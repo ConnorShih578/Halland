@@ -28,47 +28,79 @@ class AudioController {
   loadCustomBgm(file) {
     if (!file) return;
 
+    this.initContext();
+    this.resume();
+
+    this.bgmTrackName = file.name.replace(/\.[^/.]+$/, "");
+    const titleEl = document.getElementById('bgm-track-title');
+    if (titleEl) titleEl.textContent = `Loading: ${this.bgmTrackName}...`;
+
     try {
-      if (this.bgmAudio) {
-        this.bgmAudio.pause();
-        this.bgmAudio.src = "";
-        this.bgmAudio = null;
+      // 1. Hook up the dedicated DOM Audio Element
+      let audioEl = document.getElementById('bgm-player');
+      if (!audioEl) {
+        audioEl = document.createElement('audio');
+        audioEl.id = 'bgm-player';
+        audioEl.loop = true;
+        document.body.appendChild(audioEl);
       }
 
-      this.bgmTrackName = file.name.replace(/\.[^/.]+$/, "");
-
-      // Create standard HTML5 Audio element
-      const audioEl = document.createElement('audio');
+      audioEl.pause();
       audioEl.loop = true;
       audioEl.volume = this.bgmVolume;
-      audioEl.preload = 'auto';
+      this.bgmAudio = audioEl;
 
       const fileUrl = URL.createObjectURL(file);
       audioEl.src = fileUrl;
-      this.bgmAudio = audioEl;
 
-      const playPromise = audioEl.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
+      // Event listeners for state sync
+      audioEl.onplay = () => {
+        this.isBgmPlaying = true;
+        this.updateBgmHUD();
+      };
+      audioEl.onpause = () => {
+        this.isBgmPlaying = false;
+        this.updateBgmHUD();
+      };
+
+      // Play with user gesture confirmation
+      const startPlay = () => {
+        audioEl.play().then(() => {
           this.isBgmPlaying = true;
           this.updateBgmHUD();
         }).catch(err => {
-          console.warn("Autoplay deferred until user interaction:", err);
-          // Try FileReader DataURL fallback
+          console.warn("Direct play deferred, trying DataURL fallback:", err);
           const reader = new FileReader();
           reader.onload = (e) => {
             audioEl.src = e.target.result;
             audioEl.play().then(() => {
               this.isBgmPlaying = true;
               this.updateBgmHUD();
-            }).catch(() => {
+            }).catch(e2 => {
+              console.warn("DataURL play blocked:", e2);
               this.isBgmPlaying = false;
               this.updateBgmHUD();
             });
           };
           reader.readAsDataURL(file);
         });
-      }
+      };
+
+      startPlay();
+
+      // Parallel Web Audio Buffer Pipeline for maximum compatibility
+      const arrayReader = new FileReader();
+      arrayReader.onload = async (e) => {
+        try {
+          if (this.ctx) {
+            const buffer = await this.ctx.decodeAudioData(e.target.result);
+            this.customAudioBuffer = buffer;
+          }
+        } catch (e) {
+          // Handled by HTML5 audio
+        }
+      };
+      arrayReader.readAsArrayBuffer(file);
 
       this.updateBgmHUD();
       return this.bgmTrackName;
@@ -82,10 +114,8 @@ class AudioController {
     this.bgmTrackName = "Cyber Dojo Hype Beat (Sample)";
     if (this.bgmAudio) {
       this.bgmAudio.pause();
-      this.bgmAudio = null;
     }
 
-    // Procedural beat synth
     this.isBgmPlaying = true;
     this.updateBgmHUD();
     this.startSynthBeat();
