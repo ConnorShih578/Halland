@@ -198,7 +198,7 @@
         <!-- Mode Selector Tabs -->
         <div class="mode-tabs">
           <button id="tab-campaign" class="mode-tab active">
-            <span>🥋 24 ACT CAMPAIGN</span>
+            <span>🥋 STORY CAMPAIGN</span>
           </button>
           <button id="tab-endless" class="mode-tab">
             <span>♾️ ENDLESS SURVIVAL</span>
@@ -208,14 +208,14 @@
         <!-- Campaign View -->
         <div id="campaign-view" class="mode-view">
           <div class="stage-nav-bar">
-            <span class="stage-nav-title">SELECT ACT (1 - 24)</span>
+            <span class="stage-nav-title">ACT SELECT: THE SAGA OF MJ'S SHOE</span>
           </div>
           <div id="stage-grid" class="stage-select-grid scrollable">
-            <!-- Populated dynamically by main.js with 24 acts -->
+            <!-- Populated dynamically by main.js with 5 story acts -->
           </div>
           <button id="btn-play" class="cyber-btn play-btn">
             <span class="btn-glow"></span>
-            <span class="btn-text">ENTER THE DOJO</span>
+            <span class="btn-text">START STORY MISSION</span>
           </button>
         </div>
 
@@ -245,6 +245,38 @@
           <button id="btn-play-endless" class="cyber-btn play-btn endless-glow">
             <span class="btn-glow"></span>
             <span class="btn-text">START ENDLESS SURVIVAL ♾️</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cinematic Story Cutscene Modal -->
+    <div id="cutscene-screen" class="overlay-screen hidden">
+      <div class="cyber-modal cutscene-modal">
+        <div class="modal-corner tl"></div>
+        <div class="modal-corner tr"></div>
+        <div class="modal-corner bl"></div>
+        <div class="modal-corner br"></div>
+
+        <div class="cutscene-header">
+          <span class="cs-kicker">CINEMATIC FINALE</span>
+          <h2 id="cutscene-title" class="cs-title">THE CONFRONTATION</h2>
+        </div>
+
+        <div id="cutscene-graphic" class="cutscene-stage-art">
+          <!-- Populated dynamically by CutsceneManager -->
+        </div>
+
+        <div id="cutscene-text" class="cutscene-dialogue">
+          <!-- Populated dynamically by CutsceneManager -->
+        </div>
+
+        <div class="cutscene-controls">
+          <button id="btn-cutscene-skip" class="cyber-btn secondary-btn">
+            <span>SKIP CUTSCENE</span>
+          </button>
+          <button id="btn-cutscene-next" class="cyber-btn play-btn">
+            <span>NEXT ➔</span>
           </button>
         </div>
       </div>
@@ -292,6 +324,7 @@
   <!-- Scripts -->
   <script src="js/audio.js"></script>
   <script src="js/haptics.js"></script>
+  <script src="js/cutscenes.js"></script>
   <script src="js/stickman.js"></script>
   <script src="js/combat.js"></script>
   <script src="js/physics.js"></script>

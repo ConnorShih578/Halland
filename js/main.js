@@ -1,9 +1,9 @@
 /* =========================================================
-   GAME CONTROLLER & PROCEDURAL RENDER ENGINE ("HOLLAND")
-   - Infinite Continuous World Streaming (Pagodas & Torii Gates)
-   - Sakura Blossom Petal Particle System
-   - Live Distance & Infinite Score Tracking
-   - 60Hz Fixed Physics Timestep
+   GAME CONTROLLER & PROCEDURAL RENDER ENGINE ("HALLAND")
+   - Full 5-Act Narrative Campaign & Ending Cutscene
+   - Giant Boss LeBrown Jameson & Caged Michael Jordan (MJ)
+   - Dynamic 4-Theme World Renderer & Interactive Tutorial Prompts
+   - Infinite Continuous World Streamer
 ========================================================= */
 
 class GameEngine {
@@ -27,8 +27,8 @@ class GameEngine {
     this.endlessScore = 0;
     this.endlessKills = 0;
 
-    // Drifting Sakura Blossom Petals in the Air
-    this.sakuraPetals = Array.from({ length: 45 }, () => ({
+    // Drifting Sakura Blossom Petals
+    this.sakuraPetals = Array.from({ length: 35 }, () => ({
       x: Math.random() * 3000,
       y: Math.random() * 800,
       vx: Math.random() * 1.5 + 0.8,
@@ -39,6 +39,16 @@ class GameEngine {
       alpha: Math.random() * 0.4 + 0.3
     }));
 
+    // MJ Paper Ball Animation State in Act 5
+    this.mjBall = {
+      t: 0,
+      active: true,
+      startX: 1080,
+      startY: 490,
+      targetX: 1140,
+      targetY: 530
+    };
+
     this.stageTime = 0;
     this.isPlaying = false;
     this.lastFrameTime = performance.now();
@@ -47,6 +57,7 @@ class GameEngine {
 
     this.initCanvasSize();
     this.bindUI();
+    if (window.Cutscenes) window.Cutscenes.init();
     this.loadStage(0);
 
     requestAnimationFrame((t) => this.loop(t));
@@ -101,9 +112,9 @@ class GameEngine {
     const endlessView = document.getElementById('endless-view');
 
     const updateEndlessStatsUI = () => {
-      const bestDist = localStorage.getItem('holland_best_dist') || 0;
-      const bestKills = localStorage.getItem('holland_best_kills') || 0;
-      const highScore = localStorage.getItem('holland_high_score') || 0;
+      const bestDist = localStorage.getItem('halland_best_dist') || 0;
+      const bestKills = localStorage.getItem('halland_best_kills') || 0;
+      const highScore = localStorage.getItem('halland_high_score') || 0;
 
       const wEl = document.getElementById('endless-best-wave');
       const kEl = document.getElementById('endless-best-kills');
@@ -134,7 +145,7 @@ class GameEngine {
       });
     }
 
-    // 3. Populate 24 Act Cards in UI
+    // 3. Populate 5 Campaign Acts in UI
     const stageGrid = document.getElementById('stage-grid');
     if (stageGrid && window.STAGES) {
       stageGrid.innerHTML = '';
@@ -148,7 +159,7 @@ class GameEngine {
             <span class="st-rank ${st.belt.toLowerCase()}">${st.belt} BELT</span>
           </div>
           <div class="st-title">${st.name.split(':')[1] || st.name}</div>
-          <div class="st-desc">${st.entities ? st.entities.length : 4} Opponents • Grandmaster Encounter</div>
+          <div class="st-desc">${st.subtitle || 'Smash all yellow barriers & defeat boss!'}</div>
         `;
         btn.addEventListener('click', () => {
           document.querySelectorAll('.stage-card').forEach(b => b.classList.remove('active'));
@@ -238,7 +249,6 @@ class GameEngine {
         musicModal.classList.add('hidden');
       });
 
-      // File Input Change
       bgmFileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file && window.Audio) {
@@ -249,18 +259,12 @@ class GameEngine {
         }
       });
 
-      // Play / Pause Toggle
       btnBgmPlayToggle.addEventListener('click', () => {
-        if (window.Audio) {
-          window.Audio.toggleBgm();
-        }
+        if (window.Audio) window.Audio.toggleBgm();
       });
 
-      // Volume Slider
       bgmVolumeSlider.addEventListener('input', (e) => {
-        if (window.Audio) {
-          window.Audio.setBgmVolume(parseFloat(e.target.value));
-        }
+        if (window.Audio) window.Audio.setBgmVolume(parseFloat(e.target.value));
       });
     }
 
@@ -307,7 +311,7 @@ class GameEngine {
 
     this.stickRenderer.resetRibbons(this.player.x, this.player.y - 54, this.player.x, this.player.y - 26);
 
-    document.getElementById('hud-stage-name').textContent = 'ENDLESS PAGODA REALM';
+    document.getElementById('hud-stage-name').textContent = 'INFINITE GAUNTLET • 0m';
     const beltEl = document.getElementById('hud-belt');
     beltEl.textContent = 'WHITE';
     beltEl.className = 'hud-badge belt-white';
@@ -332,6 +336,14 @@ class GameEngine {
     this.isPlaying = false;
     if (window.Audio) window.Audio.play('victory');
     if (window.Haptics) window.Haptics.trigger('checkpoint');
+
+    // If Act 5 (Final Boss) is cleared -> Trigger Cinematic Ending Cutscene!
+    if (!this.isEndlessMode && this.currentStageIndex === STAGES.length - 1) {
+      if (window.Cutscenes) {
+        window.Cutscenes.playEndingCutscene();
+        return;
+      }
+    }
 
     const vicScreen = document.getElementById('victory-screen');
     document.querySelector('.victory-kicker').textContent = `STAGE CLEARED`;
@@ -362,8 +374,9 @@ class GameEngine {
           this.physics.updatePlayer(this.player, this.input, this.combat, this.currentStage, this.fixedStep);
           this.updateEntities(this.fixedStep);
           this.updateSakuraPetals(this.fixedStep);
+          this.updateMJPaperBall(this.fixedStep);
+          this.checkTutorialSteps();
 
-          // Dynamic Infinite World Streaming Check
           if (this.isEndlessMode && this.currentStage.isInfinite) {
             window.LevelGenerator.streamInfiniteWorld(this.currentStage, this.player.x);
             this.updateInfiniteProgression();
@@ -380,16 +393,32 @@ class GameEngine {
     requestAnimationFrame((t) => this.loop(t));
   }
 
+  checkTutorialSteps() {
+    if (!this.currentStage || !this.currentStage.tutorialSteps) return;
+    for (const step of this.currentStage.tutorialSteps) {
+      if (!step.triggered && Math.abs(this.player.x - step.x) < 70) {
+        step.triggered = true;
+        this.combat.announceAction(step.text);
+      }
+    }
+  }
+
+  updateMJPaperBall(dt) {
+    if (!this.currentStage || !this.currentStage.isFinalBoss) return;
+    this.mjBall.t += dt * 0.9;
+    if (this.mjBall.t > 1.0) {
+      this.mjBall.t = 0; // MJ shoots another paper ball!
+    }
+  }
+
   updateInfiniteProgression() {
     const currentMeters = Math.max(0, Math.floor((this.player.x - 100) / 10));
     if (currentMeters > this.distanceTraveled) {
       this.distanceTraveled = currentMeters;
       this.endlessScore = this.distanceTraveled * 10 + (this.combat.comboCount || 0) * 100;
 
-      // Update HUD
-      document.getElementById('hud-stage-name').textContent = `ENDLESS DOJO • ${this.distanceTraveled}m`;
+      document.getElementById('hud-stage-name').textContent = `INFINITE GAUNTLET • ${this.distanceTraveled}m`;
 
-      // Dynamic Belt Progression in Endless Mode
       const belt = window.LevelGenerator.getBeltForDistance(this.distanceTraveled * 10);
       if (this.player.beltColor !== belt.color) {
         this.player.beltColor = belt.color;
@@ -400,11 +429,10 @@ class GameEngine {
         if (window.Audio) window.Audio.play('checkpoint');
       }
 
-      // Save Best Records
-      const bestDist = parseInt(localStorage.getItem('holland_best_dist') || 0, 10);
-      const curScore = parseInt(localStorage.getItem('holland_high_score') || 0, 10);
-      if (this.distanceTraveled > bestDist) localStorage.setItem('holland_best_dist', this.distanceTraveled);
-      if (this.endlessScore > curScore) localStorage.setItem('holland_high_score', this.endlessScore);
+      const bestDist = parseInt(localStorage.getItem('halland_best_dist') || 0, 10);
+      const curScore = parseInt(localStorage.getItem('halland_high_score') || 0, 10);
+      if (this.distanceTraveled > bestDist) localStorage.setItem('halland_best_dist', this.distanceTraveled);
+      if (this.endlessScore > curScore) localStorage.setItem('halland_high_score', this.endlessScore);
     }
   }
 
@@ -487,7 +515,7 @@ class GameEngine {
   }
 
   // -----------------------------------------------------------
-  // RENDER PIPELINE WITH PAGODAS, SAKURA PETALS & TORII GATES
+  // RENDER PIPELINE WITH MJ'S CAGE & MULTI-THEME SCENERY
   // -----------------------------------------------------------
   render() {
     const ctx = this.ctx;
@@ -508,9 +536,10 @@ class GameEngine {
     ctx.translate(-camX, -camY);
 
     this.drawBackground(ctx, camX, camY);
-    this.drawDecorations(ctx); // Pagodas, Torii Gates, Sakura Trees
+    this.drawDecorations(ctx);
     this.drawPlatforms(ctx);
     this.drawBreakables(ctx);
+    this.drawGoal(ctx);
     this.drawEntities(ctx);
 
     this.stickRenderer.draw(ctx, this.player);
@@ -547,78 +576,262 @@ class GameEngine {
     ctx.restore();
   }
 
+  drawGoal(ctx) {
+    if (!this.currentStage.goal) return;
+    const g = this.currentStage.goal;
+    const remainingBreakables = this.currentStage.breakables ? this.currentStage.breakables.filter(b => !b.broken).length : 0;
+    const isLocked = remainingBreakables > 0;
+
+    ctx.save();
+    // Portal Rim
+    ctx.fillStyle = isLocked ? 'rgba(239, 68, 68, 0.2)' : 'rgba(56, 189, 248, 0.3)';
+    ctx.strokeStyle = isLocked ? '#ef4444' : '#38bdf8';
+    ctx.lineWidth = 3;
+    ctx.fillRect(g.x, g.y, g.w, g.h);
+    ctx.strokeRect(g.x, g.y, g.w, g.h);
+
+    // Lock Indicator or Torii Text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '800 12px Outfit';
+    ctx.textAlign = 'center';
+    ctx.fillText(isLocked ? `🔒 LOCKED (${remainingBreakables})` : '⛩️ EXIT GATE', g.x + g.w / 2, g.y - 12);
+
+    ctx.restore();
+  }
+
   // -----------------------------------------------------------
-  // UNIQUE JAPANESE ARCHITECTURE DRAWING ENGINE
+  // MULTI-THEME SCENERY & MJ'S CAGE RENDERING ENGINE
   // -----------------------------------------------------------
   drawDecorations(ctx) {
     if (!this.currentStage.decorations) return;
     ctx.save();
 
     for (const d of this.currentStage.decorations) {
-      if (d.type === 'pagoda_structure') {
-        this.drawPagoda(ctx, d.x, d.y, d.w, d.tiers);
+      if (d.type === 'mj_cage_scene') {
+        this.drawMJCageScene(ctx, d.x, d.y, d.w, d.h);
+      } else if (d.type === 'shoe_shrine') {
+        this.drawShoeShrine(ctx, d.x, d.y, d.label);
+      } else if (d.type === 'basketball_hoop') {
+        this.drawBasketballHoop(ctx, d.x, d.y);
+      } else if (d.type === 'stadium_scoreboard') {
+        this.drawScoreboard(ctx, d.x, d.y, d.text);
+      } else if (d.type === 'city_billboard') {
+        this.drawCityBillboard(ctx, d.x, d.y, d.text);
+      } else if (d.type === 'dumpster_prop') {
+        this.drawDumpster(ctx, d.x, d.y);
+      } else if (d.type === 'crane_hook') {
+        this.drawCrane(ctx, d.x, d.y);
       } else if (d.type === 'torii_gate') {
         this.drawToriiGate(ctx, d.x, d.y, d.w, d.h, d.label);
       } else if (d.type === 'sakura_tree') {
         this.drawSakuraTree(ctx, d.x, d.y);
-      } else if (d.type === 'lantern') {
-        this.drawLantern(ctx, d.x, d.y);
+      } else if (d.type === 'pagoda_structure') {
+        this.drawPagoda(ctx, d.x, d.y, d.w, d.tiers);
       }
     }
 
     ctx.restore();
   }
 
-  drawPagoda(ctx, cx, groundY, w, tiers = 3) {
+  // Michael Jordan locked in cage shooting paper balls into trash can!
+  drawMJCageScene(ctx, cx, groundY, w, h) {
     ctx.save();
 
-    // Wooden Pillars
-    ctx.fillStyle = '#78350f';
-    ctx.fillRect(cx - w / 2 + 30, groundY - 220, 14, 220);
-    ctx.fillRect(cx + w / 2 - 44, groundY - 220, 14, 220);
+    // 1. Golden Laser Cage Bars
+    ctx.fillStyle = 'rgba(234, 179, 8, 0.12)';
+    ctx.fillRect(cx, groundY - h, w, h);
+    ctx.strokeStyle = '#eab308';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(cx, groundY - h, w, h);
 
-    // Curved Pagoda Roofs
-    for (let i = 0; i < tiers; i++) {
-      const roofY = groundY - 80 - i * 80;
-      const roofW = w - i * 70;
-
-      ctx.fillStyle = '#0f172a';
-      ctx.strokeStyle = '#ef4444'; // Crimson glowing rim
-      ctx.lineWidth = 2.5;
-
+    for (let bx = cx + 18; bx < cx + w; bx += 22) {
       ctx.beginPath();
-      // Curved traditional upturned eaves
-      ctx.moveTo(cx - roofW / 2 - 20, roofY + 10);
-      ctx.quadraticCurveTo(cx, roofY - 25, cx + roofW / 2 + 20, roofY + 10);
-      ctx.lineTo(cx + roofW / 2, roofY + 22);
-      ctx.quadraticCurveTo(cx, roofY + 5, cx - roofW / 2, roofY + 22);
-      ctx.closePath();
-      ctx.fill();
+      ctx.moveTo(bx, groundY - h);
+      ctx.lineTo(bx, groundY);
       ctx.stroke();
+    }
 
-      // Hanging mini-lantern on eaves
-      ctx.fillStyle = '#f59e0b';
-      ctx.beginPath();
-      ctx.arc(cx - roofW / 2 - 18, roofY + 20, 4.5, 0, Math.PI * 2);
-      ctx.arc(cx + roofW / 2 + 18, roofY + 20, 4.5, 0, Math.PI * 2);
-      ctx.fill();
+    // 2. Michael Jordan Stickman (#23 Red Jersey)
+    const mjX = cx + 32;
+    const mjY = groundY;
+
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#dc2626'; // Red Jersey
+    ctx.beginPath();
+    ctx.moveTo(mjX, mjY - 18);
+    ctx.lineTo(mjX, mjY - 42); // Torso
+    ctx.stroke();
+
+    // MJ Legs
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(mjX, mjY - 18);
+    ctx.lineTo(mjX - 8, mjY);
+    ctx.moveTo(mjX, mjY - 18);
+    ctx.lineTo(mjX + 8, mjY);
+    ctx.stroke();
+
+    // MJ Shooting Arm
+    ctx.strokeStyle = '#dc2626';
+    ctx.beginPath();
+    ctx.moveTo(mjX, mjY - 40);
+    ctx.lineTo(mjX + 16, mjY - 50);
+    ctx.stroke();
+
+    // MJ Head & Headband
+    ctx.beginPath();
+    ctx.arc(mjX, mjY - 52, 7.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#1e1b4b';
+    ctx.fill();
+    ctx.strokeStyle = '#dc2626';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // "MJ #23" Label
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = '800 11px Outfit';
+    ctx.textAlign = 'center';
+    ctx.fillText("MJ #23", mjX, groundY - h - 8);
+
+    // 3. Trash Can
+    const trashX = cx + w - 24;
+    const trashY = groundY;
+
+    ctx.fillStyle = '#64748b';
+    ctx.fillRect(trashX - 10, trashY - 26, 20, 26);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(trashX - 10, trashY - 26, 20, 26);
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '700 8px Outfit';
+    ctx.fillText("TRASH", trashX, trashY - 8);
+
+    // 4. Parabolic Paper Ball Flight Animation
+    const t = this.mjBall.t;
+    const ballX = mjX + 16 + (trashX - (mjX + 16)) * t;
+    const arcHeight = Math.sin(t * Math.PI) * 45;
+    const ballY = (mjY - 50) + ((trashY - 26) - (mjY - 50)) * t - arcHeight;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(ballX, ballY, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Swish particle when entering trash can
+    if (t > 0.9) {
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '800 10px Outfit';
+      ctx.fillText("SWISH! 🏀", trashX, trashY - 32);
     }
 
     ctx.restore();
   }
 
+  drawShoeShrine(ctx, x, y, label) {
+    ctx.save();
+    ctx.fillStyle = '#1e1b4b';
+    ctx.fillRect(x - 25, y - 40, 50, 40);
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x - 25, y - 40, 50, 40);
+
+    ctx.font = '22px Outfit';
+    ctx.textAlign = 'center';
+    ctx.fillText('👟', x, y - 48);
+
+    ctx.fillStyle = '#fef3c7';
+    ctx.font = '800 9px Outfit';
+    ctx.fillText(label, x, y - 20);
+    ctx.restore();
+  }
+
+  drawBasketballHoop(ctx, x, y) {
+    ctx.save();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, y - 110);
+    ctx.stroke();
+
+    // Backboard
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(x - 15, y - 130, 30, 24);
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x - 15, y - 130, 30, 24);
+
+    // Orange Rim
+    ctx.strokeStyle = '#f97316';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, y - 112);
+    ctx.lineTo(x + 20, y - 112);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  drawScoreboard(ctx, x, y, text) {
+    ctx.save();
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(x - 100, y, 200, 40);
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x - 100, y, 200, 40);
+
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = '800 12px "JetBrains Mono"';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, x, y + 25);
+    ctx.restore();
+  }
+
+  drawCityBillboard(ctx, x, y, text) {
+    ctx.save();
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(x, y, 160, 50);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, 160, 50);
+
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '800 12px Syncopate';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, x + 80, y + 32);
+    ctx.restore();
+  }
+
+  drawDumpster(ctx, x, y) {
+    ctx.save();
+    ctx.fillStyle = '#065f46';
+    ctx.fillRect(x, y - 40, 60, 40);
+    ctx.strokeStyle = '#047857';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y - 40, 60, 40);
+    ctx.restore();
+  }
+
+  drawCrane(ctx, x, y) {
+    ctx.save();
+    ctx.strokeStyle = '#eab308';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, y + 80);
+    ctx.lineTo(x - 15, y + 95);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   drawToriiGate(ctx, x, y, w, h, label) {
     ctx.save();
-
-    // Crimson Torii Pillars
     ctx.fillStyle = '#dc2626';
-    ctx.strokeStyle = '#1e1b4b';
-    ctx.lineWidth = 2;
-
     ctx.fillRect(x + 10, y - h, 14, h);
     ctx.fillRect(x + w - 24, y - h, 14, h);
 
-    // Curved Top Beam
     ctx.beginPath();
     ctx.moveTo(x - 20, y - h);
     ctx.quadraticCurveTo(x + w / 2, y - h - 18, x + w + 20, y - h);
@@ -626,82 +839,65 @@ class GameEngine {
     ctx.quadraticCurveTo(x + w / 2, y - h + 4, x - 16, y - h + 16);
     ctx.closePath();
     ctx.fill();
-    ctx.stroke();
 
-    // Secondary Cross Beam
     ctx.fillRect(x, y - h + 28, w, 10);
 
-    // Milestone Tablet
     if (label) {
       ctx.fillStyle = '#111827';
-      ctx.fillRect(x + w / 2 - 26, y - h + 16, 52, 22);
+      ctx.fillRect(x + w / 2 - 28, y - h + 16, 56, 22);
       ctx.strokeStyle = '#f59e0b';
-      ctx.strokeRect(x + w / 2 - 26, y - h + 16, 52, 22);
+      ctx.strokeRect(x + w / 2 - 28, y - h + 16, 56, 22);
 
       ctx.fillStyle = '#fef3c7';
       ctx.font = '800 11px Outfit';
       ctx.textAlign = 'center';
       ctx.fillText(label, x + w / 2, y - h + 32);
     }
-
     ctx.restore();
   }
 
   drawSakuraTree(ctx, x, y) {
     ctx.save();
-
-    // Dark Gnarled Trunk
     ctx.strokeStyle = '#3f2e21';
     ctx.lineWidth = 12;
     ctx.lineCap = 'round';
-
     ctx.beginPath();
     ctx.moveTo(x, y);
     ctx.quadraticCurveTo(x - 10, y - 60, x - 25, y - 110);
     ctx.stroke();
 
-    // Branches
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.moveTo(x - 25, y - 110);
-    ctx.lineTo(x - 60, y - 150);
-    ctx.moveTo(x - 25, y - 110);
-    ctx.lineTo(x + 25, y - 160);
-    ctx.stroke();
-
-    // Pink Sakura Foliage Puffs
     ctx.fillStyle = 'rgba(244, 114, 182, 0.85)';
-    const puffs = [
-      { ox: -60, oy: -150, r: 28 },
-      { ox: -25, oy: -130, r: 35 },
-      { ox: 25, oy: -160, r: 30 },
-      { ox: 0, oy: -175, r: 26 }
-    ];
-
+    const puffs = [{ ox: -60, oy: -150, r: 28 }, { ox: -25, oy: -130, r: 35 }, { ox: 25, oy: -160, r: 30 }];
     for (const p of puffs) {
       ctx.beginPath();
       ctx.arc(x + p.ox, y + p.oy, p.r, 0, Math.PI * 2);
       ctx.fill();
     }
-
     ctx.restore();
   }
 
-  drawLantern(ctx, x, y) {
+  drawPagoda(ctx, cx, groundY, w, tiers = 2) {
     ctx.save();
-    ctx.fillStyle = '#ef4444';
-    ctx.shadowColor = '#f59e0b';
-    ctx.shadowBlur = 14;
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(cx - w / 2 + 30, groundY - 200, 14, 200);
+    ctx.fillRect(cx + w / 2 - 44, groundY - 200, 14, 200);
 
-    ctx.beginPath();
-    ctx.arc(x, y, 12, 0, Math.PI * 2);
-    ctx.fill();
+    for (let i = 0; i < tiers; i++) {
+      const roofY = groundY - 80 - i * 80;
+      const roofW = w - i * 70;
+      ctx.fillStyle = '#0f172a';
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2.5;
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 10px Outfit';
-    ctx.textAlign = 'center';
-    ctx.fillText('灯', x, y + 3.5);
-
+      ctx.beginPath();
+      ctx.moveTo(cx - roofW / 2 - 20, roofY + 10);
+      ctx.quadraticCurveTo(cx, roofY - 25, cx + roofW / 2 + 20, roofY + 10);
+      ctx.lineTo(cx + roofW / 2, roofY + 22);
+      ctx.quadraticCurveTo(cx, roofY + 5, cx - roofW / 2, roofY + 22);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
@@ -711,12 +907,10 @@ class GameEngine {
       ctx.save();
       ctx.translate(p.x, p.y);
       ctx.rotate(p.rot);
-
       ctx.fillStyle = `rgba(244, 114, 182, ${p.alpha})`;
       ctx.beginPath();
       ctx.ellipse(0, 0, p.size, p.size * 0.5, 0, 0, Math.PI * 2);
       ctx.fill();
-
       ctx.restore();
     }
     ctx.restore();
@@ -730,7 +924,6 @@ class GameEngine {
 
     for (const p of this.currentStage.platforms) {
       ctx.fillRect(p.x, p.y, p.w, p.h);
-
       ctx.beginPath();
       ctx.moveTo(p.x, p.y);
       ctx.lineTo(p.x + p.w, p.y);
@@ -752,20 +945,18 @@ class GameEngine {
     for (const b of this.currentStage.breakables) {
       if (b.broken) continue;
 
-      ctx.fillStyle = '#b45309';
+      // Bright yellow wooden smashable barrier
+      ctx.fillStyle = '#eab308';
       ctx.fillRect(b.x, b.y, b.w, b.h);
 
-      ctx.strokeStyle = '#d97706';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#ca8a04';
+      ctx.lineWidth = 2.5;
       ctx.strokeRect(b.x, b.y, b.w, b.h);
 
-      ctx.strokeStyle = '#fef3c7';
-      ctx.beginPath();
-      ctx.moveTo(b.x + b.w / 2, b.y + 8);
-      ctx.lineTo(b.x + b.w / 2 - 3, b.y + b.h / 2);
-      ctx.lineTo(b.x + b.w / 2 + 3, b.y + b.h / 2 + 15);
-      ctx.lineTo(b.x + b.w / 2, b.y + b.h - 8);
-      ctx.stroke();
+      ctx.fillStyle = '#1e293b';
+      ctx.font = '800 10px Outfit';
+      ctx.textAlign = 'center';
+      ctx.fillText('SMASH', b.x + b.w / 2, b.y + b.h / 2);
     }
     ctx.restore();
   }
@@ -803,6 +994,68 @@ class GameEngine {
         ctx.fillText('⭐ STUNNED ⭐', starOffset, -ent.h - 14);
       }
 
+      // Giant LeBrown Jameson Boss Styling
+      if (ent.isGiantLeBrown) {
+        ctx.fillStyle = '#a855f7'; // Purple & Gold Lakes Crown
+        ctx.font = '900 18px Outfit';
+        ctx.textAlign = 'center';
+        ctx.fillText('👑 LEBROWN JAMESON #6 👑', 0, -ent.h - 22);
+
+        let bodyColor = isHit ? '#ffffff' : '#7e22ce';
+        let suitColor = isHit ? '#ffffff' : '#eab308';
+
+        ctx.lineWidth = 5.5;
+        ctx.strokeStyle = suitColor;
+        ctx.beginPath();
+        ctx.moveTo(0, -32);
+        ctx.lineTo(-facing * 14, -16);
+        ctx.lineTo(-facing * 14, 0);
+        ctx.moveTo(0, -32);
+        ctx.lineTo(facing * 14, -16);
+        ctx.lineTo(facing * 14, 0);
+        ctx.stroke();
+
+        ctx.lineWidth = 7.0;
+        ctx.strokeStyle = bodyColor;
+        ctx.beginPath();
+        ctx.moveTo(0, -32);
+        ctx.lineTo(facing * 2, -58);
+        ctx.stroke();
+
+        ctx.lineWidth = 5.5;
+        ctx.strokeStyle = suitColor;
+        ctx.beginPath();
+        ctx.moveTo(facing * 2, -56);
+        ctx.lineTo(facing * 20, -50);
+        ctx.lineTo(facing * 34, -50);
+        ctx.stroke();
+
+        // Giant Head & Gold Headband
+        ctx.beginPath();
+        ctx.arc(facing * 4, -68, 12, 0, Math.PI * 2);
+        ctx.fillStyle = '#581c87';
+        ctx.fill();
+        ctx.strokeStyle = '#eab308';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Giant Boss Health Bar
+        const barW = 70;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(-barW / 2, -ent.h - 10, barW, 7);
+
+        const hpRatio = Math.max(0, ent.hp / ent.maxHp);
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(-barW / 2, -ent.h - 10, barW * hpRatio, 7);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(-barW / 2, -ent.h - 10, barW, 7);
+
+        ctx.restore();
+        continue;
+      }
+
+      // Standard Martial Artist Opponents
       let bodyColor = '#ef4444';
       let suitColor = '#1e293b';
       let eyeColor = '#fbbf24';
@@ -850,19 +1103,9 @@ class GameEngine {
       ctx.lineWidth = 3.5;
       ctx.strokeStyle = suitColor;
       ctx.beginPath();
-      if (isWindup) {
-        ctx.moveTo(facing * 2, -40);
-        ctx.lineTo(-facing * 12, -36);
-        ctx.lineTo(-facing * 18, -34);
-      } else if (ent.aiState === 'ATTACK') {
-        ctx.moveTo(facing * 2, -40);
-        ctx.lineTo(facing * 14, -38);
-        ctx.lineTo(facing * 24, -38);
-      } else {
-        ctx.moveTo(facing * 2, -40);
-        ctx.lineTo(facing * 8, -32);
-        ctx.lineTo(facing * 14, -36);
-      }
+      ctx.moveTo(facing * 2, -40);
+      ctx.lineTo(facing * 14, -38);
+      ctx.lineTo(facing * 24, -38);
       ctx.stroke();
 
       ctx.beginPath();
@@ -873,15 +1116,12 @@ class GameEngine {
       ctx.strokeStyle = '#ffffff';
       ctx.stroke();
 
-      ctx.fillStyle = eyeColor;
-      ctx.fillRect(facing * 4 + facing * 2, -52, facing * 3, 2);
-
-      const barW = ent.type === 'boss' ? 50 : 36;
+      const barW = 36;
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.fillRect(-barW / 2, -ent.h - 8, barW, 5);
 
       const hpRatio = Math.max(0, ent.hp / ent.maxHp);
-      ctx.fillStyle = ent.type === 'boss' ? '#f59e0b' : '#ef4444';
+      ctx.fillStyle = '#ef4444';
       ctx.fillRect(-barW / 2, -ent.h - 8, barW * hpRatio, 5);
 
       ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';

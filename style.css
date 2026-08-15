@@ -1021,9 +1021,143 @@ body, html {
   cursor: pointer;
 }
 
-@media (max-width: 768px) {
-  .stage-select-grid { grid-template-columns: 1fr; }
-  .guide-grid { grid-template-columns: 1fr; }
-  .game-title { font-size: 2.2rem; }
-  .intro-brand { font-size: 1.8rem; }
+/* =========================================================
+   8. CINEMATIC CUTSCENE MODAL & STORY GRAPHICS
+========================================================= */
+
+.cutscene-modal {
+  max-width: 680px;
+  text-align: center;
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 35px rgba(245, 158, 11, 0.35);
 }
+
+.cs-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--accent-gold);
+  letter-spacing: 0.25em;
+}
+
+.cs-title {
+  font-family: var(--font-cyber);
+  font-size: clamp(1.4rem, 4vw, 2.2rem);
+  background: linear-gradient(135deg, #ffffff 20%, #f59e0b 80%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-top: 0.3rem;
+}
+
+.cutscene-stage-art {
+  background: radial-gradient(circle at center, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.95));
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 2.2rem 1rem;
+  margin: 1.2rem 0;
+  border-radius: 6px;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cs-scene {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.6rem;
+  font-size: clamp(2.4rem, 6vw, 3.8rem);
+  filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.6));
+}
+
+.cutscene-dialogue {
+  font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+  line-height: 1.6;
+  color: #f1f5f9;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-subtle);
+  padding: 1.2rem;
+  margin-bottom: 1.4rem;
+  text-align: left;
+  border-radius: 4px;
+}
+
+.cutscene-dialogue strong {
+  color: var(--accent-gold);
+}
+
+.cutscene-dialogue em {
+  color: #38bdf8;
+  font-style: italic;
+}
+
+.cutscene-controls {
+  display: flex;
+  gap: 1rem;
+}
+
+/* =========================================================
+   9. MOBILE & SMALL SCREEN RESPONSIVENESS
+========================================================= */
+
+@media (max-width: 768px) {
+  .hud-top {
+    left: 0.6rem;
+    right: 0.6rem;
+    top: 0.6rem;
+    gap: 0.4rem;
+  }
+
+  .cyber-capsule {
+    padding: 0.3rem 0.6rem;
+  }
+
+  .capsule-val {
+    font-size: 0.8rem;
+  }
+
+  .stage-select-grid {
+    grid-template-columns: 1fr;
+    max-height: 200px;
+  }
+
+  .guide-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cyber-modal {
+    padding: 1.4rem;
+    width: 95%;
+  }
+
+  .game-title {
+    font-size: 2.2rem;
+  }
+
+  .intro-brand {
+    font-size: 1.8rem;
+  }
+
+  .icon-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stage-capsule {
+    display: none; /* Hide stage capsule to make room for timer & buttons on narrow phones */
+  }
+
+  .mode-tabs {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .victory-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+}
+

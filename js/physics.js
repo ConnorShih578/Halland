@@ -483,6 +483,33 @@ class PhysicsEngine {
     }
 
     if (level.goal && this.checkAABB(bounds, level.goal)) {
+      // 1. Mandatory Yellow Barrier Check
+      const remainingBreakables = level.breakables ? level.breakables.filter(b => !b.broken).length : 0;
+      if (remainingBreakables > 0) {
+        // Goal is locked until all yellow walls are destroyed!
+        player.x = level.goal.x - 25;
+        player.vx = -4.5;
+        if (window.Game && window.Game.combat) {
+          window.Game.combat.announceAction(`🚨 DESTROY ALL YELLOW BARRIERS! (${remainingBreakables} LEFT)`);
+        }
+        if (window.Audio) window.Audio.play('hit');
+        return;
+      }
+
+      // 2. Final Boss Defeat Check (if applicable)
+      if (level.isFinalBoss) {
+        const boss = level.entities ? level.entities.find(e => e.isGiantLeBrown) : null;
+        if (boss && !boss.isDead) {
+          player.x = level.goal.x - 30;
+          player.vx = -4.5;
+          if (window.Game && window.Game.combat) {
+            window.Game.combat.announceAction(`👑 DEFEAT GIANT LEBROWN JAMESON FIRST!`);
+          }
+          if (window.Audio) window.Audio.play('hit');
+          return;
+        }
+      }
+
       if (window.Game) window.Game.completeStage();
     }
   }
