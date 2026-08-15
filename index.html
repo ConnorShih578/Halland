@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>HALLAND - Timmy's Games</title>
+  <meta name="description" content="A hyper-responsive, crisp 2D martial arts parkour platformer starring Halland - Spider-Man meets Erling Haaland in a neon dojo world.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Outfit:wght@400;600;700;900&family=JetBrains+Mono:wght@500;700;800&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="game-container">
+    <!-- Game Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- INTRO SPLASH: TIMMY'S GAMES PRESENTS -->
+    <div id="intro-screen" class="intro-screen">
+      <div class="intro-content">
+        <div class="intro-emblem">⚡</div>
+        <h1 class="intro-brand">TIMMY'S GAMES</h1>
+        <div class="intro-subtitle">PRESENTS</div>
+        <div class="intro-bar"><div class="intro-bar-fill"></div></div>
+      </div>
+      <div class="intro-skip">TAP ANYWHERE TO SKIP</div>
+    </div>
+
+    <!-- UI Overlay / HUD -->
+    <div id="hud">
+      <div class="hud-top">
+        <div class="cyber-capsule stage-capsule">
+          <div class="capsule-tag">MISSION</div>
+          <span id="hud-stage-name" class="capsule-val">ACT 1: DOJO SHOWDOWN</span>
+        </div>
+
+        <div class="cyber-capsule timer-capsule">
+          <div class="capsule-tag">TIMER</div>
+          <span id="hud-timer" class="capsule-val mono">00:00.00</span>
+        </div>
+
+        <div class="cyber-capsule stats-capsule">
+          <div class="capsule-stat">
+            <span class="capsule-tag">DEATHS</span>
+            <span id="hud-deaths" class="capsule-val mono">0</span>
+          </div>
+          <div class="capsule-divider"></div>
+          <div class="capsule-stat">
+            <span class="capsule-tag">RANK</span>
+            <span id="hud-belt" class="hud-badge belt-white">WHITE</span>
+          </div>
+        </div>
+
+        <div class="hud-buttons">
+          <button id="btn-custom-music" class="cyber-btn icon-btn" title="Custom BGM Player (N)">
+            <span>🎵</span>
+          </button>
+          <button id="btn-restart" class="cyber-btn icon-btn" title="Restart Checkpoint (R)">
+            <span>↺</span>
+          </button>
+          <button id="btn-sound" class="cyber-btn icon-btn active" title="Toggle Sound (M)">
+            <span>🔊</span>
+          </button>
+          <button id="btn-haptics" class="cyber-btn icon-btn active" title="Toggle Haptics (H)">
+            <span>📳</span>
+          </button>
+          <button id="btn-help" class="cyber-btn icon-btn" title="Controls Guide (?)">
+            <span>🥋</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Custom BGM Player Modal -->
+      <div id="custom-music-modal" class="controls-guide-overlay hidden">
+        <div class="cyber-modal music-modal">
+          <div class="modal-corner tl"></div>
+          <div class="modal-corner tr"></div>
+          <div class="modal-corner bl"></div>
+          <div class="modal-corner br"></div>
+
+          <div class="guide-header">
+            <div class="modal-title-wrap">
+              <span class="modal-subtitle">AUDIO SUITE</span>
+              <h2>CUSTOM BACKGROUND MUSIC</h2>
+            </div>
+            <button id="btn-close-music" class="close-cyber-btn">✕</button>
+          </div>
+
+          <div class="music-content-card">
+            <div class="music-now-playing">
+              <div id="bgm-visualizer" class="equalizer-bars">
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <div class="track-info">
+                <span class="track-label">ACTIVE TRACK</span>
+                <div id="bgm-track-title" class="track-name">No Custom MP3 Loaded</div>
+              </div>
+            </div>
+
+            <div class="music-uploader-zone">
+              <label for="bgm-file-input" class="upload-dropzone">
+                <span class="upload-icon">📁</span>
+                <span class="upload-title">CHOOSE AUDIO FILE (.MP3 / .WAV)</span>
+                <span class="upload-hint">Drop your favorite hype tracks, anthems, or chants here!</span>
+              </label>
+              <input type="file" id="bgm-file-input" accept="audio/*" class="hidden-input">
+            </div>
+
+            <div class="music-controls-row">
+              <button id="btn-bgm-play-toggle" class="cyber-btn play-toggle-btn">
+                <span>▶️ PLAY</span>
+              </button>
+              <div class="volume-slider-wrap">
+                <span class="vol-icon">🔈</span>
+                <input type="range" id="bgm-volume-slider" min="0" max="1" step="0.05" value="0.65" class="cyber-slider">
+                <span class="vol-icon">🔊</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action & Combo Banners -->
+      <div id="action-announcement" class="action-banner"></div>
+      <div id="combo-display" class="combo-banner"></div>
+    </div>
+
+    <!-- Controls Guide Modal -->
+    <div id="controls-hint" class="controls-guide-overlay hidden">
+      <div class="cyber-modal">
+        <div class="modal-corner tl"></div>
+        <div class="modal-corner tr"></div>
+        <div class="modal-corner bl"></div>
+        <div class="modal-corner br"></div>
+
+        <div class="guide-header">
+          <div class="modal-title-wrap">
+            <span class="modal-subtitle">DOJO SCROLL</span>
+            <h2>MARTIAL ARTS COMBAT PROTOCOL</h2>
+          </div>
+          <button id="btn-close-guide" class="close-cyber-btn">✕</button>
+        </div>
+
+        <div class="guide-grid">
+          <div class="guide-col">
+            <div class="col-badge">LOCOMOTION</div>
+            <h3>🕹️ LEFT SCREEN / WASD</h3>
+            <p><strong>Run / Sprint:</strong> Drag Left/Right or A/D</p>
+            <p><strong>Jump / Wall Kick:</strong> Push Up or W / Space</p>
+            <p><strong>Crouch &amp; Low Slide:</strong> Pull Down or S</p>
+          </div>
+
+          <div class="guide-col">
+            <div class="col-badge">COMBAT</div>
+            <h3>✨ RIGHT SCREEN / ARROWS</h3>
+            <p><strong>Tap / E:</strong> Alternating Karate Combo</p>
+            <p><strong>Swipe Right (→):</strong> Dash Straight Punch</p>
+            <p><strong>Swipe Down (↓):</strong> Low Sweep Kick (Trip enemies)</p>
+            <p><strong>Swipe Up (↑):</strong> Web Zip (1x per jump lift!)</p>
+            <p><strong>Swipe Back (←):</strong> Backstep Dodge</p>
+          </div>
+
+          <div class="guide-col highlight-col">
+            <div class="col-badge special">PARRY &amp; COUNTER</div>
+            <h3>🥋 HAND-EYE COORDINATION</h3>
+            <p><strong>Enemy Tells:</strong> Watch for enemy <code>⚡ ATTACK !</code></p>
+            <p><strong>Perfect Parry:</strong> Hold <code>S</code> or touch &amp; hold right screen on strike to <strong>PARRY &amp; STUN</strong> for <strong>2x DAMAGE</strong>!</p>
+            <p><strong>Reverse Auto-Aim:</strong> Punching or kicking enemies behind Halland triggers <strong>Spinning Backfists</strong> &amp; <strong>Heel Kicks</strong>!</p>
+          </div>
+        </div>
+
+        <div class="guide-footer">
+          <span>⌨️ KEYBOARD CONTROLS: <strong>WASD</strong> (Move/Jump) | <strong>E</strong> (Attack) | <strong>Arrow Keys</strong> (Swipes) | <strong>S</strong> (Parry)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Start / Stage Select Screen -->
+    <div id="start-screen" class="overlay-screen hidden">
+      <div class="kanji-bg left">武</div>
+      <div class="kanji-bg right">影</div>
+
+      <div class="cyber-modal main-menu-card">
+        <div class="modal-corner tl"></div>
+        <div class="modal-corner tr"></div>
+        <div class="modal-corner bl"></div>
+        <div class="modal-corner br"></div>
+
+        <div class="brand-bar">
+          <span class="studio-tag">TIMMY'S GAMES PRESENTS</span>
+        </div>
+
+        <div class="title-wrap">
+          <h1 class="game-title">HALLAND</h1>
+          <div class="title-sub">THE HYBRID POWERHOUSE MARTIAL ARTS ADVENTURE</div>
+        </div>
+
+        <!-- Mode Selector Tabs -->
+        <div class="mode-tabs">
+          <button id="tab-campaign" class="mode-tab active">
+            <span>🥋 24 ACT CAMPAIGN</span>
+          </button>
+          <button id="tab-endless" class="mode-tab">
+            <span>♾️ ENDLESS SURVIVAL</span>
+          </button>
+        </div>
+
+        <!-- Campaign View -->
+        <div id="campaign-view" class="mode-view">
+          <div class="stage-nav-bar">
+            <span class="stage-nav-title">SELECT ACT (1 - 24)</span>
+          </div>
+          <div id="stage-grid" class="stage-select-grid scrollable">
+            <!-- Populated dynamically by main.js with 24 acts -->
+          </div>
+          <button id="btn-play" class="cyber-btn play-btn">
+            <span class="btn-glow"></span>
+            <span class="btn-text">ENTER THE DOJO</span>
+          </button>
+        </div>
+
+        <!-- Endless Survival View -->
+        <div id="endless-view" class="mode-view hidden">
+          <div class="endless-banner-card">
+            <div class="endless-badge">INFINITE WAVE COMBAT</div>
+            <h3>SURVIVE THE INFINITE DOJO</h3>
+            <p>Fight through endless waves of escalating Ninjas, Sentinels, and Grandmasters. Upgrade belt ranks every 5 waves!</p>
+
+            <div class="endless-stats-row">
+              <div class="e-stat">
+                <span class="e-label">BEST WAVE</span>
+                <span id="endless-best-wave" class="e-val mono">WAVE 1</span>
+              </div>
+              <div class="e-stat">
+                <span class="e-label">TOTAL KILLS</span>
+                <span id="endless-best-kills" class="e-val mono">0</span>
+              </div>
+              <div class="e-stat">
+                <span class="e-label">HIGH SCORE</span>
+                <span id="endless-high-score" class="e-val mono">0</span>
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-play-endless" class="cyber-btn play-btn endless-glow">
+            <span class="btn-glow"></span>
+            <span class="btn-text">START ENDLESS SURVIVAL ♾️</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victory-screen" class="overlay-screen hidden">
+      <div class="cyber-modal victory-modal">
+        <div class="modal-corner tl"></div>
+        <div class="modal-corner tr"></div>
+        <div class="modal-corner bl"></div>
+        <div class="modal-corner br"></div>
+
+        <span class="victory-kicker">STAGE CLEARED</span>
+        <h2 class="victory-title">VICTORY ACHIEVED</h2>
+        <div class="victory-badge">🥋 GRANDMASTER PERFORMANCE</div>
+
+        <div class="victory-stats-grid">
+          <div class="v-card">
+            <span class="v-label">CLEAR TIME</span>
+            <span id="victory-time" class="v-val mono">00:42.15</span>
+          </div>
+          <div class="v-card">
+            <span class="v-label">DEATHS</span>
+            <span id="victory-deaths" class="v-val mono">0</span>
+          </div>
+          <div class="v-card">
+            <span class="v-label">MAX COMBO</span>
+            <span id="victory-combos" class="v-val mono">18</span>
+          </div>
+        </div>
+
+        <div class="victory-actions">
+          <button id="btn-next-stage" class="cyber-btn play-btn">
+            <span class="btn-text">NEXT ACT ➔</span>
+          </button>
+          <button id="btn-menu" class="cyber-btn secondary-btn">
+            <span class="btn-text">STAGE SELECT</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/haptics.js"></script>
+  <script src="js/stickman.js"></script>
+  <script src="js/combat.js"></script>
+  <script src="js/physics.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
