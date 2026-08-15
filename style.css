@@ -971,11 +971,25 @@ body, html {
   clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
 }
 
-.upload-dropzone:hover {
-  background: rgba(239, 68, 68, 0.18);
-  border-color: var(--accent-red);
-  transform: translateY(-2px);
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+.upload-dropzone.drag-hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: var(--accent-cyan);
+  transform: scale(1.02);
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.5);
+}
+
+.sample-btn {
+  padding: 0.65rem 1rem;
+  font-size: 0.75rem;
+  color: var(--accent-gold);
+  border-color: var(--accent-gold);
+  background: rgba(245, 158, 11, 0.12);
+  white-space: nowrap;
+}
+
+.sample-btn:hover {
+  background: rgba(245, 158, 11, 0.28);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.5);
 }
 
 .upload-icon {

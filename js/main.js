@@ -238,7 +238,9 @@ class GameEngine {
     const musicModal = document.getElementById('custom-music-modal');
     const btnCloseMusic = document.getElementById('btn-close-music');
     const bgmFileInput = document.getElementById('bgm-file-input');
+    const bgmDropzone = document.getElementById('bgm-dropzone');
     const btnBgmPlayToggle = document.getElementById('btn-bgm-play-toggle');
+    const btnBgmSample = document.getElementById('btn-bgm-sample');
     const bgmVolumeSlider = document.getElementById('bgm-volume-slider');
 
     if (btnCustomMusic && musicModal) {
@@ -249,15 +251,48 @@ class GameEngine {
         musicModal.classList.add('hidden');
       });
 
-      bgmFileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
+      const handleAudioFile = (file) => {
         if (file && window.Audio) {
+          window.Audio.resume();
           const trackName = window.Audio.loadCustomBgm(file);
           if (trackName && this.combat) {
             this.combat.announceAction(`BGM: ${trackName.toUpperCase()}`);
           }
         }
+      };
+
+      bgmFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        handleAudioFile(file);
       });
+
+      // Drag and drop audio files
+      if (bgmDropzone) {
+        bgmDropzone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          bgmDropzone.classList.add('drag-hover');
+        });
+        bgmDropzone.addEventListener('dragleave', () => {
+          bgmDropzone.classList.remove('drag-hover');
+        });
+        bgmDropzone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          bgmDropzone.classList.remove('drag-hover');
+          if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleAudioFile(e.dataTransfer.files[0]);
+          }
+        });
+      }
+
+      // Sample Beat Button
+      if (btnBgmSample) {
+        btnBgmSample.addEventListener('click', () => {
+          if (window.Audio) {
+            window.Audio.playProceduralSampleBgm();
+            if (this.combat) this.combat.announceAction("BGM: CYBER DOJO BEAT");
+          }
+        });
+      }
 
       btnBgmPlayToggle.addEventListener('click', () => {
         if (window.Audio) window.Audio.toggleBgm();

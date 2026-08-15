@@ -31,27 +31,102 @@ class AudioController {
     try {
       if (this.bgmAudio) {
         this.bgmAudio.pause();
+        this.bgmAudio.src = "";
         this.bgmAudio = null;
       }
 
-      const url = URL.createObjectURL(file);
-      this.bgmAudio = new Audio(url);
-      this.bgmAudio.loop = true;
-      this.bgmAudio.volume = this.bgmVolume;
-      this.bgmTrackName = file.name.replace(/\.[^/.]+$/, ""); // strip extension
+      this.bgmTrackName = file.name.replace(/\.[^/.]+$/, "");
 
-      this.bgmAudio.play().then(() => {
-        this.isBgmPlaying = true;
-        this.updateBgmHUD();
-      }).catch(e => {
-        this.isBgmPlaying = false;
-        this.updateBgmHUD();
-      });
+      // Create standard HTML5 Audio element
+      const audioEl = document.createElement('audio');
+      audioEl.loop = true;
+      audioEl.volume = this.bgmVolume;
+      audioEl.preload = 'auto';
 
+      const fileUrl = URL.createObjectURL(file);
+      audioEl.src = fileUrl;
+      this.bgmAudio = audioEl;
+
+      const playPromise = audioEl.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          this.isBgmPlaying = true;
+          this.updateBgmHUD();
+        }).catch(err => {
+          console.warn("Autoplay deferred until user interaction:", err);
+          // Try FileReader DataURL fallback
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            audioEl.src = e.target.result;
+            audioEl.play().then(() => {
+              this.isBgmPlaying = true;
+              this.updateBgmHUD();
+            }).catch(() => {
+              this.isBgmPlaying = false;
+              this.updateBgmHUD();
+            });
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      this.updateBgmHUD();
       return this.bgmTrackName;
     } catch (e) {
-      console.warn("Failed to load custom BGM:", e);
+      console.error("Error loading custom audio file:", e);
     }
+  }
+
+  // Built-in Cyber Hype Beat sample for immediate testing
+  playProceduralSampleBgm() {
+    this.bgmTrackName = "Cyber Dojo Hype Beat (Sample)";
+    if (this.bgmAudio) {
+      this.bgmAudio.pause();
+      this.bgmAudio = null;
+    }
+
+    // Procedural beat synth
+    this.isBgmPlaying = true;
+    this.updateBgmHUD();
+    this.startSynthBeat();
+  }
+
+  startSynthBeat() {
+    if (this.synthBeatInterval) clearInterval(this.synthBeatInterval);
+    let step = 0;
+    this.synthBeatInterval = setInterval(() => {
+      if (!this.isBgmPlaying || !this.enabled) return;
+      this.resume();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+
+      // Bass kick on steps 0, 4, 8, 12
+      if (step % 4 === 0) {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.exponentialRampToValueAtTime(30, now + 0.12);
+        gain.gain.setValueAtTime(0.4 * this.bgmVolume, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      }
+
+      // Hi-hat on every step
+      if (step % 2 === 0) {
+        this.playNoiseCrack(now, 0.03, 0.08 * this.bgmVolume);
+      }
+
+      // Snare / clap on steps 4, 12
+      if (step % 8 === 4) {
+        this.playThud(now, 200, 60, 0.1, 0.3 * this.bgmVolume);
+        this.playNoiseCrack(now, 0.08, 0.15 * this.bgmVolume);
+      }
+
+      step = (step + 1) % 16;
+    }, 125); // 120 BPM 16th notes
   }
 
   setBgmVolume(vol) {
@@ -62,15 +137,23 @@ class AudioController {
   }
 
   toggleBgm() {
+    if (this.synthBeatInterval && !this.bgmAudio) {
+      this.isBgmPlaying = !this.isBgmPlaying;
+      this.updateBgmHUD();
+      return this.isBgmPlaying;
+    }
+
     if (!this.bgmAudio) return false;
     if (this.bgmAudio.paused) {
-      this.bgmAudio.play().catch(() => {});
-      this.isBgmPlaying = true;
+      this.bgmAudio.play().then(() => {
+        this.isBgmPlaying = true;
+        this.updateBgmHUD();
+      }).catch(() => {});
     } else {
       this.bgmAudio.pause();
       this.isBgmPlaying = false;
+      this.updateBgmHUD();
     }
-    this.updateBgmHUD();
     return this.isBgmPlaying;
   }
 
