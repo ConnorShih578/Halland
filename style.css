@@ -88,6 +88,14 @@ body, html {
   animation: introPop 2.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+.intro-logo-img {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 0.8rem;
+  filter: drop-shadow(0 0 24px rgba(245, 158, 11, 0.8));
+  animation: emblemPulse 1.8s infinite ease-in-out;
+}
+
 .intro-emblem {
   font-size: 3.5rem;
   color: var(--accent-gold);

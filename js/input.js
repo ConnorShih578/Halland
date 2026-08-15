@@ -283,7 +283,8 @@ class InputController {
     else if (this.keys['KeyD'] && !this.keys['KeyA']) this.moveX = 1;
     else if (!this.keys['KeyA'] && !this.keys['KeyD']) this.moveX = 0;
 
-    if (e.code === 'KeyW' || e.code === 'Space') {
+    // W Key = Jump
+    if (e.code === 'KeyW') {
       if (!this.jumpHeld) this.jumpPressed = true;
       this.jumpHeld = true;
     }
@@ -294,12 +295,12 @@ class InputController {
     }
 
     // Ignore browser auto-repeat for attack action triggers
-    if (e.repeat && ['KeyE', 'ArrowRight', 'ArrowDown', 'ArrowUp', 'ArrowLeft'].includes(e.code)) {
+    if (e.repeat && ['Space', 'KeyE', 'ArrowRight', 'ArrowDown', 'ArrowUp', 'ArrowLeft'].includes(e.code)) {
       return;
     }
 
-    // 2. E Key = Tap on Right Canvas (Combo / Cannonball)
-    if (e.code === 'KeyE') {
+    // 2. Spacebar (or E Key) = Basic Punch / Kick Combo
+    if (e.code === 'Space' || e.code === 'KeyE') {
       this.queueAction('TAP');
       this.spawnSyntheticKeyTrail('TAP');
       if (window.Haptics) window.Haptics.trigger('tap');
