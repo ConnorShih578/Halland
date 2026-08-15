@@ -71,62 +71,62 @@
         </div>
       </div>
 
-      <!-- Custom BGM Player Modal -->
-      <div id="custom-music-modal" class="controls-guide-overlay hidden">
-        <div class="cyber-modal music-modal">
-          <div class="modal-corner tl"></div>
-          <div class="modal-corner tr"></div>
-          <div class="modal-corner bl"></div>
-          <div class="modal-corner br"></div>
+      <!-- Action & Combo Banners -->
+      <div id="action-announcement" class="action-banner"></div>
+      <div id="combo-display" class="combo-banner"></div>
+    </div>
 
-          <div class="guide-header">
-            <div class="modal-title-wrap">
-              <span class="modal-subtitle">AUDIO SUITE</span>
-              <h2>CUSTOM BACKGROUND MUSIC</h2>
+    <!-- Custom BGM Player Modal -->
+    <div id="custom-music-modal" class="controls-guide-overlay hidden">
+      <div class="cyber-modal music-modal">
+        <div class="modal-corner tl"></div>
+        <div class="modal-corner tr"></div>
+        <div class="modal-corner bl"></div>
+        <div class="modal-corner br"></div>
+
+        <div class="guide-header">
+          <div class="modal-title-wrap">
+            <span class="modal-subtitle">AUDIO SUITE</span>
+            <h2>CUSTOM BACKGROUND MUSIC</h2>
+          </div>
+          <button id="btn-close-music" class="close-cyber-btn">✕</button>
+        </div>
+
+        <div class="music-content-card">
+          <div class="music-now-playing">
+            <div id="bgm-visualizer" class="equalizer-bars">
+              <span></span><span></span><span></span><span></span><span></span>
             </div>
-            <button id="btn-close-music" class="close-cyber-btn">✕</button>
+            <div class="track-info">
+              <span class="track-label">ACTIVE TRACK</span>
+              <div id="bgm-track-title" class="track-name">No Custom MP3 Loaded</div>
+            </div>
           </div>
 
-          <div class="music-content-card">
-            <div class="music-now-playing">
-              <div id="bgm-visualizer" class="equalizer-bars">
-                <span></span><span></span><span></span><span></span><span></span>
-              </div>
-              <div class="track-info">
-                <span class="track-label">ACTIVE TRACK</span>
-                <div id="bgm-track-title" class="track-name">No Custom MP3 Loaded</div>
-              </div>
-            </div>
+          <div class="music-uploader-zone">
+            <label for="bgm-file-input" class="upload-dropzone" id="bgm-dropzone">
+              <span class="upload-icon">📁</span>
+              <span class="upload-title">CHOOSE AUDIO FILE (.MP3 / .WAV)</span>
+              <span class="upload-hint">Click to browse or drag &amp; drop your favorite hype tracks here!</span>
+            </label>
+            <input type="file" id="bgm-file-input" accept=".mp3, .wav, .ogg, .m4a, .aac, .flac, audio/*" class="hidden-input">
+          </div>
 
-            <div class="music-uploader-zone">
-              <label for="bgm-file-input" class="upload-dropzone" id="bgm-dropzone">
-                <span class="upload-icon">📁</span>
-                <span class="upload-title">CHOOSE AUDIO FILE (.MP3 / .WAV)</span>
-                <span class="upload-hint">Click to browse or drag &amp; drop your favorite hype tracks here!</span>
-              </label>
-              <input type="file" id="bgm-file-input" accept=".mp3, .wav, .ogg, .m4a, .aac, .flac, audio/*" class="hidden-input">
-            </div>
-
-            <div class="music-controls-row">
-              <button id="btn-bgm-play-toggle" class="cyber-btn play-toggle-btn">
-                <span>▶️ PLAY</span>
-              </button>
-              <button id="btn-bgm-sample" class="cyber-btn secondary-btn sample-btn">
-                <span>⚡ SAMPLE BEAT</span>
-              </button>
-              <div class="volume-slider-wrap">
-                <span class="vol-icon">🔈</span>
-                <input type="range" id="bgm-volume-slider" min="0" max="1" step="0.05" value="0.65" class="cyber-slider">
-                <span class="vol-icon">🔊</span>
-              </div>
+          <div class="music-controls-row">
+            <button id="btn-bgm-play-toggle" class="cyber-btn play-toggle-btn">
+              <span>▶️ PLAY</span>
+            </button>
+            <button id="btn-bgm-sample" class="cyber-btn secondary-btn sample-btn">
+              <span>⚡ SAMPLE BEAT</span>
+            </button>
+            <div class="volume-slider-wrap">
+              <span class="vol-icon">🔈</span>
+              <input type="range" id="bgm-volume-slider" min="0" max="1" step="0.05" value="0.65" class="cyber-slider">
+              <span class="vol-icon">🔊</span>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Action & Combo Banners -->
-      <div id="action-announcement" class="action-banner"></div>
-      <div id="combo-display" class="combo-banner"></div>
     </div>
 
     <!-- Controls Guide Modal -->
