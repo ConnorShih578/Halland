@@ -422,6 +422,42 @@ class InputController {
 
   draw(ctx, canvasWidth, canvasHeight) {
     const now = performance.now();
+    const isMobileDevice = ('ontouchstart' in window) || (canvasWidth < 768);
+
+    // Ambient Touch Zone Indicator on Mobile (subtle guide for thumbs)
+    if (isMobileDevice && !this.leftStickActive && !this.isRightTouching) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.lineWidth = 1.5;
+
+      // Left Stick Zone
+      const leftCenterX = Math.max(70, canvasWidth * 0.14);
+      const leftCenterY = canvasHeight - 90;
+      ctx.beginPath();
+      ctx.arc(leftCenterX, leftCenterY, 44, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.font = '800 9px Outfit';
+      ctx.textAlign = 'center';
+      ctx.fillText('🕹️ MOVE', leftCenterX, leftCenterY + 3);
+
+      // Right Action Zone
+      const rightCenterX = canvasWidth - Math.max(70, canvasWidth * 0.14);
+      const rightCenterY = canvasHeight - 90;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+      ctx.beginPath();
+      ctx.arc(rightCenterX, rightCenterY, 44, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.fillText('⚡ ATTACK', rightCenterX, rightCenterY + 3);
+
+      ctx.restore();
+    }
 
     // 1. Draw Left Virtual Joystick if active
     if (this.leftStickActive) {
@@ -429,7 +465,7 @@ class InputController {
       const origin = this.leftStickOrigin;
       const cur = this.leftStickCurrent;
 
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.arc(origin.x, origin.y, this.leftStickRadius, 0, Math.PI * 2);
@@ -442,9 +478,11 @@ class InputController {
       const knobX = origin.x + Math.cos(angle) * dist;
       const knobY = origin.y + Math.sin(angle) * dist;
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.8)';
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 12;
       ctx.beginPath();
-      ctx.arc(knobX, knobY, 20, 0, Math.PI * 2);
+      ctx.arc(knobX, knobY, 22, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }

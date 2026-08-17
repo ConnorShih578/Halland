@@ -1132,67 +1132,448 @@ body, html {
 }
 
 /* =========================================================
-   9. MOBILE & SMALL SCREEN RESPONSIVENESS
+   9. DEDICATED MOBILE-FIRST UI SYSTEM
+   Optimized for Portrait (<600px) & Landscape (<900px wide / <500px tall)
 ========================================================= */
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (max-height: 520px) {
+  :root {
+    --font-size-base: 14px;
+  }
+
+  /* 1. Mobile Container & Canvas Fit */
+  #game-container {
+    height: 100dvh;
+    width: 100vw;
+    position: fixed;
+    inset: 0;
+  }
+
+  /* 2. Sleek Compact Mobile HUD Top Bar */
   .hud-top {
-    left: 0.6rem;
-    right: 0.6rem;
-    top: 0.6rem;
-    gap: 0.4rem;
+    top: 0.4rem;
+    left: 0.5rem;
+    right: 0.5rem;
+    gap: 0.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
   .cyber-capsule {
-    padding: 0.3rem 0.6rem;
+    padding: 0.25rem 0.5rem;
+    clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+  }
+
+  .stage-capsule {
+    max-width: 38vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .capsule-tag {
+    font-size: 0.5rem;
+    letter-spacing: 0.08em;
   }
 
   .capsule-val {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
   }
 
+  .stats-capsule {
+    gap: 0.4rem;
+  }
+
+  .capsule-stat .capsule-val {
+    font-size: 0.75rem;
+  }
+
+  .hud-badge {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.3rem;
+  }
+
+  .hud-buttons {
+    gap: 0.25rem;
+  }
+
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+    clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+  }
+
+  /* Action & Combo Banners */
+  .action-banner {
+    top: 14%;
+    font-size: 0.95rem;
+    padding: 0.3rem 0.9rem;
+    max-width: 88vw;
+    text-align: center;
+  }
+
+  .combo-banner {
+    bottom: 18%;
+    left: 1rem;
+    font-size: 1.15rem;
+  }
+
+  /* 3. Dedicated Mobile Menu & Modals */
+  .overlay-screen {
+    padding: 0.5rem;
+  }
+
+  .cyber-modal {
+    padding: 1.1rem 0.9rem;
+    width: 96%;
+    max-width: 500px;
+    max-height: 92dvh;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .main-menu-card {
+    max-height: 94dvh;
+  }
+
+  .brand-bar {
+    margin-bottom: 0.2rem;
+  }
+
+  .studio-tag {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+  }
+
+  .title-wrap {
+    margin-bottom: 0.8rem;
+  }
+
+  .game-title {
+    font-size: 1.9rem;
+    letter-spacing: 0.08em;
+  }
+
+  .title-sub {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* Mobile Mode Switcher Tabs */
+  .mode-tabs {
+    display: flex;
+    flex-direction: row;
+    gap: 0.4rem;
+    margin-bottom: 0.7rem;
+  }
+
+  .mode-tab {
+    padding: 0.55rem 0.4rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+  }
+
+  .stage-nav-bar {
+    margin-bottom: 0.5rem;
+  }
+
+  .stage-nav-title {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* Mobile Stage Select List */
   .stage-select-grid {
     grid-template-columns: 1fr;
-    max-height: 200px;
+    gap: 0.45rem;
+    max-height: 38dvh;
+    overflow-y: auto;
+    padding-right: 4px;
+    margin-bottom: 0.8rem;
+  }
+
+  .stage-card {
+    padding: 0.65rem 0.8rem;
+    clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+  }
+
+  .st-header {
+    margin-bottom: 0.2rem;
+  }
+
+  .st-num {
+    font-size: 0.65rem;
+  }
+
+  .st-rank {
+    font-size: 0.6rem;
+    padding: 0.08rem 0.3rem;
+  }
+
+  .st-title {
+    font-size: 0.95rem;
+    margin-bottom: 0.1rem;
+  }
+
+  .st-desc {
+    font-size: 0.7rem;
+    line-height: 1.25;
+  }
+
+  /* Mobile Play Button */
+  .play-btn {
+    padding: 0.85rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.1em;
+    clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  }
+
+  /* Endless Mobile Card */
+  .endless-banner-card {
+    padding: 0.9rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .endless-banner-card h3 {
+    font-size: 1.1rem;
+  }
+
+  .endless-banner-card p {
+    font-size: 0.75rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .endless-stats-row {
+    gap: 0.4rem;
+  }
+
+  .e-stat {
+    padding: 0.5rem 0.3rem;
+  }
+
+  .e-label {
+    font-size: 0.55rem;
+  }
+
+  .e-val {
+    font-size: 0.95rem;
+  }
+
+  /* Mobile Controls Guide Modal */
+  .controls-guide-overlay {
+    padding: 0.6rem;
+  }
+
+  .guide-header {
+    margin-bottom: 0.8rem;
+  }
+
+  .modal-title-wrap h2 {
+    font-size: 1rem;
+  }
+
+  .modal-subtitle {
+    font-size: 0.55rem;
+  }
+
+  .close-cyber-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 1rem;
   }
 
   .guide-grid {
     grid-template-columns: 1fr;
+    gap: 0.5rem;
+    max-height: 50dvh;
+    overflow-y: auto;
+    margin-bottom: 0.8rem;
   }
 
-  .cyber-modal {
-    padding: 1.4rem;
-    width: 95%;
+  .guide-col {
+    padding: 0.7rem;
+    font-size: 0.75rem;
   }
 
-  .game-title {
-    font-size: 2.2rem;
+  .guide-col h3 {
+    font-size: 0.85rem;
+    margin-bottom: 0.3rem;
   }
 
-  .intro-brand {
-    font-size: 1.8rem;
+  .guide-col p {
+    margin-bottom: 0.25rem;
   }
 
-  .icon-btn {
-    width: 34px;
-    height: 34px;
-    font-size: 0.95rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .stage-capsule {
-    display: none; /* Hide stage capsule to make room for timer & buttons on narrow phones */
+  .guide-footer {
+    font-size: 0.65rem;
+    padding-top: 0.5rem;
   }
 
-  .mode-tabs {
-    flex-direction: column;
-    gap: 0.4rem;
+  /* Mobile Music Suite Modal */
+  .music-modal {
+    max-height: 92dvh;
+  }
+
+  .music-content-card {
+    padding: 0.9rem;
+  }
+
+  .music-now-playing {
+    padding: 0.65rem;
+    gap: 0.7rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .track-label {
+    font-size: 0.55rem;
+  }
+
+  .track-name {
+    font-size: 0.9rem;
+    max-width: 200px;
+  }
+
+  .upload-dropzone {
+    padding: 0.9rem 0.5rem;
+  }
+
+  .upload-icon {
+    font-size: 1.4rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .upload-title {
+    font-size: 0.75rem;
+  }
+
+  .upload-hint {
+    font-size: 0.65rem;
+  }
+
+  .music-controls-row {
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .play-toggle-btn,
+  .sample-btn {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.75rem;
+  }
+
+  /* Mobile Animated Cutscene Modal */
+  .cutscene-modal {
+    padding: 0.9rem;
+    max-height: 94dvh;
+  }
+
+  .cs-kicker {
+    font-size: 0.6rem;
+  }
+
+  .cs-title {
+    font-size: 1.15rem;
+  }
+
+  .cutscene-stage-art {
+    min-height: 120px;
+    padding: 0.4rem;
+    margin: 0.7rem 0;
+  }
+
+  #cutscene-canvas {
+    max-width: 100%;
+  }
+
+  .cutscene-dialogue {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    padding: 0.8rem;
+    margin-bottom: 0.8rem;
+    max-height: 22dvh;
+    overflow-y: auto;
+  }
+
+  .cutscene-controls {
+    gap: 0.5rem;
+  }
+
+  .cutscene-controls .cyber-btn {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  /* Mobile Victory Modal */
+  .victory-modal {
+    padding: 1.1rem 0.8rem;
+  }
+
+  .victory-kicker {
+    font-size: 0.65rem;
+  }
+
+  .victory-title {
+    font-size: 1.6rem;
+    margin: 0.2rem 0 0.4rem;
+  }
+
+  .victory-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.8rem;
+    margin-bottom: 0.9rem;
   }
 
   .victory-stats-grid {
-    grid-template-columns: 1fr;
-    gap: 0.6rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+  }
+
+  .v-card {
+    padding: 0.5rem 0.3rem;
+  }
+
+  .v-label {
+    font-size: 0.55rem;
+  }
+
+  .v-val {
+    font-size: 1rem;
+  }
+
+  .victory-actions {
+    gap: 0.5rem;
+  }
+
+  .victory-actions .cyber-btn {
+    padding: 0.75rem 0.4rem;
+    font-size: 0.8rem;
   }
 }
+
+/* Extra Compact for Tiny Phone Screens (<380px) */
+@media (max-width: 380px) {
+  .stage-capsule {
+    display: none;
+  }
+  .timer-capsule {
+    border-left: none;
+    padding: 0.2rem 0.4rem;
+  }
+  .stats-capsule {
+    border-left: none;
+    padding: 0.2rem 0.4rem;
+  }
+  .icon-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+}
+
 
