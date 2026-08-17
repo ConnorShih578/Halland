@@ -349,9 +349,7 @@ class GameEngine {
     // Keyboard Pause Shortcuts (ESC / P)
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Escape' || e.code === 'KeyP') {
-        if (this.isPlaying) {
-          this.togglePause();
-        }
+        this.togglePause();
       }
     });
 
@@ -366,8 +364,21 @@ class GameEngine {
   }
 
   pauseGame() {
-    if (!this.player) return;
     this.isPaused = true;
+    if (this.input) {
+      this.input.keys = {};
+      this.input.actionQueue = [];
+      this.input.moveX = 0;
+      this.input.moveY = 0;
+      this.input.isBlocking = false;
+      this.input.jumpPressed = false;
+      this.input.leftStickActive = false;
+      this.input.isRightTouching = false;
+    }
+    if (this.player) {
+      this.player.vx = 0;
+      this.player.vy = 0;
+    }
     const pauseModal = document.getElementById('pause-screen');
     if (pauseModal) {
       const missionEl = document.getElementById('pause-mission-name');
@@ -383,6 +394,12 @@ class GameEngine {
 
   resumeGame() {
     this.isPaused = false;
+    if (this.input) {
+      this.input.keys = {};
+      this.input.actionQueue = [];
+      this.input.moveX = 0;
+      this.input.moveY = 0;
+    }
     const pauseModal = document.getElementById('pause-screen');
     if (pauseModal) pauseModal.classList.add('hidden');
     this.lastFrameTime = performance.now();
@@ -661,6 +678,14 @@ class GameEngine {
     ctx.restore();
 
     this.input.draw(ctx, w, h);
+
+    // Canvas Pause Backdrop & Indicator
+    if (this.isPaused) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(5, 7, 10, 0.65)';
+      ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+    }
   }
 
   drawBackground(ctx, camX, camY) {
