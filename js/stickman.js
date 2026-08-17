@@ -470,49 +470,6 @@ class StickmanRenderer {
 
     this.computeDynamicPose(player, 0.016);
 
-    // Dynamic Ghost Strike After-Images for high velocity combat strikes
-    const isHighVelocityStrike = [
-      'JAB', 'STRAIGHT_PUNCH', 'SNAP_KICK', 'SPIN_BACKFIST', 'SPIN_HEEL_KICK',
-      'FLYING_TORNADO_KICK', 'DRAGON_UPPERCUT', 'WEB_ZIP', 'DIVING_PUNCH'
-    ].includes(state);
-
-    if (isHighVelocityStrike) {
-      this.ghostTrails.push({
-        x, y,
-        spine: JSON.parse(JSON.stringify(this.spine)),
-        effectors: JSON.parse(JSON.stringify(this.effectors)),
-        facing,
-        alpha: 0.55,
-        color: state === 'DRAGON_UPPERCUT' ? '#f59e0b' : '#38bdf8'
-      });
-      if (this.ghostTrails.length > 5) this.ghostTrails.shift();
-    }
-
-    // Render fading ghost after-images behind player
-    for (let i = this.ghostTrails.length - 1; i >= 0; i--) {
-      const g = this.ghostTrails[i];
-      g.alpha -= 0.08;
-      if (g.alpha <= 0) {
-        this.ghostTrails.splice(i, 1);
-        continue;
-      }
-      ctx.save();
-      ctx.translate(g.x, g.y);
-      ctx.globalAlpha = g.alpha * 0.45;
-      ctx.strokeStyle = g.color;
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(g.spine.hips.x, g.spine.hips.y);
-      ctx.lineTo(g.spine.chest.x, g.spine.chest.y);
-      ctx.lineTo(g.spine.head.x, g.spine.head.y);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(g.spine.head.x, g.spine.head.y, this.headRadius, 0, Math.PI * 2);
-      ctx.fillStyle = g.color;
-      ctx.fill();
-      ctx.restore();
-    }
-
     ctx.translate(x, y);
 
     if (Math.abs(this.rotation) > 0.01) {
@@ -599,9 +556,7 @@ class StickmanRenderer {
     if (state === 'WEB_ZIP') {
       ctx.save();
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2.4;
-      ctx.shadowColor = '#ffffff';
-      ctx.shadowBlur = 8;
+      ctx.lineWidth = 2.0;
       ctx.beginPath();
       ctx.moveTo(eff.rightHand.x, eff.rightHand.y);
       ctx.lineTo(eff.rightHand.x + facing * 2, eff.rightHand.y - 140);
@@ -609,44 +564,10 @@ class StickmanRenderer {
       ctx.restore();
     }
 
-    // 10. Martial Arts Slash Crescent Arcs & Kinetic Swooshes
-    const isKick = ['SNAP_KICK', 'FLYING_TORNADO_KICK', 'SPIN_HEEL_KICK', 'SPIN_SWEEP'].includes(state);
-    const isPunch = ['STRAIGHT_PUNCH', 'DRAGON_UPPERCUT', 'SPIN_BACKFIST'].includes(state);
-
-    if (isKick || isPunch) {
-      ctx.save();
-      const slashColor = state === 'DRAGON_UPPERCUT' ? '#f59e0b' : isKick ? '#38bdf8' : '#ef4444';
-      ctx.strokeStyle = slashColor;
-      ctx.shadowColor = slashColor;
-      ctx.shadowBlur = 14;
-      ctx.lineWidth = 3.2;
-      ctx.lineCap = 'round';
-
-      if (isKick) {
-        ctx.beginPath();
-        const arcCenterX = state === 'SPIN_HEEL_KICK' ? -facing * 10 : facing * 12;
-        const startAng = facing > 0 ? -Math.PI * 0.4 : Math.PI * 0.6;
-        const endAng = facing > 0 ? Math.PI * 0.3 : Math.PI * 1.3;
-        ctx.arc(arcCenterX, -28, 28, startAng, endAng, facing < 0);
-        ctx.stroke();
-      } else if (state === 'DRAGON_UPPERCUT') {
-        ctx.beginPath();
-        ctx.moveTo(facing * 8, -10);
-        ctx.quadraticCurveTo(facing * 20, -50, facing * 16, -85);
-        ctx.stroke();
-      } else {
-        ctx.beginPath();
-        const punchX = state === 'SPIN_BACKFIST' ? -facing * 26 : facing * 28;
-        ctx.moveTo(punchX - facing * 14, -38);
-        ctx.lineTo(punchX + facing * 12, -38);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-
     ctx.restore();
 
     this.drawRibbons(ctx, beltColor || '#ffffff');
+  }
   }
 
   drawLimb(ctx, ik, color, outline, outerWidth, innerWidth) {

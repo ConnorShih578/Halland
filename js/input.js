@@ -465,8 +465,8 @@ class InputController {
       const origin = this.leftStickOrigin;
       const cur = this.leftStickCurrent;
 
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.arc(origin.x, origin.y, this.leftStickRadius, 0, Math.PI * 2);
       ctx.stroke();
@@ -478,11 +478,9 @@ class InputController {
       const knobX = origin.x + Math.cos(angle) * dist;
       const knobY = origin.y + Math.sin(angle) * dist;
 
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.8)';
-      ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 12;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
       ctx.beginPath();
-      ctx.arc(knobX, knobY, 22, 0, Math.PI * 2);
+      ctx.arc(knobX, knobY, 20, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }

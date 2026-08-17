@@ -488,75 +488,45 @@ class CombatSystem {
       if (window.Audio) window.Audio.play(damage >= 2 ? 'heavyHit' : 'hit');
       if (window.Haptics) window.Haptics.trigger(damage >= 2 ? 'heavyHit' : 'hit');
     }
-
-    this.comboCount++;
-    this.comboTimer = 3.0;
+     this.comboCount++;
+    this.comboTimer = 2.5;
     this.updateComboHUD();
 
     this.spawnImpactParticles(x, y, material, damage);
-
-    // Floating combat text popup
-    const popupText = damage >= 4 ? '🔥 DRAGON CRIT!' : damage >= 3 ? '⚡ TORNADO HIT!' : damage >= 2 ? '💥 CRIT 2x!' : `+${damage * 10}`;
-    const popupColor = damage >= 3 ? '#f59e0b' : damage >= 2 ? '#38bdf8' : '#ffffff';
-    this.particles.push({
-      x: x + (Math.random() * 20 - 10),
-      y: y - 15,
-      vx: (Math.random() * 2 - 1) * 0.8,
-      vy: -2.8,
-      isText: true,
-      text: popupText,
-      color: popupColor,
-      size: damage >= 3 ? 14 : 11,
-      life: 0.65,
-      maxLife: 0.65
-    });
   }
 
   spawnImpactParticles(x, y, material, damage) {
-    const count = damage >= 3 ? 24 : damage >= 2 ? 16 : 9;
+    const count = damage >= 3 ? 12 : damage >= 2 ? 8 : 5;
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 11 + 3;
-      const col = material === 'wood' ? '#f59e0b' : material === 'parry' ? '#38bdf8' : damage >= 3 ? '#fbbf24' : '#ef4444';
+      const speed = Math.random() * 6 + 2;
+      const col = material === 'wood' ? '#d97706' : material === 'parry' ? '#ffffff' : '#f87171';
       this.particles.push({
         x: x,
         y: y,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 2.5,
+        vy: Math.sin(angle) * speed - 1.5,
         color: col,
-        size: Math.random() * 4 + 2,
-        life: 0.45 + Math.random() * 0.25,
-        maxLife: 0.7
+        size: Math.random() * 2.5 + 1.5,
+        life: 0.28 + Math.random() * 0.15,
+        maxLife: 0.4
       });
     }
-
-    // Expanding shockwave impact ring
-    this.particles.push({
-      x: x,
-      y: y,
-      vx: 0,
-      vy: 0,
-      isRing: true,
-      radius: 4,
-      maxRadius: damage >= 3 ? 55 : 38,
-      color: material === 'parry' ? '#38bdf8' : damage >= 3 ? '#f59e0b' : '#ffffff',
-      life: 0.24,
-      maxLife: 0.24
-    });
-
-    // Starburst cross flares
-    this.particles.push({
-      x: x,
-      y: y,
-      vx: 0,
-      vy: 0,
-      isStarburst: true,
-      size: damage >= 3 ? 32 : 22,
-      color: '#ffffff',
-      life: 0.16,
-      maxLife: 0.16
-    });
   }
+
+  draw(ctx) {
+    // Render clean, crisp physical impact particles
+    for (const p of this.particles) {
+      const tNorm = Math.max(0, p.life / (p.maxLife || 0.4));
+      ctx.save();
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = tNorm * 0.85;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * tNorm, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  };
 
   updateComboHUD() {
     const el = document.getElementById('combo-display');
