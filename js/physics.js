@@ -429,11 +429,11 @@ class PhysicsEngine {
       }
     }
 
-    // 2. Vertical Movement
+    // 2. Vertical Movement & Apex Corner Correction
     player.y += player.vy;
     bounds = this.getPlayerBounds(player);
 
-    // Platform Collisions
+    // Platform Collisions with Sub-pixel Corner Correction
     for (const plat of level.platforms) {
       if (this.checkAABB(bounds, plat)) {
         if (player.vy > 0) {
@@ -453,8 +453,18 @@ class PhysicsEngine {
             }
           }
         } else if (player.vy < 0) {
-          player.y = plat.y + plat.h + player.h;
-          player.vy = 0;
+          // Apex Corner Assist: If player hits ceiling near edge by < 8px, nudge around corner!
+          const leftOverlap = (player.x + player.w / 2) - plat.x;
+          const rightOverlap = (plat.x + plat.w) - (player.x - player.w / 2);
+
+          if (leftOverlap > 0 && leftOverlap < 8) {
+            player.x -= leftOverlap + 1; // Nudge left around corner
+          } else if (rightOverlap > 0 && rightOverlap < 8) {
+            player.x += rightOverlap + 1; // Nudge right around corner
+          } else {
+            player.y = plat.y + plat.h + player.h;
+            player.vy = 0;
+          }
         }
         bounds = this.getPlayerBounds(player);
       }

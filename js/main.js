@@ -518,23 +518,19 @@ class GameEngine {
 
   updateCamera(dt) {
     const p = this.player;
-    const playerCenterY = p.y - 28;
+    if (!p) return;
 
-    const deadzoneX = 75;
-    const deadzoneY = 60;
+    const lookAheadX = p.facing * Math.min(90, Math.abs(p.vx) * 11);
+    const verticalLead = p.vy > 4 ? 35 : p.vy < -4 ? -25 : 0;
 
-    const dx = p.x - this.camera.x;
-    const dy = playerCenterY - this.camera.y;
+    const targetX = p.x + lookAheadX;
+    const targetY = (p.y - 28) + verticalLead;
 
-    if (Math.abs(dx) > deadzoneX) {
-      const excessX = dx - Math.sign(dx) * deadzoneX;
-      this.camera.x += excessX * (1 - Math.exp(-4.8 * dt));
-    }
+    const lerpSpeedX = 6.2;
+    const lerpSpeedY = 5.2;
 
-    if (Math.abs(dy) > deadzoneY) {
-      const excessY = dy - Math.sign(dy) * deadzoneY;
-      this.camera.y += excessY * (1 - Math.exp(-4.2 * dt));
-    }
+    this.camera.x += (targetX - this.camera.x) * (1 - Math.exp(-lerpSpeedX * dt));
+    this.camera.y += (targetY - this.camera.y) * (1 - Math.exp(-lerpSpeedY * dt));
   }
 
   updateHUDTimer() {

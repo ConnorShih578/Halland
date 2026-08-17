@@ -34,6 +34,8 @@ class StickmanRenderer {
 
     this.hair = Array.from({ length: 6 }, () => ({ x: 0, y: 0, oldX: 0, oldY: 0 }));
     this.belt = Array.from({ length: 5 }, () => ({ x: 0, y: 0, oldX: 0, oldY: 0 }));
+    this.ghostTrails = [];
+    this.landingSquash = 0;
     this.initializedRibbons = false;
   }
 
@@ -60,7 +62,7 @@ class StickmanRenderer {
     return { root, joint, end: target };
   }
 
-  springDamper(current, target, k = 460, d = 34, dt = 0.016) {
+  springDamper(current, target, k = 620, d = 42, dt = 0.016) {
     const fx = (target.x - current.x) * k - current.vx * d;
     const fy = (target.y - current.y) * k - current.vy * d;
     current.vx += fx * dt;
@@ -467,6 +469,49 @@ class StickmanRenderer {
     const { x, y, facing, beltColor, vx, vy, state } = player;
 
     this.computeDynamicPose(player, 0.016);
+
+    // Dynamic Ghost Strike After-Images for high velocity combat strikes
+    const isHighVelocityStrike = [
+      'JAB', 'STRAIGHT_PUNCH', 'SNAP_KICK', 'SPIN_BACKFIST', 'SPIN_HEEL_KICK',
+      'FLYING_TORNADO_KICK', 'DRAGON_UPPERCUT', 'WEB_ZIP', 'DIVING_PUNCH'
+    ].includes(state);
+
+    if (isHighVelocityStrike) {
+      this.ghostTrails.push({
+        x, y,
+        spine: JSON.parse(JSON.stringify(this.spine)),
+        effectors: JSON.parse(JSON.stringify(this.effectors)),
+        facing,
+        alpha: 0.55,
+        color: state === 'DRAGON_UPPERCUT' ? '#f59e0b' : '#38bdf8'
+      });
+      if (this.ghostTrails.length > 5) this.ghostTrails.shift();
+    }
+
+    // Render fading ghost after-images behind player
+    for (let i = this.ghostTrails.length - 1; i >= 0; i--) {
+      const g = this.ghostTrails[i];
+      g.alpha -= 0.08;
+      if (g.alpha <= 0) {
+        this.ghostTrails.splice(i, 1);
+        continue;
+      }
+      ctx.save();
+      ctx.translate(g.x, g.y);
+      ctx.globalAlpha = g.alpha * 0.45;
+      ctx.strokeStyle = g.color;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(g.spine.hips.x, g.spine.hips.y);
+      ctx.lineTo(g.spine.chest.x, g.spine.chest.y);
+      ctx.lineTo(g.spine.head.x, g.spine.head.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(g.spine.head.x, g.spine.head.y, this.headRadius, 0, Math.PI * 2);
+      ctx.fillStyle = g.color;
+      ctx.fill();
+      ctx.restore();
+    }
 
     ctx.translate(x, y);
 
