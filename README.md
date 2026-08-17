@@ -1,7 +1,7 @@
 # 🥋 HALLAND: Cyber-Karate Stickman Parkour
 
 [![Platform](https://img.shields.io/badge/platform-HTML5%20Canvas%20%7C%20Web%20Audio-red.svg)](https://github.com/ConnorShih578/Halland)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 [![Size](https://img.shields.io/badge/bundle%20size-227%20KB-brightgreen.svg)]()
 
 A hyper-responsive, buttery-smooth 2D martial arts parkour platformer starring **Halland** — a Spider-Man superhero meets Erling Haaland martial arts stickman in a high-octane neon dojo saga.
@@ -67,4 +67,5 @@ Open `http://localhost:8085` in your browser.
 ---
 
 ## 📄 License
-This project is open source and available under the [MIT License](LICENSE).
+This project is licensed under the **[Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/)**.
+
