@@ -16,6 +16,9 @@
     <!-- Game Canvas -->
     <canvas id="game-canvas"></canvas>
 
+    <!-- Damage Red Vignette Screen Flash -->
+    <div id="damage-flash" class="damage-flash-overlay"></div>
+
     <!-- Native BGM Audio Player Element -->
     <audio id="bgm-player" loop preload="auto"></audio>
 
@@ -33,6 +36,16 @@
     <!-- UI Overlay / HUD -->
     <div id="hud">
       <div class="hud-top">
+        <div class="cyber-capsule health-capsule">
+          <div class="health-top-row">
+            <span class="capsule-tag">HALLAND HP</span>
+            <span id="hud-hp-text" class="capsule-val mono">100 / 100</span>
+          </div>
+          <div class="health-track">
+            <div id="hud-hp-bar" class="health-fill" style="width: 100%;"></div>
+          </div>
+        </div>
+
         <div class="cyber-capsule stage-capsule">
           <div class="capsule-tag">MISSION</div>
           <span id="hud-stage-name" class="capsule-val">ACT 1: DOJO SHOWDOWN</span>

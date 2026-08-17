@@ -46,6 +46,13 @@ class PhysicsEngine {
       stateTime: 0,
       stateDuration: 0,
       beltColor: '#ffffff',
+      comboStep: 0,
+      comboChainTimer: 0,
+
+      // Health System for Halland
+      hp: 100,
+      maxHp: 100,
+      invulnerableTimer: 0,
 
       // Timers & Web Zip (1x per jump)
       coyoteTimer: 0,
@@ -187,7 +194,21 @@ class PhysicsEngine {
     // 8. Update Animation State Transitions
     this.updateAnimationStates(player, input);
 
-    // 9. Check Level Hazards & Triggers
+    // 9. Update Timers & Health HUD
+    if (player.invulnerableTimer > 0) player.invulnerableTimer -= dt;
+    if (player.comboChainTimer > 0) player.comboChainTimer -= dt;
+
+    const hpBar = document.getElementById('hud-hp-bar');
+    const hpText = document.getElementById('hud-hp-text');
+    if (hpBar) {
+      const pct = Math.max(0, Math.min(100, (player.hp / player.maxHp) * 100));
+      hpBar.style.width = `${pct}%`;
+    }
+    if (hpText) {
+      hpText.textContent = `${Math.max(0, Math.round(player.hp))} / ${player.maxHp}`;
+    }
+
+    // 10. Check Level Hazards & Triggers
     this.checkLevelInteractions(player, level);
   }
 
@@ -209,22 +230,48 @@ class PhysicsEngine {
       // ==========================================
       switch (action) {
         case 'TAP': {
+          // Automatic Combo Chain Progression (6-hit Forward / 3-hit Reverse)
+          if (player.comboChainTimer <= 0) {
+            player.comboStep = 0;
+          }
+
           if (isBehind) {
-            // Target is behind: smooth spinning reverse strike!
-            const reverseCombos = ['SPIN_BACKFIST', 'SPIN_HEEL_KICK'];
-            input.comboStep = (input.comboStep + 1) % reverseCombos.length;
-            player.state = reverseCombos[input.comboStep];
+            // Target is behind: automatic spinning reverse strike sequence
+            const reverseCombos = [
+              { state: 'SPIN_BACKFIST', dur: 0.20, sound: 'jab' },
+              { state: 'SPIN_HEEL_KICK', dur: 0.22, sound: 'kick' },
+              { state: 'SPIN_SWEEP', dur: 0.28, sound: 'sweep' }
+            ];
+            const move = reverseCombos[player.comboStep % reverseCombos.length];
+            player.state = move.state;
             player.stateTime = 0;
-            player.stateDuration = 0.24;
-            if (window.Audio) window.Audio.play('kick');
+            player.stateDuration = move.dur;
+            player.comboStep = (player.comboStep + 1) % reverseCombos.length;
+            player.comboChainTimer = 0.55; // Chain buffer window
+            if (window.Audio) window.Audio.play(move.sound);
           } else {
-            // Forward combo
-            const comboMoves = ['JAB', 'SNAP_KICK', 'STRAIGHT_PUNCH'];
-            input.comboStep = (input.comboStep + 1) % comboMoves.length;
-            player.state = comboMoves[input.comboStep];
+            // Forward: 6-hit automatic martial arts combo chain!
+            const forwardCombos = [
+              { state: 'JAB', dur: 0.16, sound: 'jab', lunge: 3.5 },
+              { state: 'STRAIGHT_PUNCH', dur: 0.18, sound: 'jab', lunge: 4.8 },
+              { state: 'SNAP_KICK', dur: 0.20, sound: 'kick', lunge: 5.5 },
+              { state: 'SPIN_BACKFIST', dur: 0.22, sound: 'jab', lunge: 6.0 },
+              { state: 'FLYING_TORNADO_KICK', dur: 0.26, sound: 'kick', lunge: 7.5 },
+              { state: 'DRAGON_UPPERCUT', dur: 0.30, sound: 'wallKick', lunge: 9.0 }
+            ];
+            const move = forwardCombos[player.comboStep % forwardCombos.length];
+            player.state = move.state;
             player.stateTime = 0;
-            player.stateDuration = 0.20;
-            if (window.Audio) window.Audio.play(player.state === 'SNAP_KICK' ? 'kick' : 'jab');
+            player.stateDuration = move.dur;
+            player.vx = player.facing * move.lunge;
+            player.comboStep = (player.comboStep + 1) % forwardCombos.length;
+            player.comboChainTimer = 0.60; // Generous combo buffer window
+
+            if (move.state === 'DRAGON_UPPERCUT') {
+              player.vy = -6.5; // Uppercut launch
+            }
+
+            if (window.Audio) window.Audio.play(move.sound);
           }
           break;
         }
@@ -519,6 +566,14 @@ class PhysicsEngine {
 
     player.isDead = true;
     player.deaths++;
+    player.hp = 0;
+
+    // Trigger red screen damage flash
+    const flashEl = document.getElementById('damage-flash');
+    if (flashEl) {
+      flashEl.classList.add('flash');
+      setTimeout(() => flashEl.classList.remove('flash'), 300);
+    }
 
     if (window.Audio) window.Audio.play('death');
     if (window.Haptics) window.Haptics.trigger('death');
@@ -531,6 +586,8 @@ class PhysicsEngine {
       player.y = player.spawnY;
       player.vx = 0;
       player.vy = 0;
+      player.hp = player.maxHp;
+      player.invulnerableTimer = 1.0; // 1s grace period on respawn
       player.state = 'IDLE';
       player.stateTime = 0;
       player.isDead = false;

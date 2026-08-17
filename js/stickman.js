@@ -351,6 +351,34 @@ class StickmanRenderer {
         break;
       }
 
+      case 'FLYING_TORNADO_KICK': {
+        // Acrobatic mid-air 360° spinning tornado kick
+        const spin = Math.sin(t * Math.PI);
+        targetSpine.head.y = -58 - spin * 8;
+        targetSpine.chest.y = -44 - spin * 6;
+        targetSpine.hips.y = -32 - spin * 4;
+
+        targetRightFoot = { x: facing * (16 + spin * 26), y: -48 };
+        targetLeftFoot = { x: -facing * 14, y: -18 };
+        targetLeftHand = { x: -facing * 16, y: -40 };
+        targetRightHand = { x: facing * 12, y: -30 };
+        break;
+      }
+
+      case 'DRAGON_UPPERCUT': {
+        // Blazing Ascending Dragon Uppercut
+        const rise = Math.sin(t * Math.PI);
+        targetSpine.head.y = -62 - rise * 14;
+        targetSpine.chest.y = -48 - rise * 10;
+        targetSpine.hips.y = -32 - rise * 6;
+
+        targetRightHand = { x: facing * 18, y: -72 - rise * 18 }; // Skyward fist
+        targetLeftHand = { x: -facing * 10, y: -36 };
+        targetLeftFoot = { x: -facing * 8, y: -10 };
+        targetRightFoot = { x: facing * 6, y: -18 };
+        break;
+      }
+
       case 'WEB_ZIP': {
         const rise = Math.sin(t * Math.PI);
         targetSpine.head.y = -56 - rise * 6;

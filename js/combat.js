@@ -131,6 +131,7 @@ class CombatSystem {
     const attacks = [
       'JAB', 'SNAP_KICK', 'STRAIGHT_PUNCH', 'SLIDE_SWEEP', 'WEB_ZIP',
       'SPIN_BACKFIST', 'SPIN_HEEL_KICK', 'SPIN_SWEEP',
+      'FLYING_TORNADO_KICK', 'DRAGON_UPPERCUT',
       'CANNONBALL', 'DIVING_PUNCH', 'BODY_SLAM'
     ];
     return attacks.includes(player.state);
@@ -162,6 +163,12 @@ class CombatSystem {
         // Sweeps both front and behind!
         hb = { x: x - 45, y: y - 24, w: 90, h: 24, damage: 2, type: 'sweep', smashWood: true };
         break;
+      case 'FLYING_TORNADO_KICK':
+        hb = { x: x + (facing > 0 ? 4 : -60), y: y - 58, w: 56, h: 42, damage: 3, type: 'heavy', smashWood: true };
+        break;
+      case 'DRAGON_UPPERCUT':
+        hb = { x: x + (facing > 0 ? 8 : -52), y: y - 76, w: 44, h: 62, damage: 4, type: 'launch', smashWood: true };
+        break;
       case 'SLIDE_SWEEP':
         hb = { x: x + (facing > 0 ? -4 : -46), y: y - 24, w: 52, h: 24, damage: 2, type: 'sweep', smashWood: true };
         break;
@@ -183,7 +190,7 @@ class CombatSystem {
   }
 
   // -----------------------------------------------------------
-  // INTELLIGENT OPPONENT AI
+  // HARDCORE AGGRESSIVE OPPONENT AI
   // -----------------------------------------------------------
   updateOpponentAI(dt, player, entities, level) {
     if (!entities || player.isDead) return;
@@ -194,13 +201,16 @@ class CombatSystem {
       // Initialize AI properties if not present
       if (!ent.aiState) {
         ent.aiState = 'PATROL';
-        ent.aiTimer = Math.random() * 2;
+        ent.aiTimer = Math.random() * 1.5;
         ent.facing = -1;
         ent.vx = 0;
         ent.vy = 0;
         ent.stunTimer = 0;
         ent.windupTimer = 0;
+        ent.dodgeCooldown = 0;
       }
+
+      if (ent.dodgeCooldown > 0) ent.dodgeCooldown -= dt;
 
       // 1. Handle Stun / Hit Recovery
       if (ent.stunTimer > 0) {
@@ -214,43 +224,70 @@ class CombatSystem {
       const dist = Math.hypot(dx, dy);
 
       // Face the player when engaged
-      if (dist < 260) {
+      if (dist < 320) {
         ent.facing = dx > 0 ? 1 : -1;
       }
 
-      // 2. AI State Machine
+      // 2. Tactical Dodge Reaction: If player strikes nearby, agile bots can backstep!
+      if (this.isAttackActive(player) && dist < 75 && ent.dodgeCooldown <= 0 && ent.aiState === 'CHASE') {
+        if (Math.random() < (ent.type === 'ninja' ? 0.45 : 0.28)) {
+          ent.aiState = 'DODGE';
+          ent.dodgeTimer = 0.20;
+          ent.dodgeCooldown = 2.0;
+          ent.vx = -ent.facing * 8.5; // Rapid evasive backstep
+          continue;
+        }
+      }
+
+      // 3. AI State Machine
       switch (ent.aiState) {
         case 'PATROL':
         case 'STUNNED': {
-          if (dist < 240 && Math.abs(dy) < 80) {
+          if (dist < 280 && Math.abs(dy) < 90) {
             ent.aiState = 'CHASE';
           } else {
-            // Casual patrol
+            // Aggressive patrol
             ent.aiTimer -= dt;
             if (ent.aiTimer <= 0) {
               ent.facing = -ent.facing;
-              ent.aiTimer = 2.0 + Math.random() * 2;
+              ent.aiTimer = 1.2 + Math.random() * 1.5;
             }
-            ent.vx = ent.facing * 1.5;
+            ent.vx = ent.facing * 2.2;
+          }
+          break;
+        }
+
+        case 'DODGE': {
+          ent.dodgeTimer -= dt;
+          if (ent.dodgeTimer <= 0) {
+            // Immediately counter-attack out of dodge!
+            ent.aiState = 'WINDUP';
+            ent.windupTimer = 0.16;
+            ent.vx = 0;
           }
           break;
         }
 
         case 'CHASE': {
-          const attackRange = ent.type === 'boss' ? 55 : 45;
+          const attackRange = ent.type === 'boss' ? 65 : ent.type === 'ninja' ? 55 : 48;
 
-          if (dist > 300 || Math.abs(dy) > 100) {
+          if (dist > 350 || Math.abs(dy) > 120) {
             ent.aiState = 'PATROL';
             ent.vx = 0;
           } else if (dist <= attackRange) {
-            // Enter Windup for telegraphed attack
+            // Fast telegraphed windup for lethal strike
             ent.aiState = 'WINDUP';
-            ent.windupTimer = ent.type === 'boss' ? 0.30 : 0.38; // Telegraphed wind-up
+            ent.windupTimer = ent.type === 'ninja' ? 0.18 : ent.type === 'boss' ? 0.22 : 0.25;
             ent.vx = 0;
           } else {
-            // Approach player smoothly
-            const speed = ent.type === 'ninja' ? 3.8 : ent.type === 'boss' ? 4.2 : 2.8;
+            // High speed pursuit
+            const speed = ent.type === 'ninja' ? 5.2 : ent.type === 'boss' ? 4.8 : ent.type === 'kicker' ? 4.2 : 3.6;
             ent.vx = ent.facing * speed;
+
+            // Leap lunge if player is slightly elevated
+            if (dy < -25 && dist < 120 && Math.random() < 0.05) {
+              ent.vy = -6.5;
+            }
           }
           break;
         }
@@ -262,8 +299,9 @@ class CombatSystem {
           // Windup complete -> Execute Strike!
           if (ent.windupTimer <= 0) {
             ent.aiState = 'ATTACK';
-            ent.attackTimer = 0.22;
-            ent.vx = ent.facing * (ent.type === 'kicker' ? 7.0 : 5.0);
+            ent.attackTimer = 0.24;
+            const lungeSpeed = ent.type === 'kicker' ? 9.0 : ent.type === 'boss' ? 8.5 : 7.2;
+            ent.vx = ent.facing * lungeSpeed;
 
             if (window.Audio) window.Audio.play('kick');
           }
@@ -275,10 +313,10 @@ class CombatSystem {
 
           // Check if enemy attack connects with player
           const entHitbox = {
-            x: ent.x + (ent.facing > 0 ? 0 : -40),
-            y: ent.y - ent.h + 10,
-            w: 40,
-            h: ent.h - 10
+            x: ent.x + (ent.facing > 0 ? 0 : -45),
+            y: ent.y - ent.h + 8,
+            w: 45,
+            h: ent.h - 8
           };
 
           const playerBounds = {
@@ -292,7 +330,7 @@ class CombatSystem {
             // Check if player is blocking -> PERFECT PARRY!
             if (player.state === 'BLOCK' || player.state === 'AIR_BLOCK') {
               this.triggerPerfectParry(player, ent);
-            } else if (!player.isDead && !player.invulnerable) {
+            } else if (!player.isDead && player.invulnerableTimer <= 0) {
               // Enemy hits player!
               this.damagePlayer(player, ent);
             }
@@ -308,32 +346,51 @@ class CombatSystem {
   }
 
   triggerPerfectParry(player, ent) {
-    // Stun the enemy for 1.2s
-    ent.stunTimer = 1.2;
+    // Stun the enemy for 1.4s
+    ent.stunTimer = 1.4;
     ent.aiState = 'STUNNED';
-    ent.vx = -ent.facing * 4;
+    ent.vx = -ent.facing * 5;
 
-    this.hitStopTimer = 0.08;
-    this.screenShake = { x: 0, y: 0, intensity: 7, duration: 0.18 };
+    this.hitStopTimer = 0.10;
+    this.screenShake = { x: 0, y: 0, intensity: 8, duration: 0.20 };
 
     if (window.Audio) window.Audio.play('wallKick');
     if (window.Haptics) window.Haptics.trigger('parry');
 
-    this.announceAction('PERFECT PARRY! ENEMY STUNNED!');
-    this.spawnImpactParticles(ent.x, ent.y - 30, 'parry', 2);
+    this.announceAction('⚡ PERFECT PARRY! ENEMY STUNNED! (2x CRIT)');
+    this.spawnImpactParticles(ent.x, ent.y - 30, 'parry', 3);
   }
 
   damagePlayer(player, ent) {
-    // Knock player back
-    player.vx = ent.facing * 8.5;
-    player.vy = -6.0;
+    if (player.isDead || player.invulnerableTimer > 0) return;
+
+    // Calculate damage based on enemy threat level
+    const dmg = ent.isGiantLeBrown ? 30 : ent.type === 'boss' ? 25 : ent.type === 'ninja' ? 18 : 14;
+    player.hp = Math.max(0, player.hp - dmg);
+    player.invulnerableTimer = 0.50; // Invulnerability window
+
+    // Red damage vignette screen flash
+    const flashEl = document.getElementById('damage-flash');
+    if (flashEl) {
+      flashEl.classList.add('flash');
+      setTimeout(() => flashEl.classList.remove('flash'), 180);
+    }
+
+    // Knock player back with impact
+    player.vx = ent.facing * 9.0;
+    player.vy = -6.5;
     player.isGrounded = false;
 
     if (window.Audio) window.Audio.play('hit');
     if (window.Haptics) window.Haptics.trigger('hit');
 
-    this.screenShake = { x: 0, y: 0, intensity: 6, duration: 0.15 };
-    this.announceAction('HIT BY ' + ent.name.toUpperCase() + '!');
+    this.screenShake = { x: 0, y: 0, intensity: 8, duration: 0.22 };
+    this.announceAction(`⚠️ HIT BY ${ent.name.toUpperCase()}! (-${dmg} HP)`);
+
+    // Check if player's HP reached 0
+    if (player.hp <= 0 && window.Game && window.Game.physics) {
+      window.Game.physics.killPlayer(player, `Defeated by ${ent.name}`);
+    }
   }
 
   getEntityBounds(ent) {
