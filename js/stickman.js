@@ -552,7 +552,10 @@ class StickmanRenderer {
     ctx.fillStyle = beltColor || '#ffffff';
     ctx.fillRect(spine.hips.x - 5, spine.hips.y - 3, 10, 6);
 
-    // 9. Spider-Web Line when executing WEB_ZIP
+    // 9. Floating Overhead Health Bar directly above Halland
+    this.drawOverheadHealth(ctx, player);
+
+    // 10. Spider-Web Line when executing WEB_ZIP
     if (state === 'WEB_ZIP') {
       ctx.save();
       ctx.strokeStyle = '#ffffff';
@@ -622,6 +625,32 @@ class StickmanRenderer {
     ctx.lineTo(joint.x, joint.y);
     ctx.lineTo(end.x, end.y);
     ctx.stroke();
+  }
+
+  drawOverheadHealth(ctx, player) {
+    if (!player || player.isDead) return;
+    const barW = 34;
+    const barH = 5;
+    const x = -barW / 2;
+    const y = -66;
+
+    // Dark background pill
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.fillRect(x - 1, y - 1, barW + 2, barH + 2);
+
+    // Health Fill
+    const maxHp = player.maxHp || 100;
+    const curHp = Math.max(0, Math.min(maxHp, player.hp));
+    const pct = curHp / maxHp;
+
+    const hpColor = pct > 0.5 ? '#10b981' : pct > 0.25 ? '#f59e0b' : '#ef4444';
+    ctx.fillStyle = hpColor;
+    ctx.fillRect(x, y, barW * pct, barH);
+
+    // Border
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x - 1, y - 1, barW + 2, barH + 2);
   }
 
   drawSpiderEyes(ctx, hx, hy, facing) {

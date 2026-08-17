@@ -366,15 +366,15 @@ class GameEngine {
   }
 
   pauseGame() {
-    if (!this.isPlaying) return;
+    if (!this.player) return;
     this.isPaused = true;
     const pauseModal = document.getElementById('pause-screen');
     if (pauseModal) {
       const missionEl = document.getElementById('pause-mission-name');
       const timerEl = document.getElementById('pause-timer');
       const deathsEl = document.getElementById('pause-deaths');
-      if (missionEl) missionEl.textContent = this.isEndlessMode ? `INFINITE (${this.distanceTraveled}m)` : `ACT ${this.currentStageIndex + 1}`;
-      if (timerEl) timerEl.textContent = this.formatTime(this.stageTime);
+      if (missionEl) missionEl.textContent = this.isEndlessMode ? `INFINITE (${this.distanceTraveled || 0}m)` : `ACT ${(this.currentStageIndex || 0) + 1}`;
+      if (timerEl) timerEl.textContent = this.formatTime(this.stageTime || 0);
       if (deathsEl) deathsEl.textContent = this.player ? this.player.deaths : 0;
       pauseModal.classList.remove('hidden');
     }

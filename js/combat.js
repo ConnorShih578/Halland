@@ -269,24 +269,31 @@ class CombatSystem {
         }
 
         case 'CHASE': {
-          const attackRange = ent.type === 'boss' ? 65 : ent.type === 'ninja' ? 55 : 48;
+          const attackRange = ent.type === 'boss' ? 70 : ent.type === 'ninja' ? 60 : 52;
 
-          if (dist > 350 || Math.abs(dy) > 120) {
+          if (dist > 400 || Math.abs(dy) > 140) {
             ent.aiState = 'PATROL';
             ent.vx = 0;
+          } else if (dist <= 30 && Math.abs(dy) < 45 && !player.isDead && player.invulnerableTimer <= 0) {
+            // Immediate close-quarters strike!
+            if (player.state === 'BLOCK' || player.state === 'AIR_BLOCK') {
+              this.triggerPerfectParry(player, ent);
+            } else {
+              this.damagePlayer(player, ent);
+            }
           } else if (dist <= attackRange) {
             // Fast telegraphed windup for lethal strike
             ent.aiState = 'WINDUP';
-            ent.windupTimer = ent.type === 'ninja' ? 0.18 : ent.type === 'boss' ? 0.22 : 0.25;
+            ent.windupTimer = ent.type === 'ninja' ? 0.12 : ent.type === 'boss' ? 0.16 : 0.18;
             ent.vx = 0;
           } else {
             // High speed pursuit
-            const speed = ent.type === 'ninja' ? 5.2 : ent.type === 'boss' ? 4.8 : ent.type === 'kicker' ? 4.2 : 3.6;
+            const speed = ent.type === 'ninja' ? 5.5 : ent.type === 'boss' ? 5.0 : ent.type === 'kicker' ? 4.4 : 3.8;
             ent.vx = ent.facing * speed;
 
             // Leap lunge if player is slightly elevated
-            if (dy < -25 && dist < 120 && Math.random() < 0.05) {
-              ent.vy = -6.5;
+            if (dy < -20 && dist < 140 && Math.random() < 0.08) {
+              ent.vy = -7.5;
             }
           }
           break;
@@ -299,8 +306,8 @@ class CombatSystem {
           // Windup complete -> Execute Strike!
           if (ent.windupTimer <= 0) {
             ent.aiState = 'ATTACK';
-            ent.attackTimer = 0.24;
-            const lungeSpeed = ent.type === 'kicker' ? 9.0 : ent.type === 'boss' ? 8.5 : 7.2;
+            ent.attackTimer = 0.22;
+            const lungeSpeed = ent.type === 'kicker' ? 10.0 : ent.type === 'boss' ? 9.2 : 8.0;
             ent.vx = ent.facing * lungeSpeed;
 
             if (window.Audio) window.Audio.play('kick');
@@ -313,10 +320,10 @@ class CombatSystem {
 
           // Check if enemy attack connects with player
           const entHitbox = {
-            x: ent.x + (ent.facing > 0 ? 0 : -45),
-            y: ent.y - ent.h + 8,
-            w: 45,
-            h: ent.h - 8
+            x: ent.x + (ent.facing > 0 ? -10 : -55),
+            y: ent.y - ent.h,
+            w: 65,
+            h: ent.h
           };
 
           const playerBounds = {

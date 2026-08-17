@@ -761,12 +761,13 @@ body, html {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 95;
+  z-index: 1000;
   pointer-events: auto;
 }
 
 .controls-guide-overlay.hidden {
-  display: none;
+  display: none !important;
+  pointer-events: none !important;
 }
 
 .modal-title-wrap h2 {
