@@ -490,39 +490,71 @@ class CombatSystem {
     }
 
     this.comboCount++;
-    this.comboTimer = 2.5;
+    this.comboTimer = 3.0;
     this.updateComboHUD();
 
     this.spawnImpactParticles(x, y, material, damage);
+
+    // Floating combat text popup
+    const popupText = damage >= 4 ? '🔥 DRAGON CRIT!' : damage >= 3 ? '⚡ TORNADO HIT!' : damage >= 2 ? '💥 CRIT 2x!' : `+${damage * 10}`;
+    const popupColor = damage >= 3 ? '#f59e0b' : damage >= 2 ? '#38bdf8' : '#ffffff';
+    this.particles.push({
+      x: x + (Math.random() * 20 - 10),
+      y: y - 15,
+      vx: (Math.random() * 2 - 1) * 0.8,
+      vy: -2.8,
+      isText: true,
+      text: popupText,
+      color: popupColor,
+      size: damage >= 3 ? 14 : 11,
+      life: 0.65,
+      maxLife: 0.65
+    });
   }
 
   spawnImpactParticles(x, y, material, damage) {
-    const count = damage >= 2 ? 14 : 7;
+    const count = damage >= 3 ? 24 : damage >= 2 ? 16 : 9;
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 8 + 2;
+      const speed = Math.random() * 11 + 3;
+      const col = material === 'wood' ? '#f59e0b' : material === 'parry' ? '#38bdf8' : damage >= 3 ? '#fbbf24' : '#ef4444';
       this.particles.push({
         x: x,
         y: y,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 2,
-        color: material === 'wood' ? '#d97706' : material === 'parry' ? '#38bdf8' : '#ef4444',
-        size: Math.random() * 3 + 2,
-        life: 0.35 + Math.random() * 0.2
+        vy: Math.sin(angle) * speed - 2.5,
+        color: col,
+        size: Math.random() * 4 + 2,
+        life: 0.45 + Math.random() * 0.25,
+        maxLife: 0.7
       });
     }
 
+    // Expanding shockwave impact ring
     this.particles.push({
       x: x,
       y: y,
       vx: 0,
       vy: 0,
       isRing: true,
-      radius: 5,
-      maxRadius: damage >= 2 ? 35 : 20,
-      color: material === 'parry' ? '#38bdf8' : '#ffffff',
-      life: 0.25,
-      maxLife: 0.25
+      radius: 4,
+      maxRadius: damage >= 3 ? 55 : 38,
+      color: material === 'parry' ? '#38bdf8' : damage >= 3 ? '#f59e0b' : '#ffffff',
+      life: 0.24,
+      maxLife: 0.24
+    });
+
+    // Starburst cross flares
+    this.particles.push({
+      x: x,
+      y: y,
+      vx: 0,
+      vy: 0,
+      isStarburst: true,
+      size: damage >= 3 ? 32 : 22,
+      color: '#ffffff',
+      life: 0.16,
+      maxLife: 0.16
     });
   }
 
