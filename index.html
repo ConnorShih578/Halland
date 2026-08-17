@@ -3,412 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
-  <title>HALLAND - Timmy's Games</title>
-  <meta name="description" content="A hyper-responsive, crisp 2D martial arts parkour platformer starring Halland - Spider-Man meets Erling Haaland in a neon dojo world.">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2.5.0">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Outfit:wght@400;600;700;900&family=JetBrains+Mono:wght@500;700;800&family=Syncopate:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2.5.0">
+  <title>HALLAND - Endless Cyber-Karate</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+    body, html { width: 100%; height: 100%; overflow: hidden; background: #07090e; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #f8fafc; }
+    #canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    #hud { position: absolute; top: 1rem; left: 1.2rem; right: 1.2rem; display: flex; justify-content: space-between; align-items: center; pointer-events: none; z-index: 10; font-family: monospace; font-size: 1.1rem; font-weight: 800; text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
+    .hud-stat { background: rgba(15, 23, 42, 0.85); padding: 0.35rem 0.8rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
+    .dist-val { color: #f59e0b; }
+    .score-val { color: #38bdf8; }
+    #screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(7, 9, 14, 0.94); z-index: 20; gap: 1.2rem; transition: opacity 0.2s ease; }
+    #screen.hidden { opacity: 0; pointer-events: none; }
+    .title-wrap { text-align: center; }
+    .brand { font-size: 0.75rem; letter-spacing: 0.3em; color: #ef4444; font-weight: 800; }
+    h1 { font-size: 3.5rem; letter-spacing: 0.15em; font-weight: 900; color: #ffffff; text-shadow: 0 0 24px rgba(239,68,68,0.5); }
+    .sub { font-size: 0.85rem; color: #94a3b8; letter-spacing: 0.1em; }
+    .stats-row { display: flex; gap: 1rem; margin: 0.5rem 0; font-family: monospace; font-size: 0.85rem; color: #cbd5e1; }
+    .stat-pill { background: rgba(255,255,255,0.06); padding: 0.3rem 0.6rem; border-radius: 4px; }
+    #btn-start { background: linear-gradient(135deg, #ef4444, #dc2626); color: #ffffff; border: none; padding: 1rem 3.5rem; font-size: 1.2rem; font-weight: 900; letter-spacing: 0.15em; border-radius: 4px; cursor: pointer; box-shadow: 0 4px 20px rgba(239,68,68,0.5); transition: transform 0.1s, box-shadow 0.1s; }
+    #btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 26px rgba(239,68,68,0.7); }
+    #btn-start:active { transform: scale(0.96); }
+    .controls-hint { font-size: 0.75rem; color: #64748b; text-align: center; line-height: 1.5; }
+    #flash { position: absolute; inset: 0; background: radial-gradient(circle, transparent 50%, rgba(239,68,68,0.3) 100%); pointer-events: none; opacity: 0; z-index: 8; transition: opacity 0.08s ease; }
+    #flash.flash { opacity: 1; }
+  </style>
 </head>
 <body>
-  <div id="game-container">
-    <!-- Game Canvas -->
-    <canvas id="game-canvas"></canvas>
+  <canvas id="canvas"></canvas>
+  <div id="flash"></div>
 
-    <!-- Damage Red Vignette Screen Flash -->
-    <div id="damage-flash" class="damage-flash-overlay"></div>
+  <div id="hud">
+    <div class="hud-stat">🏃 <span id="hud-dist" class="dist-val">0m</span></div>
+    <div class="hud-stat">⚡ <span id="hud-score" class="score-val">SCORE: 0</span></div>
+  </div>
 
-    <!-- Native BGM Audio Player Element -->
-    <audio id="bgm-player" loop preload="auto"></audio>
-
-    <!-- INTRO SPLASH: TIMMY'S GAMES PRESENTS -->
-    <div id="intro-screen" class="intro-screen">
-      <div class="intro-content">
-        <img src="favicon.svg" class="intro-logo-img" alt="Halland Logo">
-        <h1 class="intro-brand">TIMMY'S GAMES</h1>
-        <div class="intro-subtitle">PRESENTS</div>
-        <div class="intro-bar"><div class="intro-bar-fill"></div></div>
-      </div>
-      <div class="intro-skip">TAP ANYWHERE TO SKIP</div>
+  <div id="screen">
+    <div class="title-wrap">
+      <div class="brand">TIMMY'S GAMES</div>
+      <h1>HALLAND</h1>
+      <div class="sub">ENDLESS CYBER-KARATE GAUNTLET</div>
     </div>
 
-    <!-- UI Overlay / HUD -->
-    <div id="hud">
-      <div class="hud-top">
-        <div class="cyber-capsule health-capsule">
-          <div class="health-top-row">
-            <span class="capsule-tag">HALLAND HP</span>
-            <span id="hud-hp-text" class="capsule-val mono">100 / 100</span>
-          </div>
-          <div class="health-track">
-            <div id="hud-hp-bar" class="health-fill" style="width: 100%;"></div>
-          </div>
-        </div>
-
-        <div class="cyber-capsule stage-capsule">
-          <div class="capsule-tag">MISSION</div>
-          <span id="hud-stage-name" class="capsule-val">ACT 1: DOJO SHOWDOWN</span>
-        </div>
-
-        <div class="cyber-capsule timer-capsule">
-          <div class="capsule-tag">TIMER</div>
-          <span id="hud-timer" class="capsule-val mono">00:00.00</span>
-        </div>
-
-        <div class="cyber-capsule stats-capsule">
-          <div class="capsule-stat">
-            <span class="capsule-tag">DEATHS</span>
-            <span id="hud-deaths" class="capsule-val mono">0</span>
-          </div>
-          <div class="capsule-divider"></div>
-          <div class="capsule-stat">
-            <span class="capsule-tag">RANK</span>
-            <span id="hud-belt" class="hud-badge belt-white">WHITE</span>
-          </div>
-        </div>
-
-        <div class="hud-buttons">
-          <button id="btn-pause" class="cyber-btn icon-btn" title="Pause Game (ESC / P)">
-            <span>⏸️</span>
-          </button>
-          <button id="btn-custom-music" class="cyber-btn icon-btn" title="Custom BGM Player (N)">
-            <span>🎵</span>
-          </button>
-          <button id="btn-restart" class="cyber-btn icon-btn" title="Restart Checkpoint (R)">
-            <span>↺</span>
-          </button>
-          <button id="btn-sound" class="cyber-btn icon-btn active" title="Toggle Sound (M)">
-            <span>🔊</span>
-          </button>
-          <button id="btn-haptics" class="cyber-btn icon-btn active" title="Toggle Haptics (H)">
-            <span>📳</span>
-          </button>
-          <button id="btn-help" class="cyber-btn icon-btn" title="Controls Guide (?)">
-            <span>🥋</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Action & Combo Banners -->
-      <div id="action-announcement" class="action-banner"></div>
-      <div id="combo-display" class="combo-banner"></div>
+    <div class="stats-row">
+      <div class="stat-pill">BEST DIST: <strong id="best-dist" style="color:#f59e0b">0m</strong></div>
+      <div class="stat-pill">HIGH SCORE: <strong id="high-score" style="color:#38bdf8">0</strong></div>
     </div>
 
-    <!-- Pause Menu Modal -->
-    <div id="pause-screen" class="controls-guide-overlay hidden">
-      <div class="cyber-modal pause-modal">
-        <div class="modal-corner tl"></div>
-        <div class="modal-corner tr"></div>
-        <div class="modal-corner bl"></div>
-        <div class="modal-corner br"></div>
+    <button id="btn-start">START RUN</button>
 
-        <div class="guide-header">
-          <div class="modal-title-wrap">
-            <span class="modal-subtitle">TACTICAL TIMEOUT</span>
-            <h2>GAME PAUSED</h2>
-          </div>
-          <button id="btn-pause-close" class="close-cyber-btn">✕</button>
-        </div>
-
-        <div class="pause-content-card">
-          <div class="pause-stats-grid">
-            <div class="p-card">
-              <span class="p-label">MISSION / MODE</span>
-              <div id="pause-mission-name" class="p-val">ACT 1: DOJO</div>
-            </div>
-            <div class="p-card">
-              <span class="p-label">STAGE TIME</span>
-              <div id="pause-timer" class="p-val mono">00:00.00</div>
-            </div>
-            <div class="p-card">
-              <span class="p-label">DEATHS</span>
-              <div id="pause-deaths" class="p-val mono">0</div>
-            </div>
-          </div>
-
-          <div class="pause-actions-list">
-            <button id="btn-resume-game" class="cyber-btn play-btn resume-btn">
-              <span>▶️ RESUME MISSION</span>
-            </button>
-            <button id="btn-pause-restart" class="cyber-btn secondary-btn">
-              <span>↺ RESTART STAGE (R)</span>
-            </button>
-            <button id="btn-pause-music" class="cyber-btn secondary-btn">
-              <span>🎵 CUSTOM BGM PLAYER</span>
-            </button>
-            <button id="btn-pause-guide" class="cyber-btn secondary-btn">
-              <span>🥋 CONTROLS GUIDE</span>
-            </button>
-            <button id="btn-pause-menu" class="cyber-btn secondary-btn danger-btn">
-              <span>🏠 EXIT TO MAIN MENU</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Custom BGM Player Modal -->
-    <div id="custom-music-modal" class="controls-guide-overlay hidden">
-      <div class="cyber-modal music-modal">
-        <div class="modal-corner tl"></div>
-        <div class="modal-corner tr"></div>
-        <div class="modal-corner bl"></div>
-        <div class="modal-corner br"></div>
-
-        <div class="guide-header">
-          <div class="modal-title-wrap">
-            <span class="modal-subtitle">AUDIO SUITE</span>
-            <h2>CUSTOM BACKGROUND MUSIC</h2>
-          </div>
-          <button id="btn-close-music" class="close-cyber-btn">✕</button>
-        </div>
-
-        <div class="music-content-card">
-          <div class="music-now-playing">
-            <div id="bgm-visualizer" class="equalizer-bars">
-              <span></span><span></span><span></span><span></span><span></span>
-            </div>
-            <div class="track-info">
-              <span class="track-label">ACTIVE TRACK</span>
-              <div id="bgm-track-title" class="track-name">No Custom MP3 Loaded</div>
-            </div>
-          </div>
-
-          <div class="music-uploader-zone">
-            <label for="bgm-file-input" class="upload-dropzone" id="bgm-dropzone">
-              <span class="upload-icon">📁</span>
-              <span class="upload-title">CHOOSE AUDIO FILE (.MP3 / .WAV)</span>
-              <span class="upload-hint">Click to browse or drag &amp; drop your favorite hype tracks here!</span>
-            </label>
-            <input type="file" id="bgm-file-input" accept=".mp3, .wav, .ogg, .m4a, .aac, .flac, audio/*" class="hidden-input">
-          </div>
-
-          <div class="music-controls-row">
-            <button id="btn-bgm-play-toggle" class="cyber-btn play-toggle-btn">
-              <span>▶️ PLAY</span>
-            </button>
-            <button id="btn-bgm-sample" class="cyber-btn secondary-btn sample-btn">
-              <span>⚡ SAMPLE BEAT</span>
-            </button>
-            <div class="volume-slider-wrap">
-              <span class="vol-icon">🔈</span>
-              <input type="range" id="bgm-volume-slider" min="0" max="1" step="0.05" value="0.65" class="cyber-slider">
-              <span class="vol-icon">🔊</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Controls Guide Modal -->
-    <div id="controls-hint" class="controls-guide-overlay hidden">
-      <div class="cyber-modal">
-        <div class="modal-corner tl"></div>
-        <div class="modal-corner tr"></div>
-        <div class="modal-corner bl"></div>
-        <div class="modal-corner br"></div>
-
-        <div class="guide-header">
-          <div class="modal-title-wrap">
-            <span class="modal-subtitle">DOJO SCROLL</span>
-            <h2>MARTIAL ARTS COMBAT PROTOCOL</h2>
-          </div>
-          <button id="btn-close-guide" class="close-cyber-btn">✕</button>
-        </div>
-
-        <div class="guide-grid">
-          <div class="guide-col">
-            <div class="col-badge">LOCOMOTION</div>
-            <h3>🕹️ LEFT SCREEN / WASD</h3>
-            <p><strong>Run / Sprint:</strong> Drag Left/Right or A / D</p>
-            <p><strong>Jump / Wall Kick:</strong> Push Up or W</p>
-            <p><strong>Crouch &amp; Low Slide:</strong> Pull Down or S</p>
-          </div>
-
-          <div class="guide-col">
-            <div class="col-badge">COMBAT</div>
-            <h3>✨ RIGHT SCREEN / SPACEBAR</h3>
-            <p><strong>Spacebar (or Tap):</strong> Alternating Karate Combo</p>
-            <p><strong>Swipe Right (→):</strong> Dash Straight Punch</p>
-            <p><strong>Swipe Down (↓):</strong> Low Sweep Kick (Trip enemies)</p>
-            <p><strong>Swipe Up (↑):</strong> Web Zip (1x per jump lift!)</p>
-            <p><strong>Swipe Back (←):</strong> Backstep Dodge</p>
-          </div>
-
-          <div class="guide-col highlight-col">
-            <div class="col-badge special">PARRY &amp; COUNTER</div>
-            <h3>🥋 HAND-EYE COORDINATION</h3>
-            <p><strong>Enemy Tells:</strong> Watch for enemy <code>⚡ ATTACK !</code></p>
-            <p><strong>Perfect Parry:</strong> Hold <code>S</code> or touch &amp; hold right screen on strike to <strong>PARRY &amp; STUN</strong> for <strong>2x DAMAGE</strong>!</p>
-            <p><strong>Reverse Auto-Aim:</strong> Punching or kicking enemies behind Halland triggers <strong>Spinning Backfists</strong> &amp; <strong>Heel Kicks</strong>!</p>
-          </div>
-        </div>
-
-        <div class="guide-footer">
-          <span>⌨️ KEYBOARD CONTROLS: <strong>W / A / D</strong> (Move/Jump) | <strong>Spacebar</strong> (Attack Combo) | <strong>Arrow Keys</strong> (Swipes/Web Zip) | <strong>S</strong> (Parry)</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Start / Stage Select Screen -->
-    <div id="start-screen" class="overlay-screen hidden">
-      <div class="kanji-bg left">武</div>
-      <div class="kanji-bg right">影</div>
-
-      <div class="cyber-modal main-menu-card">
-        <div class="modal-corner tl"></div>
-        <div class="modal-corner tr"></div>
-        <div class="modal-corner bl"></div>
-        <div class="modal-corner br"></div>
-
-        <div class="brand-bar">
-          <span class="studio-tag">TIMMY'S GAMES PRESENTS</span>
-        </div>
-
-        <div class="title-wrap">
-          <h1 class="game-title">HALLAND</h1>
-          <div class="title-sub">THE HYBRID POWERHOUSE MARTIAL ARTS ADVENTURE</div>
-        </div>
-
-        <!-- Mode Selector Tabs -->
-        <div class="mode-tabs">
-          <button id="tab-campaign" class="mode-tab active">
-            <span>🥋 STORY CAMPAIGN</span>
-          </button>
-          <button id="tab-endless" class="mode-tab">
-            <span>♾️ ENDLESS SURVIVAL</span>
-          </button>
-        </div>
-
-        <!-- Campaign View -->
-        <div id="campaign-view" class="mode-view">
-          <div class="stage-nav-bar">
-            <span class="stage-nav-title">ACT SELECT: THE SAGA OF MJ'S SHOE</span>
-          </div>
-          <div id="stage-grid" class="stage-select-grid scrollable">
-            <!-- Populated dynamically by main.js with 5 story acts -->
-          </div>
-          <button id="btn-play" class="cyber-btn play-btn">
-            <span class="btn-glow"></span>
-            <span class="btn-text">START STORY MISSION</span>
-          </button>
-        </div>
-
-        <!-- Endless Survival View -->
-        <div id="endless-view" class="mode-view hidden">
-          <div class="endless-banner-card">
-            <div class="endless-badge">INFINITE WAVE COMBAT</div>
-            <h3>SURVIVE THE INFINITE DOJO</h3>
-            <p>Fight through endless waves of escalating Ninjas, Sentinels, and Grandmasters. Upgrade belt ranks every 5 waves!</p>
-
-            <div class="endless-stats-row">
-              <div class="e-stat">
-                <span class="e-label">BEST WAVE</span>
-                <span id="endless-best-wave" class="e-val mono">WAVE 1</span>
-              </div>
-              <div class="e-stat">
-                <span class="e-label">TOTAL KILLS</span>
-                <span id="endless-best-kills" class="e-val mono">0</span>
-              </div>
-              <div class="e-stat">
-                <span class="e-label">HIGH SCORE</span>
-                <span id="endless-high-score" class="e-val mono">0</span>
-              </div>
-            </div>
-          </div>
-
-          <button id="btn-play-endless" class="cyber-btn play-btn endless-glow">
-            <span class="btn-glow"></span>
-            <span class="btn-text">START ENDLESS SURVIVAL ♾️</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Cinematic Story Cutscene Modal -->
-    <div id="cutscene-screen" class="overlay-screen hidden">
-      <div class="cyber-modal cutscene-modal">
-        <div class="modal-corner tl"></div>
-        <div class="modal-corner tr"></div>
-        <div class="modal-corner bl"></div>
-        <div class="modal-corner br"></div>
-
-        <div class="cutscene-header">
-          <span class="cs-kicker">CINEMATIC FINALE</span>
-          <h2 id="cutscene-title" class="cs-title">THE CONFRONTATION</h2>
-        </div>
-
-        <div id="cutscene-graphic" class="cutscene-stage-art">
-          <!-- Populated dynamically by CutsceneManager -->
-        </div>
-
-        <div id="cutscene-text" class="cutscene-dialogue">
-          <!-- Populated dynamically by CutsceneManager -->
-        </div>
-
-        <div class="cutscene-controls">
-          <button id="btn-cutscene-skip" class="cyber-btn secondary-btn">
-            <span>SKIP CUTSCENE</span>
-          </button>
-          <button id="btn-cutscene-next" class="cyber-btn play-btn">
-            <span>NEXT ➔</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Victory Screen -->
-    <div id="victory-screen" class="overlay-screen hidden">
-      <div class="cyber-modal victory-modal">
-        <div class="modal-corner tl"></div>
-        <div class="modal-corner tr"></div>
-        <div class="modal-corner bl"></div>
-        <div class="modal-corner br"></div>
-
-        <span class="victory-kicker">STAGE CLEARED</span>
-        <h2 class="victory-title">VICTORY ACHIEVED</h2>
-        <div class="victory-badge">🥋 GRANDMASTER PERFORMANCE</div>
-
-        <div class="victory-stats-grid">
-          <div class="v-card">
-            <span class="v-label">CLEAR TIME</span>
-            <span id="victory-time" class="v-val mono">00:42.15</span>
-          </div>
-          <div class="v-card">
-            <span class="v-label">DEATHS</span>
-            <span id="victory-deaths" class="v-val mono">0</span>
-          </div>
-          <div class="v-card">
-            <span class="v-label">MAX COMBO</span>
-            <span id="victory-combos" class="v-val mono">18</span>
-          </div>
-        </div>
-
-        <div class="victory-actions">
-          <button id="btn-next-stage" class="cyber-btn play-btn">
-            <span class="btn-text">NEXT ACT ➔</span>
-          </button>
-          <button id="btn-menu" class="cyber-btn secondary-btn">
-            <span class="btn-text">STAGE SELECT</span>
-          </button>
-        </div>
-      </div>
+    <div class="controls-hint">
+      <strong>A / D</strong> Move &bull; <strong>W</strong> Jump / Wall-Kick &bull; <strong>Spacebar</strong> Combo Attack &bull; <strong>S</strong> Parry / Slide &bull; <strong>Up</strong> Web Zip<br>
+      <em>Mobile: Left Screen Thumbstick &bull; Right Screen Tap / Swipe</em>
     </div>
   </div>
 
-  <!-- Scripts with Cache-Busting Versioning -->
-  <script src="js/audio.js?v=2.5.0"></script>
-  <script src="js/haptics.js?v=2.5.0"></script>
-  <script src="js/cutscenes.js?v=2.5.0"></script>
-  <script src="js/stickman.js?v=2.5.0"></script>
-  <script src="js/combat.js?v=2.5.0"></script>
-  <script src="js/physics.js?v=2.5.0"></script>
-  <script src="js/input.js?v=2.5.0"></script>
-  <script src="js/levels.js?v=2.5.0"></script>
-  <script src="js/main.js?v=2.5.0"></script>
+  <script src="game.js"></script>
 </body>
 </html>
