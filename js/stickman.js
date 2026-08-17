@@ -564,10 +564,44 @@ class StickmanRenderer {
       ctx.restore();
     }
 
+    // 10. Martial Arts Slash Crescent Arcs & Kinetic Swooshes
+    const isKick = ['SNAP_KICK', 'FLYING_TORNADO_KICK', 'SPIN_HEEL_KICK', 'SPIN_SWEEP'].includes(state);
+    const isPunch = ['STRAIGHT_PUNCH', 'DRAGON_UPPERCUT', 'SPIN_BACKFIST'].includes(state);
+
+    if (isKick || isPunch) {
+      ctx.save();
+      const slashColor = state === 'DRAGON_UPPERCUT' ? '#f59e0b' : isKick ? '#38bdf8' : '#ef4444';
+      ctx.strokeStyle = slashColor;
+      ctx.shadowColor = slashColor;
+      ctx.shadowBlur = 8;
+      ctx.lineWidth = 2.8;
+      ctx.lineCap = 'round';
+
+      if (isKick) {
+        ctx.beginPath();
+        const arcCenterX = state === 'SPIN_HEEL_KICK' ? -facing * 10 : facing * 12;
+        const startAng = facing > 0 ? -Math.PI * 0.4 : Math.PI * 0.6;
+        const endAng = facing > 0 ? Math.PI * 0.3 : Math.PI * 1.3;
+        ctx.arc(arcCenterX, -28, 28, startAng, endAng, facing < 0);
+        ctx.stroke();
+      } else if (state === 'DRAGON_UPPERCUT') {
+        ctx.beginPath();
+        ctx.moveTo(facing * 8, -10);
+        ctx.quadraticCurveTo(facing * 20, -50, facing * 16, -85);
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        const punchX = state === 'SPIN_BACKFIST' ? -facing * 26 : facing * 28;
+        ctx.moveTo(punchX - facing * 14, -38);
+        ctx.lineTo(punchX + facing * 12, -38);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
     ctx.restore();
 
     this.drawRibbons(ctx, beltColor || '#ffffff');
-  }
   }
 
   drawLimb(ctx, ik, color, outline, outerWidth, innerWidth) {
