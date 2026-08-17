@@ -592,17 +592,25 @@ class PhysicsEngine {
     if (dEl) dEl.textContent = player.deaths;
 
     setTimeout(() => {
-      player.x = player.spawnX;
-      player.y = player.spawnY;
-      player.vx = 0;
-      player.vy = 0;
-      player.hp = player.maxHp;
-      player.invulnerableTimer = 1.0; // 1s grace period on respawn
-      player.state = 'IDLE';
-      player.stateTime = 0;
-      player.isDead = false;
-      if (window.Game && window.Game.stickRenderer) {
-        window.Game.stickRenderer.resetRibbons(player.x, player.y - 54, player.x, player.y - 28);
+      if (window.Game && window.Game.isEndlessMode) {
+        // Full Reset to Beginning in Endless Mode
+        window.Game.loadInfiniteEndlessWorld();
+        if (window.Game.combat) {
+          window.Game.combat.announceAction('💀 ENDLESS RUN RESET TO 0m!');
+        }
+      } else {
+        player.x = player.spawnX;
+        player.y = player.spawnY;
+        player.vx = 0;
+        player.vy = 0;
+        player.hp = player.maxHp;
+        player.invulnerableTimer = 1.0;
+        player.state = 'IDLE';
+        player.stateTime = 0;
+        player.isDead = false;
+        if (window.Game && window.Game.stickRenderer) {
+          window.Game.stickRenderer.resetRibbons(player.x, player.y - 54, player.x, player.y - 28);
+        }
       }
     }, 400);
   }

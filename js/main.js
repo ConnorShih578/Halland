@@ -51,6 +51,7 @@ class GameEngine {
 
     this.stageTime = 0;
     this.isPlaying = false;
+    this.isPaused = false;
     this.lastFrameTime = performance.now();
     this.accumulator = 0;
     this.fixedStep = 1 / 60;
@@ -303,9 +304,89 @@ class GameEngine {
       });
     }
 
+    // 6. Pause System Handlers
+    const btnPause = document.getElementById('btn-pause');
+    const btnResumeGame = document.getElementById('btn-resume-game');
+    const btnPauseClose = document.getElementById('btn-pause-close');
+    const btnPauseRestart = document.getElementById('btn-pause-restart');
+    const btnPauseMusic = document.getElementById('btn-pause-music');
+    const btnPauseGuide = document.getElementById('btn-pause-guide');
+    const btnPauseMenu = document.getElementById('btn-pause-menu');
+
+    if (btnPause) {
+      btnPause.addEventListener('click', () => this.togglePause());
+    }
+    if (btnResumeGame) {
+      btnResumeGame.addEventListener('click', () => this.resumeGame());
+    }
+    if (btnPauseClose) {
+      btnPauseClose.addEventListener('click', () => this.resumeGame());
+    }
+    if (btnPauseRestart) {
+      btnPauseRestart.addEventListener('click', () => {
+        this.resumeGame();
+        this.restartCheckpoint();
+      });
+    }
+    if (btnPauseMusic && musicModal) {
+      btnPauseMusic.addEventListener('click', () => {
+        musicModal.classList.remove('hidden');
+      });
+    }
+    if (btnPauseGuide && hintOverlay) {
+      btnPauseGuide.addEventListener('click', () => {
+        hintOverlay.classList.remove('hidden');
+      });
+    }
+    if (btnPauseMenu) {
+      btnPauseMenu.addEventListener('click', () => {
+        this.resumeGame();
+        this.isPlaying = false;
+        document.getElementById('start-screen').classList.remove('hidden');
+      });
+    }
+
+    // Keyboard Pause Shortcuts (ESC / P)
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Escape' || e.code === 'KeyP') {
+        if (this.isPlaying) {
+          this.togglePause();
+        }
+      }
+    });
+
     document.getElementById('btn-restart').addEventListener('click', () => {
       this.restartCheckpoint();
     });
+  }
+
+  togglePause() {
+    if (this.isPaused) this.resumeGame();
+    else this.pauseGame();
+  }
+
+  pauseGame() {
+    if (!this.isPlaying) return;
+    this.isPaused = true;
+    const pauseModal = document.getElementById('pause-screen');
+    if (pauseModal) {
+      const missionEl = document.getElementById('pause-mission-name');
+      const timerEl = document.getElementById('pause-timer');
+      const deathsEl = document.getElementById('pause-deaths');
+      if (missionEl) missionEl.textContent = this.isEndlessMode ? `INFINITE (${this.distanceTraveled}m)` : `ACT ${this.currentStageIndex + 1}`;
+      if (timerEl) timerEl.textContent = this.formatTime(this.stageTime);
+      if (deathsEl) deathsEl.textContent = this.player ? this.player.deaths : 0;
+      pauseModal.classList.remove('hidden');
+    }
+    if (window.Audio) window.Audio.play('tap');
+  }
+
+  resumeGame() {
+    this.isPaused = false;
+    const pauseModal = document.getElementById('pause-screen');
+    if (pauseModal) pauseModal.classList.add('hidden');
+    this.lastFrameTime = performance.now();
+    if (window.Audio) window.Audio.play('tap');
   }
 
   loadStage(index) {
@@ -395,7 +476,7 @@ class GameEngine {
     const rawDt = Math.min((currentTime - this.lastFrameTime) / 1000, 0.1);
     this.lastFrameTime = currentTime;
 
-    if (this.isPlaying && this.player) {
+    if (this.isPlaying && this.player && !this.isPaused) {
       this.stageTime += rawDt;
       this.updateHUDTimer();
 

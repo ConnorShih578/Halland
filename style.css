@@ -860,6 +860,74 @@ body, html {
 }
 
 /* =========================================================
+   5.1 PAUSE MENU MODAL
+========================================================= */
+
+.pause-modal {
+  max-width: 480px;
+}
+
+.pause-content-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.pause-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+
+.p-card {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-subtle);
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+}
+
+.p-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #94a3b8;
+  display: block;
+  margin-bottom: 0.2rem;
+  letter-spacing: 0.05em;
+}
+
+.p-val {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.pause-actions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.resume-btn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  padding: 0.9rem;
+  font-size: 1rem;
+}
+
+.resume-btn:hover {
+  background: linear-gradient(135deg, #34d399, #10b981);
+}
+
+.danger-btn {
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+.danger-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+}
+
+/* =========================================================
    6. VICTORY MODAL
 ========================================================= */
 

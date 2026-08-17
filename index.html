@@ -69,6 +69,9 @@
         </div>
 
         <div class="hud-buttons">
+          <button id="btn-pause" class="cyber-btn icon-btn" title="Pause Game (ESC / P)">
+            <span>⏸️</span>
+          </button>
           <button id="btn-custom-music" class="cyber-btn icon-btn" title="Custom BGM Player (N)">
             <span>🎵</span>
           </button>
@@ -90,6 +93,59 @@
       <!-- Action & Combo Banners -->
       <div id="action-announcement" class="action-banner"></div>
       <div id="combo-display" class="combo-banner"></div>
+    </div>
+
+    <!-- Pause Menu Modal -->
+    <div id="pause-screen" class="controls-guide-overlay hidden">
+      <div class="cyber-modal pause-modal">
+        <div class="modal-corner tl"></div>
+        <div class="modal-corner tr"></div>
+        <div class="modal-corner bl"></div>
+        <div class="modal-corner br"></div>
+
+        <div class="guide-header">
+          <div class="modal-title-wrap">
+            <span class="modal-subtitle">TACTICAL TIMEOUT</span>
+            <h2>GAME PAUSED</h2>
+          </div>
+          <button id="btn-pause-close" class="close-cyber-btn">✕</button>
+        </div>
+
+        <div class="pause-content-card">
+          <div class="pause-stats-grid">
+            <div class="p-card">
+              <span class="p-label">MISSION / MODE</span>
+              <div id="pause-mission-name" class="p-val">ACT 1: DOJO</div>
+            </div>
+            <div class="p-card">
+              <span class="p-label">STAGE TIME</span>
+              <div id="pause-timer" class="p-val mono">00:00.00</div>
+            </div>
+            <div class="p-card">
+              <span class="p-label">DEATHS</span>
+              <div id="pause-deaths" class="p-val mono">0</div>
+            </div>
+          </div>
+
+          <div class="pause-actions-list">
+            <button id="btn-resume-game" class="cyber-btn play-btn resume-btn">
+              <span>▶️ RESUME MISSION</span>
+            </button>
+            <button id="btn-pause-restart" class="cyber-btn secondary-btn">
+              <span>↺ RESTART STAGE (R)</span>
+            </button>
+            <button id="btn-pause-music" class="cyber-btn secondary-btn">
+              <span>🎵 CUSTOM BGM PLAYER</span>
+            </button>
+            <button id="btn-pause-guide" class="cyber-btn secondary-btn">
+              <span>🥋 CONTROLS GUIDE</span>
+            </button>
+            <button id="btn-pause-menu" class="cyber-btn secondary-btn danger-btn">
+              <span>🏠 EXIT TO MAIN MENU</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Custom BGM Player Modal -->
