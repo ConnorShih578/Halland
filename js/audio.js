@@ -316,19 +316,11 @@ class AudioController {
     filter.connect(gain);
     gain.connect(this.ctx.destination);
 
-    osc.start(now);
-    osc.stop(now + duration);
-  }
-
-  playThud(now, startFreq, endFreq, duration, volume) {
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc.type = 'triangle';
+    osc.type = 'sine';
     osc.frequency.setValueAtTime(startFreq, now);
-    osc.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(10, endFreq), now + duration);
 
-    gain.gain.setValueAtTime(volume, now);
+    gain.gain.setValueAtTime(volume * 1.2, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
     osc.connect(gain);
@@ -342,12 +334,30 @@ class AudioController {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
-    osc.type = 'sine';
+    osc.type = 'triangle';
     osc.frequency.setValueAtTime(startFreq, now);
     osc.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
 
-    gain.gain.setValueAtTime(volume, now);
-    gain.gain.linearRampToValueAtTime(0.001, now + duration);
+    gain.gain.setValueAtTime(volume * 1.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + duration);
+  }
+
+  playThud(now, startFreq, endFreq, duration, volume) {
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(startFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(10, endFreq), now + duration);
+
+    gain.gain.setValueAtTime(volume * 1.4, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
     osc.connect(gain);
     gain.connect(this.ctx.destination);
@@ -357,10 +367,11 @@ class AudioController {
   }
 
   playNoiseCrack(now, duration, volume) {
-    const bufferSize = this.ctx.sampleRate * duration;
+    const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+    if (bufferSize <= 0) return;
+
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
-
     for (let i = 0; i < bufferSize; i++) {
       data[i] = Math.random() * 2 - 1;
     }
@@ -369,12 +380,11 @@ class AudioController {
     noise.buffer = buffer;
 
     const filter = this.ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(1600, now);
-    filter.Q.setValueAtTime(2, now);
+    filter.type = 'highpass';
+    filter.frequency.setValueAtTime(1400, now);
 
     const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(volume, now);
+    gain.gain.setValueAtTime(volume * 1.3, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
     noise.connect(filter);
@@ -385,18 +395,18 @@ class AudioController {
   }
 
   playWoodSnap(now, duration, volume) {
-    this.playNoiseCrack(now, duration * 0.7, volume);
-    this.playThud(now, 320, 80, duration, volume * 0.8);
+    this.playNoiseCrack(now, duration * 0.7, volume * 1.2);
+    this.playThud(now, 320, 80, duration, volume);
   }
 
   playCannonballLaunch(now) {
-    this.playWhoosh(now, 140, 480, 0.25, 0.6);
-    this.playThud(now, 200, 60, 0.2, 0.4);
+    this.playWhoosh(now, 140, 480, 0.25, 0.7);
+    this.playThud(now, 200, 60, 0.2, 0.5);
   }
 
   playWebZip(now) {
-    this.playWhoosh(now, 680, 190, 0.10, 0.35);
-    this.playNoiseCrack(now, 0.06, 0.2);
+    this.playWhoosh(now, 720, 220, 0.12, 0.45);
+    this.playNoiseCrack(now, 0.08, 0.3);
   }
 
   playCheckpointChime(now) {
@@ -408,20 +418,20 @@ class AudioController {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, now + idx * 0.08);
 
-      gain.gain.setValueAtTime(0.2, now + idx * 0.08);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.35);
+      gain.gain.setValueAtTime(0.28, now + idx * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.4);
 
       osc.connect(gain);
       gain.connect(this.ctx.destination);
 
       osc.start(now + idx * 0.08);
-      osc.stop(now + idx * 0.08 + 0.35);
+      osc.stop(now + idx * 0.08 + 0.4);
     });
   }
 
   playDeathSound(now) {
-    this.playThud(now, 150, 20, 0.4, 0.7);
-    this.playNoiseCrack(now, 0.3, 0.4);
+    this.playThud(now, 180, 20, 0.45, 0.9);
+    this.playNoiseCrack(now, 0.35, 0.6);
   }
 
   playVictoryFanfare(now) {
@@ -433,7 +443,7 @@ class AudioController {
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(freq, now + idx * 0.1);
 
-      gain.gain.setValueAtTime(0.3, now + idx * 0.1);
+      gain.gain.setValueAtTime(0.35, now + idx * 0.1);
       gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.6);
 
       osc.connect(gain);
@@ -446,3 +456,10 @@ class AudioController {
 }
 
 window.Audio = new AudioController();
+
+// Global Auto-Unlock Listeners for browser AudioContext
+['pointerdown', 'touchstart', 'mousedown', 'keydown', 'click'].forEach(evt => {
+  window.addEventListener(evt, () => {
+    if (window.Audio) window.Audio.resume();
+  }, { passive: true });
+});
