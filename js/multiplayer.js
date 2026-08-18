@@ -346,6 +346,12 @@ class MultiplayerManager {
             id: msg.senderId,
             name: msg.data.name || 'OPPONENT',
             characterId: msg.data.characterId || 'lebrown',
+            type: 'pvp_opponent',
+            isTarget: true,
+            isPvP: true,
+            isPlayer: true,
+            w: 22,
+            h: 60,
             x: Number.isFinite(msg.data.x) ? msg.data.x : 500,
             y: Number.isFinite(msg.data.y) ? msg.data.y : 380,
             targetX: Number.isFinite(msg.data.x) ? msg.data.x : 500,
@@ -359,14 +365,27 @@ class MultiplayerManager {
             isBlocking: !!msg.data.isBlocking,
             comboStep: msg.data.comboStep || 0,
             beltColor: '#38bdf8',
-            isDead: false
+            isDead: false,
+            renderer: new StickmanRenderer()
           };
           this.players.set(msg.senderId, target);
-          this.renderers.set(msg.senderId, new StickmanRenderer());
+          this.renderers.set(msg.senderId, target.renderer);
+
+          if (this.game.currentStage && this.game.currentStage.entities) {
+            if (!this.game.currentStage.entities.some(e => e.id === msg.senderId)) {
+              this.game.currentStage.entities.push(target);
+            }
+          }
         }
 
-        if (Number.isFinite(msg.data.x)) target.targetX = msg.data.x;
-        if (Number.isFinite(msg.data.y)) target.targetY = msg.data.y;
+        if (Number.isFinite(msg.data.x)) {
+          target.targetX = msg.data.x;
+          target.x += (msg.data.x - target.x) * 0.55;
+        }
+        if (Number.isFinite(msg.data.y)) {
+          target.targetY = msg.data.y;
+          target.y += (msg.data.y - target.y) * 0.55;
+        }
         target.vx = msg.data.vx || 0;
         target.vy = msg.data.vy || 0;
         target.facing = msg.data.facing || target.facing || -1;
@@ -376,6 +395,13 @@ class MultiplayerManager {
         target.comboStep = msg.data.comboStep || 0;
         target.characterId = msg.data.characterId || target.characterId || 'halland';
         if (msg.data.name) target.name = msg.data.name;
+
+        // Ensure entity is present in stage entities list
+        if (this.game.currentStage && this.game.currentStage.entities) {
+          if (!this.game.currentStage.entities.some(e => e.id === msg.senderId)) {
+            this.game.currentStage.entities.push(target);
+          }
+        }
         break;
       }
 

@@ -1163,6 +1163,12 @@ class GameEngine {
     for (const ent of this.currentStage.entities) {
       if (ent.isDead) continue;
 
+      if (ent.isPvP || ent.isPlayer) {
+        if (!ent.renderer) ent.renderer = new StickmanRenderer();
+        ent.renderer.draw(ctx, ent);
+        continue;
+      }
+
       ctx.save();
       ctx.translate(ent.x, ent.y);
 

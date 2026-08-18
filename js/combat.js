@@ -451,10 +451,10 @@ class CombatSystem {
       }
     }
 
-    // 2. Enemy Martial Artists
+    // 2. Enemy Martial Artists & PvP Opponents
     if (entities) {
       for (const ent of entities) {
-        if (!ent.isDead && ent.isTarget) {
+        if (!ent.isDead && (ent.isTarget || ent.isPvP || ent.isPlayer)) {
           const entBounds = this.getEntityBounds(ent);
           if (this.rectsOverlap(hb, entBounds)) {
             // Prevent duplicate multi-hits within the same strike
@@ -499,6 +499,22 @@ class CombatSystem {
       ent.vy = -4.5;
       ent.stunTimer = 0.5;
       this.announceAction(hb.type === 'cannonball' ? 'CANNONBALL STRIKE!' : 'SOLID STRIKE!');
+    }
+
+    if (ent.isPvP && window.Game && window.Game.multiplayer) {
+      window.Game.multiplayer.sendWsPacket({
+        roomCode: window.Game.multiplayer.roomCode,
+        event: 'action',
+        senderId: window.Game.multiplayer.senderId,
+        data: {
+          event: 'hit',
+          targetId: ent.id,
+          damage: damage * 10,
+          knockbackX: ent.vx,
+          knockbackY: ent.vy,
+          attackType: player.state
+        }
+      });
     }
 
     if (ent.hp <= 0) {
