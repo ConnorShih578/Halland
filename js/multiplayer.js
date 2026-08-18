@@ -1,277 +1,548 @@
 /* =========================================================
-   ONLINE MULTIPLAYER ARENA ("HALLAND")
-   Rock-Solid Direct Player Synchronization
-   - Instant 0ms Local Play via BroadcastChannel
-   - Native WebSocket Relay for Internet Play
-   - Direct Entity Integration with Single-Player Combat
-   - 5 Unique Selectable Legends (Halland, LeBrown, Jordunn, McBape, Ronalds)
+   ONLINE MULTIPLAYER ARENA MANAGER ("HALLAND")
+   - Matchmaking Lobby: Host Room, Copy Invite Link, Join Code
+   - 5 Parody Legends: Halland, LeBrown, Jordunn, McBape, Ronalds
+   - Direct Entity Streaming: Remote players stream into currentStage.entities
+   - Native Singleplayer Combat Integration: Full combos, strike magnetism & hitboxes
 ========================================================= */
 
 class MultiplayerManager {
   constructor(game) {
     this.game = game;
     this.isMultiplayer = false;
-    this.roomCode = 'ARENA1';
-    this.senderId = 'p_' + Math.random().toString(36).substring(2, 9);
+    this.isHost = false;
+    this.roomCode = null;
+    this.isConnected = false;
+    this.senderId = 'p_' + Math.random().toString(36).substring(2, 8);
 
-    // Profile Settings
-    this.playerName = localStorage.getItem('pvp_player_name') || 'FIGHTER ' + Math.floor(Math.random() * 90 + 10);
+    // Local Player Profile
+    this.playerName = localStorage.getItem('pvp_player_name') || 'FIGHTER 1';
     this.characterId = localStorage.getItem('pvp_character_id') || 'halland';
     this.serverUrl = localStorage.getItem('render_server_url') || 'wss://mygameserver-bsow.onrender.com/';
 
+    // Remote Players Pool
+    this.players = new Map();
+    this.renderers = new Map();
+
+    this.isBattleActive = false;
+    this.banner = { text: '', sub: '', timer: 0 };
     this.ws = null;
     this.bc = null;
     this.syncInterval = null;
-    this.banner = { text: '', sub: '', timer: 0 };
 
     this.initBroadcastChannel();
-    this.initWebSocket();
+    this.checkUrlRoomParam();
   }
 
-  // --- DUAL-TRANSPORT NETWORKING ---
+  // --- DUAL TRANSPORT NETWORKING ---
   initBroadcastChannel() {
     try {
-      this.bc = new BroadcastChannel('halland_pvp_channel');
+      this.bc = new BroadcastChannel('halland_party_pvp_channel');
       this.bc.onmessage = (e) => {
-        if (e.data) this.handleIncomingMessage(e.data);
+        if (this.isMultiplayer && e.data) {
+          this.handleIncomingMessage(e.data);
+        }
       };
     } catch(e) {
       console.warn("[PVP] BroadcastChannel unavailable:", e);
     }
   }
 
-  initWebSocket() {
+  checkUrlRoomParam() {
+    try {
+      if (typeof window !== 'undefined' && window.location && window.URLSearchParams) {
+        const params = new URLSearchParams(window.location.search);
+        const room = params.get('room') || params.get('pvp');
+        if (room) {
+          setTimeout(() => {
+            const inputEl = document.getElementById('pvp-join-code');
+            if (inputEl) inputEl.value = room.toUpperCase();
+            this.openPvpModal();
+          }, 300);
+        }
+      }
+    } catch(e) {
+      console.warn("[PVP] URL param check error:", e);
+    }
+  }
+
+  generateRoomCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = 'HALL-';
+    for (let i = 0; i < 4; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  }
+
+  setServerUrl(newUrl) {
+    this.serverUrl = (newUrl || '').trim();
+    localStorage.setItem('render_server_url', this.serverUrl);
+  }
+
+  setPlayerProfile(name, charId) {
+    this.playerName = (name || 'FIGHTER').trim();
+    this.characterId = charId || 'halland';
+    localStorage.setItem('pvp_player_name', this.playerName);
+    localStorage.setItem('pvp_character_id', this.characterId);
+  }
+
+  // --- HOST A MULTI-PLAYER MATCH ---
+  hostMatch() {
+    this.roomCode = this.generateRoomCode();
+    this.isHost = true;
+    this.isMultiplayer = true;
+    this.isConnected = true;
+    this.players.clear();
+    this.renderers.clear();
+
+    this.showHostLobbyUI(this.roomCode);
+    this.updateStatusUI(`🟢 ROOM CREATED: <strong>${this.roomCode}</strong><br><span style="font-size:0.85em;color:#94a3b8">Share room code or invite link. (2 - 8 Players)</span>`);
+
+    const launchBtn = document.getElementById('btn-launch-arena');
+    if (launchBtn) launchBtn.style.display = 'block';
+
+    this.connectWebSocket(() => {
+      this.isConnected = true;
+      this.sendWsPacket({
+        roomCode: this.roomCode,
+        event: 'player_join',
+        senderId: this.senderId,
+        data: {
+          name: this.playerName,
+          characterId: this.characterId,
+          isHost: true
+        }
+      });
+    });
+
+    this.sendWsPacket({
+      roomCode: this.roomCode,
+      event: 'player_join',
+      senderId: this.senderId,
+      data: {
+        name: this.playerName,
+        characterId: this.characterId,
+        isHost: true
+      }
+    });
+  }
+
+  // --- JOIN A MULTI-PLAYER MATCH ---
+  joinMatch(code) {
+    if (!code || code.trim().length < 3) {
+      this.updateStatusUI("❌ Please enter a valid room code!");
+      return;
+    }
+
+    this.roomCode = code.trim().toUpperCase();
+    this.isHost = false;
+    this.isMultiplayer = true;
+    this.isConnected = true;
+    this.players.clear();
+    this.renderers.clear();
+
+    this.updateStatusUI(`Connecting to Room <strong>${this.roomCode}</strong>...`);
+
+    const launchBtn = document.getElementById('btn-launch-arena');
+    if (launchBtn) launchBtn.style.display = 'none';
+
+    this.connectWebSocket(() => {
+      this.isConnected = true;
+      this.sendWsPacket({
+        roomCode: this.roomCode,
+        event: 'player_join',
+        senderId: this.senderId,
+        data: {
+          name: this.playerName,
+          characterId: this.characterId,
+          isHost: false
+        }
+      });
+      this.updateStatusUI(`⚡ Connected to room ${this.roomCode}! Waiting for host to launch battle...`);
+    });
+
+    this.sendWsPacket({
+      roomCode: this.roomCode,
+      event: 'player_join',
+      senderId: this.senderId,
+      data: {
+        name: this.playerName,
+        characterId: this.characterId,
+        isHost: false
+      }
+    });
+  }
+
+  connectWebSocket(onOpen) {
     if (this.ws) {
       try { this.ws.close(); } catch(e) {}
     }
+
     try {
       this.ws = new WebSocket(this.serverUrl);
+
       this.ws.onopen = () => {
-        console.log("[PVP] Connected to WebSocket Relay:", this.serverUrl);
+        console.log(`[PVP] Connected to WebSocket server: ${this.serverUrl}`);
+        if (onOpen) onOpen();
       };
-      this.ws.onmessage = async (e) => {
+
+      this.ws.onmessage = async (event) => {
         try {
           let text = '';
-          if (e.data instanceof Blob) text = await e.data.text();
-          else if (typeof e.data === 'string') text = e.data;
-          else if (e.data instanceof ArrayBuffer) text = new TextDecoder().decode(e.data);
-          else text = e.data.toString();
+          if (event.data instanceof Blob) text = await event.data.text();
+          else if (typeof event.data === 'string') text = event.data;
+          else if (event.data instanceof ArrayBuffer) text = new TextDecoder().decode(event.data);
+          else text = event.data.toString();
 
           const msg = JSON.parse(text);
           this.handleIncomingMessage(msg);
-        } catch(err) {
-          // ignore malformed packets
-        }
+        } catch(err) {}
       };
-      this.ws.onerror = () => {
-        console.warn("[PVP] WebSocket notice (server waking or offline)");
+
+      this.ws.onerror = (err) => {
+        console.warn("[PVP] WebSocket notice (server waking or offline):", err);
       };
+
       this.ws.onclose = () => {
-        // Reconnect after 3 seconds
-        setTimeout(() => this.initWebSocket(), 3000);
+        console.log("[PVP] Disconnected from WebSocket server.");
       };
     } catch(e) {
-      console.warn("[PVP] WS connection failed:", e);
+      console.error("[PVP] Init error:", e);
     }
   }
 
-  sendPacket(msg) {
-    msg.room = this.roomCode;
-    msg.sender = this.senderId;
-
-    // 1. Send via local BroadcastChannel (instant across tabs on same device)
+  sendWsPacket(msg) {
+    const payload = JSON.stringify(msg);
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      try { this.ws.send(payload); } catch(e) {}
+    }
     if (this.bc) {
       try { this.bc.postMessage(msg); } catch(e) {}
     }
-
-    // 2. Send via WebSocket (across internet devices)
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      try { this.ws.send(JSON.stringify(msg)); } catch(e) {}
-    }
   }
 
-  // --- ARENA LAUNCH & PLAY ---
-  enterArena(roomCode = 'ARENA1') {
-    this.roomCode = (roomCode || 'ARENA1').trim().toUpperCase();
-    this.isMultiplayer = true;
-
-    // Close all menus
-    const pvpModal = document.getElementById('pvp-modal');
-    if (pvpModal) pvpModal.classList.add('hidden');
-    const startScreen = document.getElementById('start-screen');
-    if (startScreen) startScreen.classList.add('hidden');
-    const victoryScreen = document.getElementById('victory-screen');
-    if (victoryScreen) victoryScreen.classList.add('hidden');
-
-    // Create Dojo Combat Arena Level
-    this.game.currentStage = {
-      id: 99,
-      name: `PVP ARENA • ROOM: ${this.roomCode}`,
-      belt: "BLACK",
-      gravity: 0.68,
-      friction: 0.88,
-      startX: 220,
-      startY: 420,
-      platforms: [
-        { x: 40, y: 520, w: 1000, h: 45, type: 'ground' },
-        { x: 20, y: 150, w: 20, h: 370, type: 'wall' },
-        { x: 1040, y: 150, w: 20, h: 370, type: 'wall' },
-        // Fighting Pagoda Platforms
-        { x: 140, y: 390, w: 220, h: 18, type: 'pagoda' },
-        { x: 720, y: 390, w: 220, h: 18, type: 'pagoda' },
-        { x: 430, y: 280, w: 220, h: 18, type: 'pagoda' },
-        // Jump Bouncer
-        { x: 510, y: 510, w: 60, h: 12, isBouncer: true }
-      ],
-      breakables: [
-        { x: 240, y: 330, w: 16, h: 60, broken: false },
-        { x: 820, y: 330, w: 16, h: 60, broken: false }
-      ],
-      entities: []
-    };
-
-    // Initialize Local Player
-    const p = this.game.physics.createPlayer(220 + Math.random() * 400, 420);
-    p.characterId = this.characterId;
-    p.name = this.playerName;
-    p.hp = 100;
-    p.maxHp = 100;
-    p.beltColor = '#ef4444';
-    this.game.player = p;
-
-    this.game.isPlaying = true;
-    this.game.isPaused = false;
-    this.game.isEndlessMode = false;
-    this.game.stageTime = 0;
-
-    // Reset camera & ribbons
-    this.game.camera.x = p.x;
-    this.game.camera.y = p.y - 28;
-    this.game.stickRenderer.resetRibbons(p.x, p.y - 54, p.x, p.y - 26);
-
-    const hudStageName = document.getElementById('hud-stage-name');
-    if (hudStageName) hudStageName.textContent = `⚔️ PVP ARENA • ${this.roomCode}`;
-
-    if (window.Audio) window.Audio.resume();
-
-    this.triggerBanner('⚔️ PVP ARENA READY', `FIGHTER: ${this.playerName} • ROOM: ${this.roomCode}`, 3.0);
-
-    // Broadcast state at 40Hz
-    if (this.syncInterval) clearInterval(this.syncInterval);
-    this.syncInterval = setInterval(() => this.broadcastState(), 1000 / 40);
-
-    // Immediate join announcement
-    this.sendPacket({
-      type: 'join',
-      name: this.playerName,
-      characterId: this.characterId
-    });
-  }
-
-  // --- STATE BROADCASTER ---
-  broadcastState() {
-    if (!this.isMultiplayer || !this.game.player) return;
-    const p = this.game.player;
-
-    this.sendPacket({
-      type: 'sync',
-      name: this.playerName,
-      characterId: this.characterId,
-      x: Math.round(p.x * 10) / 10,
-      y: Math.round(p.y * 10) / 10,
-      vx: Math.round(p.vx * 10) / 10,
-      vy: Math.round(p.vy * 10) / 10,
-      facing: p.facing || 1,
-      state: p.state || 'IDLE',
-      hp: p.hp,
-      isBlocking: this.game.input ? this.game.input.isBlocking : false,
-      comboStep: p.comboStep || 0
-    });
-  }
-
-  // --- MESSAGE RECEIVER & ENTITY MANAGER ---
   handleIncomingMessage(msg) {
-    if (!msg || msg.room !== this.roomCode || msg.sender === this.senderId) return;
+    if (!msg || msg.roomCode !== this.roomCode || msg.senderId === this.senderId) return;
 
-    if (!this.game.currentStage) return;
-    if (!this.game.currentStage.entities) this.game.currentStage.entities = [];
-
-    switch(msg.type) {
-      case 'join':
-      case 'sync': {
-        let ent = this.game.currentStage.entities.find(e => e.id === msg.sender);
-        if (!ent) {
-          // Spawn remote player directly into currentStage.entities
-          ent = {
-            id: msg.sender,
-            name: msg.name || 'OPPONENT',
-            characterId: msg.characterId || 'halland',
-            type: 'pvp_fighter',
-            isPvP: true,
+    switch(msg.event) {
+      case 'player_join': {
+        const pData = msg.data || {};
+        if (!this.players.has(msg.senderId)) {
+          const newPlayer = {
+            id: msg.senderId,
+            name: pData.name || 'GUEST',
+            characterId: pData.characterId || 'lebrown',
+            type: 'pvp_opponent',
             isTarget: true,
+            isPvP: true,
             isPlayer: true,
             w: 22,
             h: 60,
-            x: Number.isFinite(msg.x) ? msg.x : 600,
-            y: Number.isFinite(msg.y) ? msg.y : 420,
+            x: 500 + (this.players.size * 100),
+            y: 400,
+            targetX: 500 + (this.players.size * 100),
+            targetY: 400,
             vx: 0,
             vy: 0,
-            facing: msg.facing || -1,
-            state: msg.state || 'IDLE',
-            hp: msg.hp !== undefined ? msg.hp : 100,
+            facing: -1,
+            state: 'IDLE',
+            hp: 100,
             maxHp: 100,
             hitTimer: 0,
             isDead: false,
             renderer: new StickmanRenderer()
           };
-          this.game.currentStage.entities.push(ent);
-          this.triggerBanner('⚡ OPPONENT JOINED!', `${ent.name.toUpperCase()} ENTERED THE ARENA!`, 2.5);
+          this.players.set(msg.senderId, newPlayer);
+          this.renderers.set(msg.senderId, newPlayer.renderer);
+
+          if (this.game.currentStage && this.game.currentStage.entities) {
+            if (!this.game.currentStage.entities.some(e => e.id === msg.senderId)) {
+              this.game.currentStage.entities.push(newPlayer);
+            }
+          }
         }
 
-        // Smooth position and sync animation
-        if (Number.isFinite(msg.x)) ent.x += (msg.x - ent.x) * 0.6;
-        if (Number.isFinite(msg.y)) ent.y += (msg.y - ent.y) * 0.6;
-        ent.vx = msg.vx || 0;
-        ent.vy = msg.vy || 0;
-        ent.facing = msg.facing || ent.facing;
-        ent.state = msg.state || 'IDLE';
-        ent.characterId = msg.characterId || ent.characterId;
-        ent.name = msg.name || ent.name;
-        if (msg.hp !== undefined) ent.hp = msg.hp;
-        break;
-      }
+        this.updateLobbyPlayerList();
 
-      case 'hit': {
-        if (msg.target === this.senderId) {
-          this.receiveDamage(msg.damage || 15, msg.kbX || 6, msg.kbY || -4, msg.atkType);
+        if (this.isHost) {
+          this.sendWsPacket({
+            roomCode: this.roomCode,
+            event: 'roster_sync',
+            senderId: this.senderId,
+            data: {
+              hostName: this.playerName,
+              hostCharId: this.characterId,
+              isBattleActive: this.isBattleActive,
+              playersCount: this.players.size + 1
+            }
+          });
         }
         break;
       }
 
-      case 'defeat': {
-        const victim = this.game.currentStage.entities.find(e => e.id === msg.victimId);
-        if (victim) victim.isDead = true;
-        this.triggerBanner('🏆 KNOCKOUT! 🏆', `${msg.winnerName} DEFEATED OPPONENT!`, 4.0);
+      case 'roster_sync': {
+        if (!this.players.has(msg.senderId)) {
+          const hostPlayer = {
+            id: msg.senderId,
+            name: msg.data.hostName || 'HOST',
+            characterId: msg.data.hostCharId || 'halland',
+            type: 'pvp_opponent',
+            isTarget: true,
+            isPvP: true,
+            isPlayer: true,
+            w: 22,
+            h: 60,
+            x: 200,
+            y: 400,
+            targetX: 200,
+            targetY: 400,
+            vx: 0,
+            vy: 0,
+            facing: 1,
+            state: 'IDLE',
+            hp: 100,
+            maxHp: 100,
+            hitTimer: 0,
+            isDead: false,
+            renderer: new StickmanRenderer()
+          };
+          this.players.set(msg.senderId, hostPlayer);
+          this.renderers.set(msg.senderId, hostPlayer.renderer);
+
+          if (this.game.currentStage && this.game.currentStage.entities) {
+            if (!this.game.currentStage.entities.some(e => e.id === msg.senderId)) {
+              this.game.currentStage.entities.push(hostPlayer);
+            }
+          }
+        }
+        this.updateLobbyPlayerList();
+
+        if (msg.data.isBattleActive && !this.isBattleActive) {
+          this.startMultiplayerArena();
+        }
         break;
       }
 
-      case 'respawn': {
-        const ent = this.game.currentStage.entities.find(e => e.id === msg.sender);
-        if (ent) {
-          ent.isDead = false;
-          ent.hp = 100;
-          ent.x = msg.x || 500;
-          ent.y = 420;
+      case 'start_battle': {
+        this.startMultiplayerArena();
+        break;
+      }
+
+      case 'state_sync': {
+        if (!msg.data) break;
+        let target = this.players.get(msg.senderId);
+        if (!target) {
+          target = {
+            id: msg.senderId,
+            name: msg.data.name || 'OPPONENT',
+            characterId: msg.data.characterId || 'lebrown',
+            type: 'pvp_opponent',
+            isTarget: true,
+            isPvP: true,
+            isPlayer: true,
+            w: 22,
+            h: 60,
+            x: Number.isFinite(msg.data.x) ? msg.data.x : 500,
+            y: Number.isFinite(msg.data.y) ? msg.data.y : 400,
+            targetX: Number.isFinite(msg.data.x) ? msg.data.x : 500,
+            targetY: Number.isFinite(msg.data.y) ? msg.data.y : 400,
+            vx: 0,
+            vy: 0,
+            facing: msg.data.facing || -1,
+            state: msg.data.state || 'IDLE',
+            hp: msg.data.hp !== undefined ? msg.data.hp : 100,
+            maxHp: 100,
+            hitTimer: 0,
+            isDead: false,
+            renderer: new StickmanRenderer()
+          };
+          this.players.set(msg.senderId, target);
+          this.renderers.set(msg.senderId, target.renderer);
+
+          if (this.game.currentStage && this.game.currentStage.entities) {
+            if (!this.game.currentStage.entities.some(e => e.id === msg.senderId)) {
+              this.game.currentStage.entities.push(target);
+            }
+          }
+        }
+
+        // Direct position streaming
+        if (Number.isFinite(msg.data.x)) {
+          target.targetX = msg.data.x;
+          target.x += (msg.data.x - target.x) * 0.55;
+        }
+        if (Number.isFinite(msg.data.y)) {
+          target.targetY = msg.data.y;
+          target.y += (msg.data.y - target.y) * 0.55;
+        }
+        target.vx = msg.data.vx || 0;
+        target.vy = msg.data.vy || 0;
+        target.facing = msg.data.facing || target.facing || -1;
+        target.state = msg.data.state || 'IDLE';
+        if (msg.data.hp !== undefined) target.hp = msg.data.hp;
+        target.characterId = msg.data.characterId || target.characterId || 'halland';
+        if (msg.data.name) target.name = msg.data.name;
+
+        // Ensure presence in active stage entities list for singleplayer combat hits
+        if (this.game.currentStage && this.game.currentStage.entities) {
+          if (!this.game.currentStage.entities.some(e => e.id === msg.senderId)) {
+            this.game.currentStage.entities.push(target);
+          }
+        }
+        break;
+      }
+
+      case 'action': {
+        if (msg.data) {
+          if (msg.data.event === 'hit' && msg.data.targetId === this.senderId) {
+            this.receiveDamage(msg.data.damage, msg.data.knockbackX, msg.data.knockbackY, msg.data.attackType);
+          } else if (msg.data.event === 'player_defeated') {
+            const victim = this.players.get(msg.data.victimId);
+            if (victim) victim.isDead = true;
+            this.checkLastStanding();
+          }
         }
         break;
       }
     }
   }
 
-  // --- DAMAGE & IMPACT ---
+  updateLobbyPlayerList() {
+    const listEl = document.getElementById('pvp-connected-count');
+    const totalCount = this.players.size + 1;
+    if (listEl) listEl.textContent = `${totalCount} / 8 FIGHTERS IN LOBBY`;
+
+    if (totalCount >= 2) {
+      this.updateStatusUI(`🟢 ${totalCount} FIGHTERS READY! Host can launch arena!`);
+    }
+  }
+
+  updateStatusUI(html) {
+    const el = document.getElementById('pvp-status-msg');
+    if (el) el.innerHTML = html;
+  }
+
+  getArenaConfiguration(playerCount) {
+    return {
+      id: 99,
+      name: "CYBER DOJO PVP ARENA",
+      belt: "BLACK",
+      gravity: 0.68,
+      friction: 0.88,
+      startX: 180,
+      startY: 400,
+      platforms: [
+        { x: 40, y: 480, w: 920, h: 40, type: 'ground' },
+        { x: 20, y: 120, w: 20, h: 370, type: 'wall' },
+        { x: 960, y: 120, w: 20, h: 370, type: 'wall' },
+        { x: 140, y: 350, w: 200, h: 18, type: 'pagoda' },
+        { x: 660, y: 350, w: 200, h: 18, type: 'pagoda' },
+        { x: 400, y: 240, w: 200, h: 18, type: 'pagoda' },
+        { x: 470, y: 470, w: 60, h: 12, isBouncer: true }
+      ],
+      breakables: [
+        { x: 220, y: 290, w: 16, h: 60, broken: false },
+        { x: 740, y: 290, w: 16, h: 60, broken: false }
+      ],
+      entities: []
+    };
+  }
+
+  // --- START BATTLE ARENA ---
+  startMultiplayerArena() {
+    this.isBattleActive = true;
+
+    // Close Modals
+    const modal = document.getElementById('pvp-modal');
+    if (modal) modal.classList.add('hidden');
+    const startScreen = document.getElementById('start-screen');
+    if (startScreen) startScreen.classList.add('hidden');
+
+    const totalCount = this.players.size + 1;
+    this.game.currentStage = this.getArenaConfiguration(totalCount);
+    this.game.currentStage.entities = [];
+
+    // Position local player
+    const p = this.game.player;
+    p.characterId = this.characterId;
+    p.name = this.playerName;
+    p.hp = 100;
+    p.maxHp = 100;
+    p.isDead = false;
+    p.state = 'IDLE';
+
+    const spawnOffsets = [180, 720, 340, 560, 450, 850];
+    let slot = this.isHost ? 0 : 1;
+    p.x = spawnOffsets[slot % spawnOffsets.length];
+    p.y = 400;
+    p.facing = p.x < 500 ? 1 : -1;
+
+    // Put all remote players directly into currentStage.entities
+    let rSlot = 0;
+    for (const [id, rPlayer] of this.players) {
+      if (rSlot === slot) rSlot++;
+      rPlayer.x = spawnOffsets[rSlot % spawnOffsets.length];
+      rPlayer.targetX = rPlayer.x;
+      rPlayer.y = 400;
+      rPlayer.hp = 100;
+      rPlayer.isDead = false;
+      rPlayer.isPvP = true;
+      rPlayer.isTarget = true;
+      rPlayer.isPlayer = true;
+      this.game.currentStage.entities.push(rPlayer);
+      rSlot++;
+    }
+
+    this.triggerBanner(`BATTLE ARENA`, `${totalCount} FIGHTERS • FIGHT!`, 3.0);
+
+    this.game.isPlaying = true;
+    this.game.isEndlessMode = false;
+    this.game.camera.x = p.x;
+    this.game.camera.y = p.y - 28;
+    this.game.stickRenderer.resetRibbons(p.x, p.y - 54, p.x, p.y - 26);
+
+    if (window.Audio) window.Audio.resume();
+
+    // Start 40Hz State Streaming Loop
+    if (this.syncInterval) clearInterval(this.syncInterval);
+    this.syncInterval = setInterval(() => this.broadcastState(), 1000 / 40);
+
+    if (this.isHost) {
+      this.sendWsPacket({
+        roomCode: this.roomCode,
+        event: 'start_battle',
+        senderId: this.senderId
+      });
+    }
+  }
+
+  // --- STREAM PLAYER STATE ---
+  broadcastState() {
+    if (!this.isConnected || !this.game.player) return;
+
+    const p = this.game.player;
+    this.sendWsPacket({
+      roomCode: this.roomCode,
+      event: 'state_sync',
+      senderId: this.senderId,
+      data: {
+        name: this.playerName,
+        x: Math.round(p.x * 10) / 10,
+        y: Math.round(p.y * 10) / 10,
+        vx: Math.round(p.vx * 10) / 10,
+        vy: Math.round(p.vy * 10) / 10,
+        facing: p.facing || 1,
+        state: p.state || 'IDLE',
+        hp: p.hp,
+        characterId: this.characterId
+      }
+    });
+  }
+
   receiveDamage(dmg, kbX, kbY, atkType) {
     const p = this.game.player;
-    if (!p || p.invulnerableTimer > 0 || p.hp <= 0) return;
+    if (p.invulnerableTimer > 0 || p.hp <= 0) return;
 
     p.hp = Math.max(0, p.hp - dmg);
     p.vx = kbX;
@@ -294,37 +565,36 @@ class MultiplayerManager {
 
     if (p.hp <= 0) {
       p.isDead = true;
-      this.sendPacket({
-        type: 'defeat',
-        victimId: this.senderId,
-        winnerName: 'OPPONENT'
+      this.sendWsPacket({
+        roomCode: this.roomCode,
+        event: 'action',
+        senderId: this.senderId,
+        data: { event: 'player_defeated', victimId: this.senderId }
       });
-      this.triggerBanner('💀 YOU WERE DEFEATED', 'PRESS [SPACE] TO RESPAWN', 5.0);
-
-      // Auto-respawn after 3.5 seconds
-      setTimeout(() => {
-        if (this.isMultiplayer && p.isDead) {
-          this.respawnPlayer();
-        }
-      }, 3500);
+      this.checkLastStanding();
     }
   }
 
-  respawnPlayer() {
-    const p = this.game.player;
-    if (!p) return;
-    p.hp = 100;
-    p.isDead = false;
-    p.x = 220 + Math.random() * 500;
-    p.y = 420;
-    p.vx = 0;
-    p.vy = 0;
-    p.state = 'IDLE';
-    this.sendPacket({
-      type: 'respawn',
-      x: p.x
-    });
-    this.triggerBanner('⚡ RESPAWNED!', 'READY FOR ROUND 2!', 2.0);
+  checkLastStanding() {
+    let aliveCount = this.game.player.hp > 0 ? 1 : 0;
+    let winnerName = this.game.player.name;
+
+    for (const [id, rPlayer] of this.players) {
+      if (rPlayer.hp > 0 && !rPlayer.isDead) {
+        aliveCount++;
+        winnerName = rPlayer.name;
+      }
+    }
+
+    if (aliveCount <= 1) {
+      if (this.game.player.hp > 0) {
+        if (window.Audio) window.Audio.playVictoryStinger();
+        this.triggerBanner('🏆 ARENA CHAMPION! 🏆', `${this.playerName} ELIMINATED ALL OPPONENTS!`, 4.5);
+      } else {
+        if (window.Audio) window.Audio.playDeath();
+        this.triggerBanner('MATCH CONCLUDED', `WINNER: ${winnerName}`, 4.5);
+      }
+    }
   }
 
   triggerBanner(title, sub, duration = 2.5) {
@@ -333,11 +603,10 @@ class MultiplayerManager {
     this.banner.timer = duration;
   }
 
-  // --- RENDER MATCH BANNER & HUD ---
   render(ctx) {
-    if (!this.isMultiplayer) return;
+    if (!this.isBattleActive) return;
 
-    // Draw Top Match Banner
+    // Draw Match Banner
     if (this.banner.timer > 0) {
       this.banner.timer -= 0.016;
       ctx.save();
@@ -356,13 +625,15 @@ class MultiplayerManager {
     }
   }
 
-  // --- UI CONTROLS ---
   openPvpModal() {
     const modal = document.getElementById('pvp-modal');
     if (modal) modal.classList.remove('hidden');
 
     const nameInput = document.getElementById('pvp-player-name-input');
     if (nameInput) nameInput.value = this.playerName;
+
+    const urlInput = document.getElementById('pvp-server-url-input');
+    if (urlInput) urlInput.value = this.serverUrl;
 
     const charCards = document.querySelectorAll('.char-select-card');
     charCards.forEach(c => {
@@ -377,10 +648,22 @@ class MultiplayerManager {
     if (modal) modal.classList.add('hidden');
   }
 
-  setPlayerProfile(name, charId) {
-    this.playerName = (name || 'FIGHTER').trim();
-    this.characterId = charId || 'halland';
-    localStorage.setItem('pvp_player_name', this.playerName);
-    localStorage.setItem('pvp_character_id', this.characterId);
+  showHostLobbyUI(code) {
+    const codeEl = document.getElementById('pvp-room-code-display');
+    if (codeEl) codeEl.textContent = code;
+
+    const hostDetails = document.getElementById('pvp-host-details');
+    if (hostDetails) hostDetails.style.display = 'block';
+
+    const copyBtn = document.getElementById('btn-copy-pvp-link');
+    if (copyBtn) {
+      copyBtn.onclick = () => {
+        const url = `${window.location.origin}${window.location.pathname}?room=${code}`;
+        navigator.clipboard.writeText(url).then(() => {
+          copyBtn.textContent = 'COPIED! ✓';
+          setTimeout(() => copyBtn.textContent = 'COPY LINK 🔗', 2000);
+        });
+      };
+    }
   }
 }

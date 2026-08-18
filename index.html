@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Outfit:wght@400;600;700;900&family=JetBrains+Mono:wght@500;700;800&family=Syncopate:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.0.0">
+  <link rel="stylesheet" href="style.css?v=3.1.0">
   <!-- PeerJS for WebRTC 1v1 Online Multiplayer -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
@@ -295,26 +295,26 @@
 
     <!-- Multi-Player Online Arena PvP Modal (2-8 Players) -->
     <div id="pvp-modal" class="overlay-screen hidden">
-      <div class="cyber-modal main-menu-card" style="max-width: 580px; text-align: center;">
+      <div class="cyber-modal main-menu-card" style="max-width: 600px; text-align: center;">
         <div class="modal-corner tl"></div>
         <div class="modal-corner tr"></div>
         <div class="modal-corner bl"></div>
         <div class="modal-corner br"></div>
 
         <div class="brand-bar">
-          <span class="studio-tag">REAL-TIME ONLINE MULTIPLAYER ARENA</span>
+          <span class="studio-tag">ONLINE MULTIPLAYER ARENA (2 - 8 PLAYERS)</span>
         </div>
 
         <div class="title-wrap">
           <h2 style="font-family: var(--font-cyber); font-size: 1.7rem; color: #38bdf8; letter-spacing: 0.1em; margin: 0.2rem 0;">CYBER DOJO ARENA</h2>
-          <div class="title-sub">INSTANT BRAWL &bull; CROSS-TAB &bull; ONLINE RELAY</div>
+          <div class="title-sub">REAL-TIME BATTLE ROYALE &bull; DYNAMIC MAP SCALING</div>
         </div>
 
         <!-- Player Custom Name & Character Selector -->
         <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 0.9rem; margin: 0.8rem 0; text-align: left;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
-            <span style="font-size: 0.75rem; font-weight: 800; color: #f59e0b; letter-spacing: 0.1em;">SELECT YOUR FIGHTER:</span>
-            <input type="text" id="pvp-player-name-input" placeholder="Your Fighter Name..." maxlength="16" value="FIGHTER 1" style="background: rgba(0,0,0,0.6); border: 1px solid rgba(245,158,11,0.5); color: #fff; padding: 0.3rem 0.6rem; font-weight: 800; font-size: 0.85rem; border-radius: 4px; width: 160px;">
+            <span style="font-size: 0.75rem; font-weight: 800; color: #f59e0b; letter-spacing: 0.1em;">1. YOUR FIGHTER PROFILE:</span>
+            <input type="text" id="pvp-player-name-input" placeholder="Enter Your Name..." maxlength="16" value="FIGHTER 1" style="background: rgba(0,0,0,0.6); border: 1px solid rgba(245,158,11,0.5); color: #fff; padding: 0.3rem 0.6rem; font-weight: 800; font-size: 0.85rem; border-radius: 4px; width: 180px;">
           </div>
 
           <!-- 5 Character Cards Grid -->
@@ -342,20 +342,55 @@
           </div>
         </div>
 
-        <!-- 1-Click Action Buttons -->
-        <button id="btn-enter-public-arena" class="cyber-btn play-btn" style="width: 100%; padding: 0.95rem; font-size: 1.15rem; margin-bottom: 0.8rem; background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 0 20px rgba(239,68,68,0.4);">
-          <span>⚔️ ENTER PUBLIC ARENA (QUICK PLAY)</span>
-        </button>
+        <!-- PVP Host / Join Panels -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 0.8rem;">
+          <!-- Host Panel -->
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; padding: 0.9rem; display: flex; flex-direction: column; gap: 0.6rem;">
+            <div style="font-size: 0.75rem; font-weight: 800; color: #38bdf8; letter-spacing: 0.15em;">HOST MATCH</div>
+            <button id="btn-host-pvp" class="cyber-btn" style="background: #0284c7; padding: 0.7rem; font-size: 0.9rem; font-weight: 800;">
+              <span>👑 CREATE ROOM</span>
+            </button>
+            <div id="pvp-host-details" style="display: none;">
+              <div style="font-size: 0.75rem; color: #64748b;">ROOM CODE:</div>
+              <div id="pvp-room-code-display" style="font-family: monospace; font-size: 1.3rem; font-weight: 900; color: #f59e0b; letter-spacing: 0.15em; margin: 0.2rem 0;">HALL-XXXX</div>
+              <button id="btn-copy-pvp-link" class="cyber-btn secondary-btn" style="width: 100%; padding: 0.4rem; font-size: 0.75rem;">
+                <span>COPY LINK 🔗</span>
+              </button>
+            </div>
+          </div>
 
-        <!-- Custom Room Code Row -->
-        <div style="display: flex; gap: 0.5rem; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 0.6rem; margin-bottom: 0.8rem;">
-          <input type="text" id="pvp-custom-room-input" placeholder="OR ENTER CUSTOM ROOM CODE (e.g. 123)" maxlength="12" style="flex: 1; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); color: #38bdf8; padding: 0.5rem 0.8rem; font-family: monospace; font-size: 0.9rem; font-weight: 800; border-radius: 4px; text-transform: uppercase;">
-          <button id="btn-enter-custom-arena" class="cyber-btn" style="background: #0284c7; padding: 0.5rem 1.2rem; font-size: 0.85rem; font-weight: 800;">
-            <span>ENTER ROOM 🔑</span>
-          </button>
+          <!-- Join Panel -->
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 0.9rem; display: flex; flex-direction: column; gap: 0.6rem;">
+            <div style="font-size: 0.75rem; font-weight: 800; color: #ef4444; letter-spacing: 0.15em;">JOIN MATCH</div>
+            <input type="text" id="pvp-join-code" placeholder="ROOM CODE" maxlength="10" style="background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); color: #fff; text-align: center; padding: 0.5rem; font-family: monospace; font-size: 1rem; font-weight: 800; letter-spacing: 0.1em; border-radius: 4px; text-transform: uppercase;">
+            <button id="btn-join-pvp" class="cyber-btn" style="background: #dc2626; padding: 0.7rem; font-size: 0.9rem; font-weight: 800;">
+              <span>⚔️ JOIN DUEL</span>
+            </button>
+          </div>
         </div>
 
-        <button id="btn-close-pvp" class="cyber-btn secondary-btn" style="width: 100%; padding: 0.5rem; font-size: 0.85rem;">
+        <div id="pvp-connected-count" style="font-size: 0.8rem; font-weight: 800; color: #38bdf8; font-family: monospace; margin-bottom: 0.4rem;">
+          1 / 8 FIGHTERS READY
+        </div>
+
+        <button id="btn-launch-arena" class="cyber-btn play-btn" style="display: none; width: 100%; padding: 0.85rem; font-size: 1.1rem; margin-bottom: 0.6rem;">
+          <span>⚔️ LAUNCH BATTLE ARENA</span>
+        </button>
+
+        <div id="pvp-status-msg" style="font-size: 0.8rem; color: #cbd5e1; min-height: 1.5rem; font-family: monospace;">
+          Select character and host/join to start multiplayer!
+        </div>
+
+        <!-- Render Server URL Settings Toggle -->
+        <div style="margin-top: 0.6rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.6rem;">
+          <div style="display: flex; gap: 0.5rem; justify-content: center; align-items: center;">
+            <span style="font-size: 0.7rem; color: #64748b; font-family: monospace;">SERVER:</span>
+            <input type="text" id="pvp-server-url-input" value="wss://mygameserver-bsow.onrender.com/" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #38bdf8; font-size: 0.7rem; padding: 0.25rem 0.5rem; font-family: monospace; width: 240px; border-radius: 3px;">
+            <button id="btn-save-server-url" class="cyber-btn" style="padding: 0.25rem 0.5rem; font-size: 0.7rem; background: #0369a1;">SAVE</button>
+          </div>
+        </div>
+
+        <button id="btn-close-pvp" class="cyber-btn secondary-btn" style="margin-top: 0.6rem; width: 100%; padding: 0.5rem; font-size: 0.85rem;">
           <span>← BACK TO MAIN MENU</span>
         </button>
       </div>
@@ -433,15 +468,15 @@
   </div>
 
   <!-- Scripts with Cache-Busting Versioning -->
-  <script src="js/audio.js?v=3.0.0"></script>
-  <script src="js/haptics.js?v=3.0.0"></script>
-  <script src="js/cutscenes.js?v=3.0.0"></script>
-  <script src="js/stickman.js?v=3.0.0"></script>
-  <script src="js/combat.js?v=3.0.0"></script>
-  <script src="js/physics.js?v=3.0.0"></script>
-  <script src="js/input.js?v=3.0.0"></script>
-  <script src="js/levels.js?v=3.0.0"></script>
-  <script src="js/multiplayer.js?v=3.0.0"></script>
-  <script src="js/main.js?v=3.0.0"></script>
+  <script src="js/audio.js?v=3.1.0"></script>
+  <script src="js/haptics.js?v=3.1.0"></script>
+  <script src="js/cutscenes.js?v=3.1.0"></script>
+  <script src="js/stickman.js?v=3.1.0"></script>
+  <script src="js/combat.js?v=3.1.0"></script>
+  <script src="js/physics.js?v=3.1.0"></script>
+  <script src="js/input.js?v=3.1.0"></script>
+  <script src="js/levels.js?v=3.1.0"></script>
+  <script src="js/multiplayer.js?v=3.1.0"></script>
+  <script src="js/main.js?v=3.1.0"></script>
 </body>
 </html>
