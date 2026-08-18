@@ -382,6 +382,9 @@ class GameEngine {
 
     // Keyboard Pause Shortcuts (ESC / P)
     window.addEventListener('keydown', (e) => {
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) {
+        return;
+      }
       if (e.code === 'Escape' || e.code === 'KeyP') {
         this.togglePause();
       }

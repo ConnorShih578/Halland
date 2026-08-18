@@ -268,9 +268,11 @@ class InputController {
     return act;
   }
 
-  // --- Desktop Keyboard & Gamepad Input ---
-
   handleKeyDown(e) {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) {
+      return;
+    }
+
     const gameKeys = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyE', 'KeyT', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyR'];
     if (gameKeys.includes(e.code)) {
       e.preventDefault();
@@ -341,6 +343,10 @@ class InputController {
   }
 
   handleKeyUp(e) {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) {
+      return;
+    }
+
     this.keys[e.code] = false;
 
     // Update horizontal movement
