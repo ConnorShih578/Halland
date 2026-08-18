@@ -403,7 +403,15 @@ body, html {
    4. BESPOKE CYBER MODALS & PANELS
 ========================================================= */
 
-.overlay-screen {
+.hidden {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.overlay-screen,
+.controls-guide-overlay {
   position: absolute;
   inset: 0;
   background: rgba(5, 7, 10, 0.85);
@@ -416,10 +424,25 @@ body, html {
   transition: opacity 0.3s ease, visibility 0.3s;
 }
 
-.overlay-screen.hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
+.overlay-screen.hidden,
+.controls-guide-overlay.hidden {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+#start-screen {
+  z-index: 60;
+}
+
+#pvp-modal,
+#custom-music-modal,
+#controls-hint,
+#pause-screen,
+#cutscene-screen,
+#victory-screen {
+  z-index: 70;
 }
 
 .kanji-bg {
