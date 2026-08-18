@@ -126,22 +126,19 @@ class GameEngine {
       });
     }
 
-    const btnHostPvp = document.getElementById('btn-host-pvp');
-    if (btnHostPvp) {
-      btnHostPvp.addEventListener('click', () => {
-        const detailsEl = document.getElementById('pvp-host-details');
-        if (detailsEl) detailsEl.style.display = 'block';
-        if (this.multiplayer) this.multiplayer.hostMatch();
+    const btnEnterPublic = document.getElementById('btn-enter-public-arena');
+    if (btnEnterPublic) {
+      btnEnterPublic.addEventListener('click', () => {
+        if (this.multiplayer) this.multiplayer.enterArena('PUBLIC');
       });
     }
 
-    const btnJoinPvp = document.getElementById('btn-join-pvp');
-    if (btnJoinPvp) {
-      btnJoinPvp.addEventListener('click', () => {
-        const codeInput = document.getElementById('pvp-join-code');
-        if (this.multiplayer && codeInput) {
-          this.multiplayer.joinMatch(codeInput.value);
-        }
+    const btnEnterCustom = document.getElementById('btn-enter-custom-arena');
+    if (btnEnterCustom) {
+      btnEnterCustom.addEventListener('click', () => {
+        const input = document.getElementById('pvp-custom-room-input');
+        const code = input && input.value.trim() ? input.value.trim() : 'ROOM1';
+        if (this.multiplayer) this.multiplayer.enterArena(code);
       });
     }
 
@@ -168,25 +165,6 @@ class GameEngine {
         const activeCard = document.querySelector('.char-select-card.active');
         const charId = activeCard ? activeCard.getAttribute('data-char') : 'halland';
         if (this.multiplayer) this.multiplayer.setPlayerProfile(nameInput.value, charId);
-      });
-    }
-
-    const btnLaunch = document.getElementById('btn-launch-arena');
-    if (btnLaunch) {
-      btnLaunch.addEventListener('click', () => {
-        if (this.multiplayer) this.multiplayer.startMultiplayerArena();
-      });
-    }
-
-    const btnSaveServer = document.getElementById('btn-save-server-url');
-    if (btnSaveServer) {
-      btnSaveServer.addEventListener('click', () => {
-        const serverInput = document.getElementById('pvp-server-url-input');
-        if (this.multiplayer && serverInput) {
-          this.multiplayer.setServerUrl(serverInput.value);
-          btnSaveServer.textContent = 'SAVED! ✓';
-          setTimeout(() => btnSaveServer.textContent = 'SAVE', 2000);
-        }
       });
     }
 
