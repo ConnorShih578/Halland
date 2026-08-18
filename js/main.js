@@ -212,7 +212,9 @@ class GameEngine {
         if (this.isEndlessMode) {
           this.loadInfiniteEndlessWorld();
         } else {
-          const nextIdx = (this.currentStageIndex + 1) % STAGES.length;
+          const stages = window.STAGES || (window.LevelGenerator ? window.LevelGenerator.getCampaignStages() : []);
+          const total = stages.length || 5;
+          const nextIdx = (this.currentStageIndex + 1) % total;
           this.loadStage(nextIdx);
         }
         this.isPlaying = true;
@@ -438,12 +440,27 @@ class GameEngine {
     if (window.Audio) window.Audio.play('tap');
   }
 
+  startEndlessGame() {
+    const startScreen = document.getElementById('start-screen');
+    if (startScreen) startScreen.classList.add('hidden');
+    this.isEndlessMode = true;
+    if (this.multiplayer) this.multiplayer.isMultiplayer = false;
+    this.distanceTraveled = 0;
+    this.endlessKills = 0;
+    this.endlessScore = 0;
+    this.loadInfiniteEndlessWorld();
+    this.isPlaying = true;
+    if (window.Audio) window.Audio.resume();
+  }
+
   loadStage(index) {
     this.isEndlessMode = false;
     this.currentStageIndex = index;
-    this.currentStage = JSON.parse(JSON.stringify(STAGES[index]));
-    this.player = this.physics.createPlayer(this.currentStage.startX, this.currentStage.startY);
-    this.player.beltColor = this.currentStage.beltColor;
+    const stages = window.STAGES || (window.LevelGenerator ? window.LevelGenerator.getCampaignStages() : []);
+    const stageData = stages[index] || stages[0];
+    this.currentStage = JSON.parse(JSON.stringify(stageData));
+    this.player = this.physics.createPlayer(this.currentStage.startX || 80, this.currentStage.startY || 540);
+    this.player.beltColor = this.currentStage.beltColor || '#ffffff';
 
     this.stageTime = 0;
     this.accumulator = 0;
@@ -452,11 +469,15 @@ class GameEngine {
 
     this.stickRenderer.resetRibbons(this.player.x, this.player.y - 54, this.player.x, this.player.y - 26);
 
-    document.getElementById('hud-stage-name').textContent = this.currentStage.name;
+    const nameEl = document.getElementById('hud-stage-name');
+    if (nameEl) nameEl.textContent = this.currentStage.name;
     const beltEl = document.getElementById('hud-belt');
-    beltEl.textContent = this.currentStage.belt;
-    beltEl.className = `hud-badge belt-${this.currentStage.belt.toLowerCase()}`;
-    document.getElementById('hud-deaths').textContent = '0';
+    if (beltEl) {
+      beltEl.textContent = this.currentStage.belt || 'WHITE';
+      beltEl.className = `hud-badge belt-${(this.currentStage.belt || 'white').toLowerCase()}`;
+    }
+    const deathsEl = document.getElementById('hud-deaths');
+    if (deathsEl) deathsEl.textContent = '0';
   }
 
   loadInfiniteEndlessWorld() {
@@ -503,7 +524,8 @@ class GameEngine {
     if (window.Haptics) window.Haptics.trigger('checkpoint');
 
     // If Act 5 (Final Boss) is cleared -> Trigger Cinematic Ending Cutscene!
-    if (!this.isEndlessMode && this.currentStageIndex === STAGES.length - 1) {
+    const stages = window.STAGES || (window.LevelGenerator ? window.LevelGenerator.getCampaignStages() : []);
+    if (!this.isEndlessMode && this.currentStageIndex === stages.length - 1) {
       if (window.Cutscenes) {
         window.Cutscenes.playEndingCutscene();
         return;

@@ -277,11 +277,11 @@
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 0.8rem; width: 100%;">
-          <button id="btn-play" class="cyber-btn play-btn" style="width: 100%; padding: 1.1rem; font-size: 1.25rem;">
+          <button id="btn-play" class="cyber-btn play-btn" onclick="if(window.Game && window.Game.startEndlessGame) window.Game.startEndlessGame(); else { document.getElementById('start-screen').classList.add('hidden'); if(window.Audio) window.Audio.resume(); }" style="width: 100%; padding: 1.1rem; font-size: 1.25rem;">
             <span class="btn-glow"></span>
             <span class="btn-text">▶️ START GAME</span>
           </button>
-          <button id="btn-open-pvp" class="cyber-btn endless-glow" style="width: 100%; padding: 0.9rem; font-size: 1.1rem; background: linear-gradient(135deg, #0284c7, #0369a1);">
+          <button id="btn-open-pvp" class="cyber-btn endless-glow" onclick="if(window.Game && window.Game.multiplayer) window.Game.multiplayer.openPvpModal(); else document.getElementById('pvp-modal').classList.remove('hidden');" style="width: 100%; padding: 0.9rem; font-size: 1.1rem; background: linear-gradient(135deg, #0284c7, #0369a1);">
             <span class="btn-glow"></span>
             <span class="btn-text">⚔️ 1V1 ONLINE PVP DUEL</span>
           </button>
