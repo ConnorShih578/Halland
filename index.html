@@ -25,17 +25,6 @@
     <!-- Native BGM Audio Player Element -->
     <audio id="bgm-player" loop preload="auto"></audio>
 
-    <!-- INTRO SPLASH: TIMMY'S GAMES PRESENTS -->
-    <div id="intro-screen" class="intro-screen">
-      <div class="intro-content">
-        <img src="favicon.svg" class="intro-logo-img" alt="Halland Logo">
-        <h1 class="intro-brand">TIMMY'S GAMES</h1>
-        <div class="intro-subtitle">PRESENTS</div>
-        <div class="intro-bar"><div class="intro-bar-fill"></div></div>
-      </div>
-      <div class="intro-skip">TAP ANYWHERE TO SKIP</div>
-    </div>
-
     <!-- UI Overlay / HUD -->
     <div id="hud">
       <div class="hud-top">
@@ -254,12 +243,12 @@
       </div>
     </div>
 
-    <!-- Start / Stage Select Screen -->
-    <div id="start-screen" class="overlay-screen hidden">
+    <!-- Clean Start Screen -->
+    <div id="start-screen" class="overlay-screen">
       <div class="kanji-bg left">武</div>
       <div class="kanji-bg right">影</div>
 
-      <div class="cyber-modal main-menu-card">
+      <div class="cyber-modal main-menu-card" style="max-width: 500px; text-align: center;">
         <div class="modal-corner tl"></div>
         <div class="modal-corner tr"></div>
         <div class="modal-corner bl"></div>
@@ -274,57 +263,24 @@
           <div class="title-sub">THE HYBRID POWERHOUSE MARTIAL ARTS ADVENTURE</div>
         </div>
 
-        <!-- Mode Selector Tabs -->
-        <div class="mode-tabs">
-          <button id="tab-campaign" class="mode-tab active">
-            <span>🥋 STORY CAMPAIGN</span>
-          </button>
-          <button id="tab-endless" class="mode-tab">
-            <span>♾️ ENDLESS SURVIVAL</span>
-          </button>
+        <div class="endless-stats-row" style="margin: 1.2rem 0; justify-content: center; gap: 1rem;">
+          <div class="e-stat">
+            <span class="e-label">BEST DISTANCE</span>
+            <span id="endless-best-wave" class="e-val mono" style="color: #f59e0b;">0m</span>
+          </div>
+          <div class="e-stat">
+            <span class="e-label">HIGH SCORE</span>
+            <span id="endless-high-score" class="e-val mono" style="color: #38bdf8;">0</span>
+          </div>
         </div>
 
-        <!-- Campaign View -->
-        <div id="campaign-view" class="mode-view">
-          <div class="stage-nav-bar">
-            <span class="stage-nav-title">ACT SELECT: THE SAGA OF MJ'S SHOE</span>
-          </div>
-          <div id="stage-grid" class="stage-select-grid scrollable">
-            <!-- Populated dynamically by main.js with 5 story acts -->
-          </div>
-          <button id="btn-play" class="cyber-btn play-btn">
-            <span class="btn-glow"></span>
-            <span class="btn-text">START STORY MISSION</span>
-          </button>
-        </div>
+        <button id="btn-play" class="cyber-btn play-btn" style="width: 100%; padding: 1.1rem; font-size: 1.25rem;">
+          <span class="btn-glow"></span>
+          <span class="btn-text">▶️ START GAME</span>
+        </button>
 
-        <!-- Endless Survival View -->
-        <div id="endless-view" class="mode-view hidden">
-          <div class="endless-banner-card">
-            <div class="endless-badge">INFINITE WAVE COMBAT</div>
-            <h3>SURVIVE THE INFINITE DOJO</h3>
-            <p>Fight through endless waves of escalating Ninjas, Sentinels, and Grandmasters. Upgrade belt ranks every 5 waves!</p>
-
-            <div class="endless-stats-row">
-              <div class="e-stat">
-                <span class="e-label">BEST WAVE</span>
-                <span id="endless-best-wave" class="e-val mono">WAVE 1</span>
-              </div>
-              <div class="e-stat">
-                <span class="e-label">TOTAL KILLS</span>
-                <span id="endless-best-kills" class="e-val mono">0</span>
-              </div>
-              <div class="e-stat">
-                <span class="e-label">HIGH SCORE</span>
-                <span id="endless-high-score" class="e-val mono">0</span>
-              </div>
-            </div>
-          </div>
-
-          <button id="btn-play-endless" class="cyber-btn play-btn endless-glow">
-            <span class="btn-glow"></span>
-            <span class="btn-text">START ENDLESS SURVIVAL ♾️</span>
-          </button>
+        <div class="guide-footer" style="margin-top: 1.2rem; font-size: 0.8rem; color: #94a3b8;">
+          <span>⌨️ <strong>W / A / D</strong> Move &bull; <strong>Spacebar</strong> Combo &bull; <strong>S</strong> Parry/Slide &bull; <strong>Up</strong> Web Zip</span>
         </div>
       </div>
     </div>

@@ -81,104 +81,33 @@ class GameEngine {
   }
 
   bindUI() {
-    // 1. "TIMMY'S GAMES PRESENTS" Intro Sequence Lifecycle
-    const introScreen = document.getElementById('intro-screen');
-    const startScreen = document.getElementById('start-screen');
-
-    const finishIntro = () => {
-      if (introScreen && !introScreen.classList.contains('fade-out')) {
-        introScreen.classList.add('fade-out');
-        setTimeout(() => {
-          introScreen.style.display = 'none';
-          if (startScreen) startScreen.classList.remove('hidden');
-        }, 800);
-      }
-    };
-
-    if (introScreen) {
-      introScreen.addEventListener('click', finishIntro);
-      window.addEventListener('keydown', (e) => {
-        if (introScreen && !introScreen.classList.contains('fade-out')) {
-          finishIntro();
-        }
-      }, { once: true });
-
-      setTimeout(finishIntro, 2400);
-    }
-
-    // 2. Mode Tabs (Campaign vs Endless Survival)
-    const tabCampaign = document.getElementById('tab-campaign');
-    const tabEndless = document.getElementById('tab-endless');
-    const campaignView = document.getElementById('campaign-view');
-    const endlessView = document.getElementById('endless-view');
-
+    // 1. High Score & Distance Readout Sync
     const updateEndlessStatsUI = () => {
       const bestDist = localStorage.getItem('halland_best_dist') || 0;
-      const bestKills = localStorage.getItem('halland_best_kills') || 0;
       const highScore = localStorage.getItem('halland_high_score') || 0;
 
       const wEl = document.getElementById('endless-best-wave');
-      const kEl = document.getElementById('endless-best-kills');
       const sEl = document.getElementById('endless-high-score');
 
       if (wEl) wEl.textContent = `${Number(bestDist).toLocaleString()}m`;
-      if (kEl) kEl.textContent = bestKills;
       if (sEl) sEl.textContent = Number(highScore).toLocaleString();
     };
     updateEndlessStatsUI();
 
-    if (tabCampaign && tabEndless) {
-      tabCampaign.addEventListener('click', () => {
-        tabCampaign.classList.add('active');
-        tabEndless.classList.remove('active');
-        campaignView.classList.remove('hidden');
-        endlessView.classList.add('hidden');
-        this.isEndlessMode = false;
-      });
-
-      tabEndless.addEventListener('click', () => {
-        tabEndless.classList.add('active');
-        tabCampaign.classList.remove('active');
-        endlessView.classList.remove('hidden');
-        campaignView.classList.add('hidden');
+    // 2. Clean Single Start Button
+    const btnPlay = document.getElementById('btn-play');
+    if (btnPlay) {
+      btnPlay.addEventListener('click', () => {
+        document.getElementById('start-screen').classList.add('hidden');
         this.isEndlessMode = true;
-        updateEndlessStatsUI();
+        this.distanceTraveled = 0;
+        this.endlessKills = 0;
+        this.endlessScore = 0;
+        this.loadInfiniteEndlessWorld();
+        this.isPlaying = true;
+        if (window.Audio) window.Audio.resume();
       });
     }
-
-    // 3. Populate 5 Campaign Acts in UI
-    const stageGrid = document.getElementById('stage-grid');
-    if (stageGrid && window.STAGES) {
-      stageGrid.innerHTML = '';
-      window.STAGES.forEach((st, idx) => {
-        const btn = document.createElement('button');
-        btn.className = `stage-card ${idx === this.currentStageIndex ? 'active' : ''}`;
-        btn.dataset.stage = idx;
-        btn.innerHTML = `
-          <div class="st-header">
-            <span class="st-num">ACT ${idx + 1}</span>
-            <span class="st-rank ${st.belt.toLowerCase()}">${st.belt} BELT</span>
-          </div>
-          <div class="st-title">${st.name.split(':')[1] || st.name}</div>
-          <div class="st-desc">${st.subtitle || 'Smash all yellow barriers & defeat boss!'}</div>
-        `;
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.stage-card').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          this.isEndlessMode = false;
-          this.loadStage(idx);
-        });
-        stageGrid.appendChild(btn);
-      });
-    }
-
-    // 4. Start Buttons
-    document.getElementById('btn-play').addEventListener('click', () => {
-      document.getElementById('start-screen').classList.add('hidden');
-      this.isEndlessMode = false;
-      this.isPlaying = true;
-      if (window.Audio) window.Audio.resume();
-    });
 
     const btnPlayEndless = document.getElementById('btn-play-endless');
     if (btnPlayEndless) {
