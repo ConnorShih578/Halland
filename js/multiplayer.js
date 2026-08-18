@@ -545,33 +545,54 @@ class MultiplayerManager {
       }
     }
 
-    const isAttacking = player.state.startsWith('ATK') || player.state === 'FLYING_TORNADO_KICK' || player.state === 'DRAGON_UPPERCUT';
-    if (isAttacking && player.stateTime < 0.12 && !player.hasHitMultiplayerThisMove) {
+    const isAttacking = this.game.combat ? this.game.combat.isAttackActive(player) : (
+      ['JAB', 'SNAP_KICK', 'STRAIGHT_PUNCH', 'SLIDE_SWEEP', 'WEB_ZIP', 'SPIN_BACKFIST', 'SPIN_HEEL_KICK', 'SPIN_SWEEP', 'FLYING_TORNADO_KICK', 'DRAGON_UPPERCUT'].includes(player.state)
+    );
+
+    if (isAttacking && !player.hasHitMultiplayerThisMove) {
       player.hasHitMultiplayerThisMove = true;
 
-      const strikeRange = player.state === 'DRAGON_UPPERCUT' ? 75 : 65;
+      const hitbox = this.game.combat ? this.game.combat.getPlayerHitbox(player) : { x: player.x - 20, y: player.y - 60, w: 50, h: 60 };
+      const isUppercut = player.state === 'DRAGON_UPPERCUT';
+      const isHeavy = ['FLYING_TORNADO_KICK', 'DRAGON_UPPERCUT', 'STRAIGHT_PUNCH', 'SPIN_BACKFIST', 'SPIN_HEEL_KICK'].includes(player.state);
 
       for (const [targetId, rPlayer] of this.players) {
         if (rPlayer.isDead || rPlayer.hp <= 0) continue;
+
+        const rBounds = {
+          x: rPlayer.x - 22,
+          y: rPlayer.y - 65,
+          w: 44,
+          h: 70
+        };
 
         const dx = rPlayer.x - player.x;
         const dy = rPlayer.y - player.y;
         const dist = Math.hypot(dx, dy);
 
-        if (dist < strikeRange && (Math.sign(dx) === player.facing || Math.abs(dx) < 25)) {
+        // Check either rectangular overlap with hitbox or natural close proximity in front/reverse
+        const rectOverlap = this.game.combat ? this.game.combat.rectsOverlap(hitbox, rBounds) : false;
+        const isReverseAttack = ['SPIN_BACKFIST', 'SPIN_HEEL_KICK', 'SPIN_SWEEP'].includes(player.state);
+        const directionalMatch = isReverseAttack || Math.sign(dx) === player.facing || Math.abs(dx) < 28;
+        const proxHit = dist < 72 && directionalMatch && Math.abs(dy) < 60;
+
+        if (rectOverlap || proxHit) {
           if (rPlayer.isBlocking) {
             if (window.Audio) window.Audio.playParry();
             player.vx = -player.facing * 8;
             player.state = 'STUNNED';
-            this.game.combat.spawnImpactParticles(rPlayer.x, rPlayer.y - 30, '#38bdf8', 16);
+            if (this.game.combat) this.game.combat.spawnImpactParticles(rPlayer.x, rPlayer.y - 30, '#38bdf8', 16);
           } else {
-            const dmg = player.state === 'DRAGON_UPPERCUT' ? 26 : 14;
-            const kbX = player.facing * (player.state === 'DRAGON_UPPERCUT' ? 12 : 8);
-            const kbY = player.state === 'DRAGON_UPPERCUT' ? -10 : -4;
+            const dmg = isUppercut ? 28 : player.state === 'FLYING_TORNADO_KICK' ? 24 : isHeavy ? 18 : 12;
+            const kbX = player.facing * (isUppercut ? 14 : isHeavy ? 10 : 6);
+            const kbY = isUppercut ? -11 : -4;
 
             rPlayer.hp = Math.max(0, rPlayer.hp - dmg);
             if (window.Audio) window.Audio.playPunch();
-            this.game.combat.spawnImpactParticles(rPlayer.x, rPlayer.y - 30, '#ef4444', 18);
+            if (this.game.combat) {
+              this.game.combat.spawnImpactParticles(rPlayer.x, rPlayer.y - 30, '#ef4444', 18);
+              this.game.combat.triggerScreenShake(isHeavy ? 6 : 3);
+            }
 
             this.sendWsPacket({
               roomCode: this.roomCode,
