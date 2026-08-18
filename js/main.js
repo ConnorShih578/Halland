@@ -145,6 +145,39 @@ class GameEngine {
       });
     }
 
+    // Character Card Selector
+    const charCards = document.querySelectorAll('.char-select-card');
+    charCards.forEach(card => {
+      card.addEventListener('click', () => {
+        charCards.forEach(c => {
+          c.classList.remove('active');
+          c.style.border = '1px solid rgba(255,255,255,0.2)';
+        });
+        card.classList.add('active');
+        card.style.border = '2px solid #38bdf8';
+        const charId = card.getAttribute('data-char') || 'halland';
+        const nameInput = document.getElementById('pvp-player-name-input');
+        const name = nameInput ? nameInput.value : 'FIGHTER';
+        if (this.multiplayer) this.multiplayer.setPlayerProfile(name, charId);
+      });
+    });
+
+    const nameInput = document.getElementById('pvp-player-name-input');
+    if (nameInput) {
+      nameInput.addEventListener('input', () => {
+        const activeCard = document.querySelector('.char-select-card.active');
+        const charId = activeCard ? activeCard.getAttribute('data-char') : 'halland';
+        if (this.multiplayer) this.multiplayer.setPlayerProfile(nameInput.value, charId);
+      });
+    }
+
+    const btnLaunch = document.getElementById('btn-launch-arena');
+    if (btnLaunch) {
+      btnLaunch.addEventListener('click', () => {
+        if (this.multiplayer) this.multiplayer.startMultiplayerArena();
+      });
+    }
+
     const btnSaveServer = document.getElementById('btn-save-server-url');
     if (btnSaveServer) {
       btnSaveServer.addEventListener('click', () => {

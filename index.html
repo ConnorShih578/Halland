@@ -293,66 +293,104 @@
       </div>
     </div>
 
-    <!-- 1v1 Online Multiplayer PvP Modal -->
+    <!-- Multi-Player Online Arena PvP Modal (2-8 Players) -->
     <div id="pvp-modal" class="overlay-screen hidden">
-      <div class="cyber-modal main-menu-card" style="max-width: 520px; text-align: center;">
+      <div class="cyber-modal main-menu-card" style="max-width: 600px; text-align: center;">
         <div class="modal-corner tl"></div>
         <div class="modal-corner tr"></div>
         <div class="modal-corner bl"></div>
         <div class="modal-corner br"></div>
 
         <div class="brand-bar">
-          <span class="studio-tag">PEER-TO-PEER WEBRTC ARENA</span>
+          <span class="studio-tag">ONLINE MULTIPLAYER ARENA (2 - 8 PLAYERS)</span>
         </div>
 
         <div class="title-wrap">
-          <h2 style="font-family: var(--font-cyber); font-size: 1.8rem; color: #38bdf8; letter-spacing: 0.1em; margin: 0.4rem 0;">1V1 ONLINE PVP DUEL</h2>
-          <div class="title-sub">REAL-TIME MARTIAL ARTS COMBAT &bull; BEST OF 3 ROUNDS</div>
+          <h2 style="font-family: var(--font-cyber); font-size: 1.7rem; color: #38bdf8; letter-spacing: 0.1em; margin: 0.2rem 0;">CYBER DOJO ARENA</h2>
+          <div class="title-sub">REAL-TIME BATTLE ROYALE &bull; DYNAMIC MAP SCALING</div>
+        </div>
+
+        <!-- Player Custom Name & Character Selector -->
+        <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 0.9rem; margin: 0.8rem 0; text-align: left;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+            <span style="font-size: 0.75rem; font-weight: 800; color: #f59e0b; letter-spacing: 0.1em;">1. YOUR FIGHTER PROFILE:</span>
+            <input type="text" id="pvp-player-name-input" placeholder="Enter Your Name..." maxlength="16" value="FIGHTER 1" style="background: rgba(0,0,0,0.6); border: 1px solid rgba(245,158,11,0.5); color: #fff; padding: 0.3rem 0.6rem; font-weight: 800; font-size: 0.85rem; border-radius: 4px; width: 180px;">
+          </div>
+
+          <!-- 5 Character Cards Grid -->
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem;">
+            <button class="char-select-card active" data-char="halland" style="background: rgba(239,68,68,0.15); border: 2px solid #ef4444; border-radius: 4px; padding: 0.4rem 0.2rem; cursor: pointer; color: #fff; text-align: center;">
+              <div style="font-size: 1.4rem;">👱</div>
+              <div style="font-size: 0.7rem; font-weight: 900; color: #ef4444;">HALLAND</div>
+            </button>
+            <button class="char-select-card" data-char="lebrown" style="background: rgba(168,85,247,0.15); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 0.4rem 0.2rem; cursor: pointer; color: #fff; text-align: center;">
+              <div style="font-size: 1.4rem;">👑</div>
+              <div style="font-size: 0.7rem; font-weight: 900; color: #a855f7;">LEBROWN</div>
+            </button>
+            <button class="char-select-card" data-char="jordunn" style="background: rgba(220,38,38,0.15); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 0.4rem 0.2rem; cursor: pointer; color: #fff; text-align: center;">
+              <div style="font-size: 1.4rem;">👟</div>
+              <div style="font-size: 0.7rem; font-weight: 900; color: #dc2626;">JORDUNN</div>
+            </button>
+            <button class="char-select-card" data-char="mcbape" style="background: rgba(59,130,246,0.15); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 0.4rem 0.2rem; cursor: pointer; color: #fff; text-align: center;">
+              <div style="font-size: 1.4rem;">⚡</div>
+              <div style="font-size: 0.7rem; font-weight: 900; color: #3b82f6;">MCBAPE</div>
+            </button>
+            <button class="char-select-card" data-char="ronalds" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 0.4rem 0.2rem; cursor: pointer; color: #fff; text-align: center;">
+              <div style="font-size: 1.4rem;">💥</div>
+              <div style="font-size: 0.7rem; font-weight: 900; color: #22c55e;">RONALDS</div>
+            </button>
+          </div>
         </div>
 
         <!-- PVP Host / Join Panels -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.4rem 0;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 0.8rem;">
           <!-- Host Panel -->
-          <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; padding: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem;">
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; padding: 0.9rem; display: flex; flex-direction: column; gap: 0.6rem;">
             <div style="font-size: 0.75rem; font-weight: 800; color: #38bdf8; letter-spacing: 0.15em;">HOST MATCH</div>
-            <div style="font-size: 0.8rem; color: #94a3b8;">Create a battle room and share your code or link with a friend!</div>
-            <button id="btn-host-pvp" class="cyber-btn" style="background: #0284c7; padding: 0.8rem; font-size: 0.95rem; font-weight: 800;">
+            <button id="btn-host-pvp" class="cyber-btn" style="background: #0284c7; padding: 0.7rem; font-size: 0.9rem; font-weight: 800;">
               <span>👑 CREATE ROOM</span>
             </button>
-            <div id="pvp-host-details" style="display: none; margin-top: 0.4rem;">
+            <div id="pvp-host-details" style="display: none;">
               <div style="font-size: 0.75rem; color: #64748b;">ROOM CODE:</div>
-              <div id="pvp-room-code-display" style="font-family: monospace; font-size: 1.4rem; font-weight: 900; color: #f59e0b; letter-spacing: 0.15em; margin: 0.3rem 0;">HALL-XXXX</div>
-              <button id="btn-copy-pvp-link" class="cyber-btn secondary-btn" style="width: 100%; padding: 0.5rem; font-size: 0.8rem;">
+              <div id="pvp-room-code-display" style="font-family: monospace; font-size: 1.3rem; font-weight: 900; color: #f59e0b; letter-spacing: 0.15em; margin: 0.2rem 0;">HALL-XXXX</div>
+              <button id="btn-copy-pvp-link" class="cyber-btn secondary-btn" style="width: 100%; padding: 0.4rem; font-size: 0.75rem;">
                 <span>COPY LINK 🔗</span>
               </button>
             </div>
           </div>
 
           <!-- Join Panel -->
-          <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem;">
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 0.9rem; display: flex; flex-direction: column; gap: 0.6rem;">
             <div style="font-size: 0.75rem; font-weight: 800; color: #ef4444; letter-spacing: 0.15em;">JOIN MATCH</div>
-            <div style="font-size: 0.8rem; color: #94a3b8;">Enter an active Room Code to connect directly:</div>
-            <input type="text" id="pvp-join-code" placeholder="e.g. HALL-A1B2" maxlength="12" style="background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); color: #fff; text-align: center; padding: 0.65rem; font-family: monospace; font-size: 1.1rem; font-weight: 800; letter-spacing: 0.1em; border-radius: 4px; text-transform: uppercase;">
-            <button id="btn-join-pvp" class="cyber-btn" style="background: #dc2626; padding: 0.8rem; font-size: 0.95rem; font-weight: 800;">
+            <input type="text" id="pvp-join-code" placeholder="ROOM CODE" maxlength="10" style="background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); color: #fff; text-align: center; padding: 0.5rem; font-family: monospace; font-size: 1rem; font-weight: 800; letter-spacing: 0.1em; border-radius: 4px; text-transform: uppercase;">
+            <button id="btn-join-pvp" class="cyber-btn" style="background: #dc2626; padding: 0.7rem; font-size: 0.9rem; font-weight: 800;">
               <span>⚔️ JOIN DUEL</span>
             </button>
           </div>
         </div>
 
-        <div id="pvp-status-msg" style="font-size: 0.85rem; color: #cbd5e1; min-height: 1.8rem; font-family: monospace;">
-          Select Host or Join to start a multiplayer match.
+        <div id="pvp-connected-count" style="font-size: 0.8rem; font-weight: 800; color: #38bdf8; font-family: monospace; margin-bottom: 0.4rem;">
+          1 / 8 FIGHTERS READY
+        </div>
+
+        <button id="btn-launch-arena" class="cyber-btn play-btn" style="display: none; width: 100%; padding: 0.85rem; font-size: 1.1rem; margin-bottom: 0.6rem;">
+          <span>⚔️ LAUNCH BATTLE ARENA</span>
+        </button>
+
+        <div id="pvp-status-msg" style="font-size: 0.8rem; color: #cbd5e1; min-height: 1.5rem; font-family: monospace;">
+          Select character and host/join to start multiplayer!
         </div>
 
         <!-- Render Server URL Settings Toggle -->
-        <div style="margin-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.8rem;">
+        <div style="margin-top: 0.6rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.6rem;">
           <div style="display: flex; gap: 0.5rem; justify-content: center; align-items: center;">
-            <span style="font-size: 0.75rem; color: #64748b; font-family: monospace;">SERVER:</span>
-            <input type="text" id="pvp-server-url-input" value="wss://mygameserver-bsow.onrender.com/" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #38bdf8; font-size: 0.75rem; padding: 0.3rem 0.5rem; font-family: monospace; width: 260px; border-radius: 3px;">
-            <button id="btn-save-server-url" class="cyber-btn" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background: #0369a1;">SAVE</button>
+            <span style="font-size: 0.7rem; color: #64748b; font-family: monospace;">SERVER:</span>
+            <input type="text" id="pvp-server-url-input" value="wss://mygameserver-bsow.onrender.com/" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #38bdf8; font-size: 0.7rem; padding: 0.25rem 0.5rem; font-family: monospace; width: 240px; border-radius: 3px;">
+            <button id="btn-save-server-url" class="cyber-btn" style="padding: 0.25rem 0.5rem; font-size: 0.7rem; background: #0369a1;">SAVE</button>
           </div>
         </div>
 
-        <button id="btn-close-pvp" class="cyber-btn secondary-btn" style="margin-top: 0.8rem; width: 100%; padding: 0.6rem;">
+        <button id="btn-close-pvp" class="cyber-btn secondary-btn" style="margin-top: 0.6rem; width: 100%; padding: 0.5rem; font-size: 0.85rem;">
           <span>← BACK TO MAIN MENU</span>
         </button>
       </div>

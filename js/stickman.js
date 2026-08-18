@@ -505,40 +505,113 @@ class StickmanRenderer {
     const leftArm = this.solveIK(leftShoulderJoint, eff.leftHand, this.upperArmLen, this.forearmLen, -facing);
     const rightArm = this.solveIK(rightShoulderJoint, eff.rightHand, this.upperArmLen, this.forearmLen, -facing);
 
-    const suitRed = '#ef4444';
-    const darkLimb = '#dc2626';
+    const charId = (player.characterId || 'halland').toLowerCase();
+
+    let suitColor = '#ef4444';
+    let darkLimb = '#dc2626';
+    let headColor = '#ef4444';
+    let hasHairRibbon = true;
+    let hasCrown = false;
+    let hasHeadband = false;
+    let headbandColor = '#ffffff';
+    let jerseyNum = '';
+
+    if (charId === 'lebrown') {
+      suitColor = '#a855f7';
+      darkLimb = '#7e22ce';
+      headColor = '#7e22ce';
+      hasHairRibbon = false;
+      hasCrown = true;
+      hasHeadband = true;
+      headbandColor = '#eab308';
+      jerseyNum = '6';
+    } else if (charId === 'jordunn') {
+      suitColor = '#dc2626';
+      darkLimb = '#991b1b';
+      headColor = '#1e1b4b';
+      hasHairRibbon = false;
+      hasHeadband = true;
+      headbandColor = '#dc2626';
+      jerseyNum = '23';
+    } else if (charId === 'mcbape') {
+      suitColor = '#3b82f6';
+      darkLimb = '#1d4ed8';
+      headColor = '#1e3a8a';
+      hasHairRibbon = false;
+      hasHeadband = true;
+      headbandColor = '#ffffff';
+      jerseyNum = '10';
+    } else if (charId === 'ronalds') {
+      suitColor = '#ef4444';
+      darkLimb = '#15803d'; // Green & Red Portugal style
+      headColor = '#b91c1c';
+      hasHairRibbon = false;
+      jerseyNum = '7';
+    }
 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // 1. Back Limbs (Sleek, Single-Pass High-Contrast)
+    // 1. Back Limbs (Sleek, High-Contrast)
     this.drawLimb(ctx, leftArm, darkLimb, 3.2);
     this.drawLimb(ctx, leftLeg, darkLimb, 3.6);
 
     // 2. Torso & Spine Curve
-    ctx.lineWidth = 4.2;
-    ctx.strokeStyle = suitRed;
+    ctx.lineWidth = 4.4;
+    ctx.strokeStyle = suitColor;
     ctx.beginPath();
     ctx.moveTo(spine.hips.x, spine.hips.y);
     ctx.lineTo(spine.chest.x, spine.chest.y);
     ctx.lineTo(spine.neck.x, spine.neck.y);
     ctx.stroke();
 
-    // 3. Front Limbs
-    this.drawLimb(ctx, rightLeg, suitRed, 3.6);
-    this.drawLimb(ctx, rightArm, suitRed, 3.2);
+    // Jersey Number if applicable
+    if (jerseyNum) {
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 9px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(jerseyNum, (spine.hips.x + spine.chest.x) / 2, (spine.hips.y + spine.chest.y) / 2 + 3);
+    }
 
-    // 4. Clean Spider Mask Head
+    // 3. Front Limbs
+    this.drawLimb(ctx, rightLeg, suitColor, 3.6);
+    this.drawLimb(ctx, rightArm, suitColor, 3.2);
+
+    // 4. Head
     ctx.beginPath();
     ctx.arc(spine.head.x, spine.head.y, this.headRadius, 0, Math.PI * 2);
-    ctx.fillStyle = suitRed;
+    ctx.fillStyle = headColor;
     ctx.fill();
 
-    // 5. White Angular Spider-Eye
+    // 5. Headgear / Headband / Accessories
+    if (hasCrown) {
+      ctx.font = '14px Outfit';
+      ctx.textAlign = 'center';
+      ctx.fillText('👑', spine.head.x, spine.head.y - 8);
+    }
+
+    if (hasHeadband) {
+      ctx.strokeStyle = headbandColor;
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(spine.head.x - 7, spine.head.y - 2);
+      ctx.lineTo(spine.head.x + 7, spine.head.y - 2);
+      ctx.stroke();
+    }
+
+    if (charId === 'ronalds') {
+      // Slick black pompadour hair
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(spine.head.x - facing * 2, spine.head.y - 5, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // White Angular Eye Lens
     this.drawSpiderEyes(ctx, spine.head.x, spine.head.y, facing);
 
     // 6. Karate Belt Knot
-    ctx.fillStyle = beltColor || '#ffffff';
+    ctx.fillStyle = beltColor || (charId === 'ronalds' ? '#15803d' : '#ffffff');
     ctx.fillRect(spine.hips.x - 4, spine.hips.y - 2, 8, 4);
 
     // 7. Floating Overhead Health Bar
@@ -554,12 +627,12 @@ class StickmanRenderer {
       ctx.stroke();
     }
 
-    // 9. Martial Arts Slash Crescent Arcs (Crisp & High-Performance, Zero Shadow Blur)
+    // 9. Martial Arts Slash Crescent Arcs
     const isKick = ['SNAP_KICK', 'FLYING_TORNADO_KICK', 'SPIN_HEEL_KICK', 'SPIN_SWEEP'].includes(state);
     const isPunch = ['STRAIGHT_PUNCH', 'DRAGON_UPPERCUT', 'SPIN_BACKFIST'].includes(state);
 
     if (isKick || isPunch) {
-      const slashColor = state === 'DRAGON_UPPERCUT' ? '#f59e0b' : isKick ? '#38bdf8' : '#ef4444';
+      const slashColor = state === 'DRAGON_UPPERCUT' ? '#f59e0b' : isKick ? '#38bdf8' : suitColor;
       ctx.strokeStyle = slashColor;
       ctx.lineWidth = 2.6;
 
@@ -586,7 +659,9 @@ class StickmanRenderer {
 
     ctx.restore();
 
-    this.drawRibbons(ctx, beltColor || '#ffffff');
+    if (hasHairRibbon) {
+      this.drawRibbons(ctx, beltColor || '#ffffff');
+    }
   }
 
   drawLimb(ctx, ik, color, width) {
