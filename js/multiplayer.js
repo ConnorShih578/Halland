@@ -312,19 +312,43 @@ class MultiplayerManager {
       }
 
       case 'state_sync': {
-        const target = this.players.get(msg.senderId);
-        if (target && msg.data) {
-          target.targetX = msg.data.x;
-          target.targetY = msg.data.y;
-          target.vx = msg.data.vx;
-          target.vy = msg.data.vy;
-          target.facing = msg.data.facing;
-          target.state = msg.data.state;
-          target.hp = msg.data.hp;
-          target.isBlocking = msg.data.isBlocking;
-          target.comboStep = msg.data.comboStep;
-          target.characterId = msg.data.characterId || target.characterId;
+        if (!msg.data) break;
+        let target = this.players.get(msg.senderId);
+        if (!target) {
+          target = {
+            id: msg.senderId,
+            name: msg.data.name || 'OPPONENT',
+            characterId: msg.data.characterId || 'lebrown',
+            x: Number.isFinite(msg.data.x) ? msg.data.x : 500,
+            y: Number.isFinite(msg.data.y) ? msg.data.y : 380,
+            targetX: Number.isFinite(msg.data.x) ? msg.data.x : 500,
+            targetY: Number.isFinite(msg.data.y) ? msg.data.y : 380,
+            vx: 0,
+            vy: 0,
+            facing: msg.data.facing || -1,
+            state: msg.data.state || 'IDLE',
+            hp: msg.data.hp !== undefined ? msg.data.hp : 100,
+            maxHp: 100,
+            isBlocking: !!msg.data.isBlocking,
+            comboStep: msg.data.comboStep || 0,
+            beltColor: '#38bdf8',
+            isDead: false
+          };
+          this.players.set(msg.senderId, target);
+          this.renderers.set(msg.senderId, new StickmanRenderer());
         }
+
+        if (Number.isFinite(msg.data.x)) target.targetX = msg.data.x;
+        if (Number.isFinite(msg.data.y)) target.targetY = msg.data.y;
+        target.vx = msg.data.vx || 0;
+        target.vy = msg.data.vy || 0;
+        target.facing = msg.data.facing || target.facing || -1;
+        target.state = msg.data.state || 'IDLE';
+        if (msg.data.hp !== undefined) target.hp = msg.data.hp;
+        target.isBlocking = !!msg.data.isBlocking;
+        target.comboStep = msg.data.comboStep || 0;
+        target.characterId = msg.data.characterId || target.characterId || 'halland';
+        if (msg.data.name) target.name = msg.data.name;
         break;
       }
 
@@ -511,7 +535,7 @@ class MultiplayerManager {
   }
 
   broadcastState() {
-    if (!this.isConnected) return;
+    if (!this.isConnected || !this.game.player) return;
 
     const p = this.game.player;
     this.sendWsPacket({
@@ -519,14 +543,15 @@ class MultiplayerManager {
       event: 'state_sync',
       senderId: this.senderId,
       data: {
+        name: this.playerName,
         x: Math.round(p.x * 10) / 10,
         y: Math.round(p.y * 10) / 10,
         vx: Math.round(p.vx * 10) / 10,
         vy: Math.round(p.vy * 10) / 10,
-        facing: p.facing,
-        state: p.state,
+        facing: p.facing || 1,
+        state: p.state || 'IDLE',
         hp: p.hp,
-        isBlocking: this.game.input.isBlocking,
+        isBlocking: this.game.input ? this.game.input.isBlocking : false,
         comboStep: p.comboStep || 0,
         characterId: this.characterId
       }
@@ -699,11 +724,28 @@ class MultiplayerManager {
       ctx.save();
       rRenderer.draw(ctx, rPlayer);
 
+      // Fighter Overhead Health Bar
+      const barW = 44;
+      const barH = 5;
+      const barX = (rPlayer.x || 0) - barW / 2;
+      const barY = (rPlayer.y || 0) - 76;
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+      ctx.fillRect(barX, barY, barW, barH);
+
+      const hpRatio = Math.max(0, Math.min(1, (rPlayer.hp !== undefined ? rPlayer.hp : 100) / (rPlayer.maxHp || 100)));
+      ctx.fillStyle = hpRatio > 0.5 ? '#22c55e' : hpRatio > 0.25 ? '#f59e0b' : '#ef4444';
+      ctx.fillRect(barX, barY, barW * hpRatio, barH);
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(barX, barY, barW, barH);
+
       // Fighter Overhead Custom Name Pill
       ctx.fillStyle = '#ffffff';
       ctx.font = '800 11px Outfit, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(rPlayer.name.toUpperCase(), rPlayer.x, rPlayer.y - 78);
+      ctx.fillText((rPlayer.name || 'OPPONENT').toUpperCase(), rPlayer.x || 0, barY - 4);
 
       ctx.restore();
     }

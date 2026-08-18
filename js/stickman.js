@@ -526,9 +526,16 @@ class StickmanRenderer {
   }
 
   draw(ctx, player) {
+    if (!player) return;
     ctx.save();
 
-    const { x, y, facing, beltColor, vx, vy, state } = player;
+    const x = Number.isFinite(player.x) ? player.x : 0;
+    const y = Number.isFinite(player.y) ? player.y : 0;
+    const facing = player.facing === -1 ? -1 : 1;
+    const beltColor = player.beltColor || '#ffffff';
+    const vx = Number.isFinite(player.vx) ? player.vx : 0;
+    const vy = Number.isFinite(player.vy) ? player.vy : 0;
+    const state = player.state || 'IDLE';
 
     this.computeDynamicPose(player, 0.016);
 
