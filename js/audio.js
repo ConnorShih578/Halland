@@ -220,6 +220,11 @@ class AudioController {
     return this.enabled;
   }
 
+  playParry() { this.play('wallKick'); }
+  playPunch() { this.play('hit'); }
+  playKick() { this.play('heavyHit'); }
+  playVictoryStinger() { this.play('victory'); }
+
   play(type) {
     if (!this.enabled) return;
     this.resume();

@@ -16,6 +16,19 @@ class CombatSystem {
     this.comboTimer = 0;
   }
 
+  triggerHitStop(duration = 0.04) {
+    this.hitStopTimer = duration;
+  }
+
+  triggerScreenShake(intensity = 6, duration = 0.18) {
+    this.screenShake = {
+      x: 0,
+      y: 0,
+      intensity: intensity,
+      duration: duration
+    };
+  }
+
   update(dt, player, entities, level) {
     // 1. Update Hit-Stop Freeze Frame
     if (this.hitStopTimer > 0) {
