@@ -597,12 +597,12 @@ class StickmanRenderer {
       headbandColor = '#dc2626';
       jerseyNum = '23';
     } else if (charId === 'mcbape') {
-      // Soldier Army Suit (Olive Camo & Tactical Combat Gear)
-      suitColor = '#4d7c0f'; // Military Olive Green
-      darkLimb = '#27272a'; // Tactical Black Combat Boots & Gloves
-      headColor = '#365314'; // Army Camo Green
+      // Supreme Military Dictator McBape Uniform
+      suitColor = '#3f6212'; // Deep Dictator General Olive Green
+      darkLimb = '#1c1917'; // Polished Black General Officer Boots & Gloves
+      headColor = '#1c1917'; // Dictator General Crown
       hasHairRibbon = false;
-      hasHelmet = true; // Military Army Helmet
+      hasHelmet = true; // Officer Peaked Cap
       jerseyNum = '10';
     } else if (charId === 'ronalds') {
       suitColor = '#ef4444';
@@ -620,7 +620,7 @@ class StickmanRenderer {
     this.drawLimb(ctx, leftLeg, darkLimb, 3.6);
 
     // 2. Torso & Spine Curve
-    ctx.lineWidth = 4.4;
+    ctx.lineWidth = 4.6;
     ctx.strokeStyle = suitColor;
     ctx.beginPath();
     ctx.moveTo(spine.hips.x, spine.hips.y);
@@ -628,16 +628,26 @@ class StickmanRenderer {
     ctx.lineTo(spine.neck.x, spine.neck.y);
     ctx.stroke();
 
-    // Tactical Soldier Vest Harness for McBape
+    // Supreme Dictator Red Sash & Medals for McBape
     if (charId === 'mcbape') {
-      ctx.strokeStyle = '#18181b';
-      ctx.lineWidth = 2.0;
+      // Red Dictator Commander Sash
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 2.8;
       ctx.beginPath();
-      ctx.moveTo(spine.chest.x - 4, spine.chest.y - 4);
-      ctx.lineTo(spine.hips.x + 4, spine.hips.y + 2);
-      ctx.moveTo(spine.chest.x + 4, spine.chest.y - 4);
-      ctx.lineTo(spine.hips.x - 4, spine.hips.y + 2);
+      ctx.moveTo(spine.neck.x - 3, spine.neck.y);
+      ctx.lineTo(spine.hips.x + 4, spine.hips.y);
       ctx.stroke();
+
+      // Gold Officer Epaulettes on shoulders
+      ctx.fillStyle = '#eab308';
+      ctx.fillRect(leftShoulderJoint.x - 3, leftShoulderJoint.y - 2, 6, 3);
+      ctx.fillRect(rightShoulderJoint.x - 3, rightShoulderJoint.y - 2, 6, 3);
+
+      // Medal Ribbon Bar
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(spine.chest.x - 4, spine.chest.y - 2, 3, 2);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(spine.chest.x - 1, spine.chest.y - 2, 3, 2);
     }
 
     // Jersey / Dogtag Number if applicable
@@ -666,21 +676,33 @@ class StickmanRenderer {
     }
 
     if (hasHelmet) {
-      // Tactical Army Soldier Helmet
-      ctx.fillStyle = '#365314';
-      ctx.strokeStyle = '#1c1917';
-      ctx.lineWidth = 1.4;
+      // Supreme Dictator Military Peaked Officer Cap
+      ctx.fillStyle = '#1c1917';
+      ctx.strokeStyle = '#eab308';
+      ctx.lineWidth = 1.6;
+
+      // High flared peaked cap crown
       ctx.beginPath();
-      ctx.arc(spine.head.x, spine.head.y - 2, this.headRadius + 1.6, Math.PI * 0.9, Math.PI * 2.1);
+      ctx.moveTo(spine.head.x - 11, spine.head.y - 3);
+      ctx.lineTo(spine.head.x - 13, spine.head.y - 12);
+      ctx.lineTo(spine.head.x + 13, spine.head.y - 12);
+      ctx.lineTo(spine.head.x + 11, spine.head.y - 3);
+      ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
-      // Helmet Rim & Chin Strap
-      ctx.strokeStyle = '#4d7c0f';
-      ctx.lineWidth = 2.0;
+      // Gold Laurel Insignia Cockade on Front of Cap
+      ctx.fillStyle = '#eab308';
       ctx.beginPath();
-      ctx.moveTo(spine.head.x - 9, spine.head.y - 1);
-      ctx.lineTo(spine.head.x + 9, spine.head.y - 1);
+      ctx.arc(spine.head.x, spine.head.y - 7, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Black Patent Leather Visor
+      ctx.strokeStyle = '#09090b';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(spine.head.x - 10, spine.head.y - 2);
+      ctx.lineTo(spine.head.x + facing * 12, spine.head.y - 2);
       ctx.stroke();
     }
 
@@ -712,8 +734,8 @@ class StickmanRenderer {
       ctx.fill();
     }
 
-    // 6. Karate Belt Knot / Ammo Belt
-    ctx.fillStyle = beltColor || (charId === 'mcbape' ? '#18181b' : charId === 'ronalds' ? '#15803d' : '#ffffff');
+    // 6. Karate Belt Knot / Dictator Gold Buckle
+    ctx.fillStyle = beltColor || (charId === 'mcbape' ? '#eab308' : charId === 'ronalds' ? '#15803d' : '#ffffff');
     ctx.fillRect(spine.hips.x - 4, spine.hips.y - 2, 8, 4);
 
     // 7. Floating Overhead Health Bar
@@ -737,10 +759,10 @@ class StickmanRenderer {
         ctx.textAlign = 'center';
         ctx.fillText("💥 SUUUUIIIIIIII! 💥", 0, -92);
       } else if (charId === 'mcbape') {
-        ctx.fillStyle = '#84cc16';
+        ctx.fillStyle = '#facc15';
         ctx.font = '900 12px Outfit, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(t < 0.45 ? "🪖 YES SIR! 🫡" : "⚡ SIGNATURE STAND", 0, -92);
+        ctx.fillText(t < 0.45 ? "🎖️ COMMAND SALUTE 🫡" : "⚡ SUPREME DICTATOR", 0, -92);
       } else if (charId === 'jordunn') {
         ctx.fillStyle = '#ef4444';
         ctx.font = '900 12px Outfit, sans-serif';
