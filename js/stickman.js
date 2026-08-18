@@ -40,8 +40,13 @@ class StickmanRenderer {
   }
 
   solveIK(root, target, l1, l2, bendDirection = 1) {
-    const dx = target.x - root.x;
-    const dy = target.y - root.y;
+    const rx = Number.isFinite(root.x) ? root.x : 0;
+    const ry = Number.isFinite(root.y) ? root.y : 0;
+    const tx = Number.isFinite(target.x) ? target.x : rx + 10;
+    const ty = Number.isFinite(target.y) ? target.y : ry + 10;
+
+    const dx = tx - rx;
+    const dy = ty - ry;
     const dist = Math.hypot(dx, dy) || 0.001;
 
     const maxReach = l1 + l2 - 0.01;
@@ -52,19 +57,27 @@ class StickmanRenderer {
     const angle1 = Math.acos(Math.max(-1, Math.min(1, cosAngle1)));
 
     const baseAngle = Math.atan2(dy, dx);
-    const jointAngle = baseAngle + angle1 * bendDirection;
+    const jointAngle = baseAngle + angle1 * (bendDirection || 1);
 
     const joint = {
-      x: root.x + Math.cos(jointAngle) * l1,
-      y: root.y + Math.sin(jointAngle) * l1
+      x: rx + Math.cos(jointAngle) * l1,
+      y: ry + Math.sin(jointAngle) * l1
     };
 
-    return { root, joint, end: target };
+    return { root: { x: rx, y: ry }, joint, end: { x: tx, y: ty } };
   }
 
   springDamper(current, target, k = 620, d = 42, dt = 0.016) {
-    const fx = (target.x - current.x) * k - current.vx * d;
-    const fy = (target.y - current.y) * k - current.vy * d;
+    if (!Number.isFinite(current.x)) current.x = 0;
+    if (!Number.isFinite(current.y)) current.y = 0;
+    if (!Number.isFinite(current.vx)) current.vx = 0;
+    if (!Number.isFinite(current.vy)) current.vy = 0;
+
+    const tx = Number.isFinite(target.x) ? target.x : current.x;
+    const ty = Number.isFinite(target.y) ? target.y : current.y;
+
+    const fx = (tx - current.x) * k - current.vx * d;
+    const fy = (ty - current.y) * k - current.vy * d;
     current.vx += fx * dt;
     current.vy += fy * dt;
     current.x += current.vx * dt;
