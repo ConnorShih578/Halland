@@ -514,6 +514,7 @@ class StickmanRenderer {
     let hasCrown = false;
     let hasHeadband = false;
     let headbandColor = '#ffffff';
+    let hasHelmet = false;
     let jerseyNum = '';
 
     if (charId === 'lebrown') {
@@ -534,12 +535,12 @@ class StickmanRenderer {
       headbandColor = '#dc2626';
       jerseyNum = '23';
     } else if (charId === 'mcbape') {
-      suitColor = '#3b82f6';
-      darkLimb = '#1d4ed8';
-      headColor = '#1e3a8a';
+      // Soldier Army Suit (Olive Camo & Tactical Combat Gear)
+      suitColor = '#4d7c0f'; // Military Olive Green
+      darkLimb = '#27272a'; // Tactical Black Combat Boots & Gloves
+      headColor = '#365314'; // Army Camo Green
       hasHairRibbon = false;
-      hasHeadband = true;
-      headbandColor = '#ffffff';
+      hasHelmet = true; // Military Army Helmet
       jerseyNum = '10';
     } else if (charId === 'ronalds') {
       suitColor = '#ef4444';
@@ -565,9 +566,21 @@ class StickmanRenderer {
     ctx.lineTo(spine.neck.x, spine.neck.y);
     ctx.stroke();
 
-    // Jersey Number if applicable
+    // Tactical Soldier Vest Harness for McBape
+    if (charId === 'mcbape') {
+      ctx.strokeStyle = '#18181b';
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(spine.chest.x - 4, spine.chest.y - 4);
+      ctx.lineTo(spine.hips.x + 4, spine.hips.y + 2);
+      ctx.moveTo(spine.chest.x + 4, spine.chest.y - 4);
+      ctx.lineTo(spine.hips.x - 4, spine.hips.y + 2);
+      ctx.stroke();
+    }
+
+    // Jersey / Dogtag Number if applicable
     if (jerseyNum) {
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = charId === 'mcbape' ? '#fde047' : '#ffffff';
       ctx.font = '900 9px "JetBrains Mono", monospace';
       ctx.textAlign = 'center';
       ctx.fillText(jerseyNum, (spine.hips.x + spine.chest.x) / 2, (spine.hips.y + spine.chest.y) / 2 + 3);
@@ -583,11 +596,30 @@ class StickmanRenderer {
     ctx.fillStyle = headColor;
     ctx.fill();
 
-    // 5. Headgear / Headband / Accessories
+    // 5. Headgear / Headband / Soldier Helmet
     if (hasCrown) {
       ctx.font = '14px Outfit';
       ctx.textAlign = 'center';
       ctx.fillText('👑', spine.head.x, spine.head.y - 8);
+    }
+
+    if (hasHelmet) {
+      // Tactical Army Soldier Helmet
+      ctx.fillStyle = '#365314';
+      ctx.strokeStyle = '#1c1917';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.arc(spine.head.x, spine.head.y - 2, this.headRadius + 1.6, Math.PI * 0.9, Math.PI * 2.1);
+      ctx.fill();
+      ctx.stroke();
+
+      // Helmet Rim & Chin Strap
+      ctx.strokeStyle = '#4d7c0f';
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(spine.head.x - 9, spine.head.y - 1);
+      ctx.lineTo(spine.head.x + 9, spine.head.y - 1);
+      ctx.stroke();
     }
 
     if (hasHeadband) {
@@ -610,8 +642,8 @@ class StickmanRenderer {
     // White Angular Eye Lens
     this.drawSpiderEyes(ctx, spine.head.x, spine.head.y, facing);
 
-    // 6. Karate Belt Knot
-    ctx.fillStyle = beltColor || (charId === 'ronalds' ? '#15803d' : '#ffffff');
+    // 6. Karate Belt Knot / Ammo Belt
+    ctx.fillStyle = beltColor || (charId === 'mcbape' ? '#18181b' : charId === 'ronalds' ? '#15803d' : '#ffffff');
     ctx.fillRect(spine.hips.x - 4, spine.hips.y - 2, 8, 4);
 
     // 7. Floating Overhead Health Bar
