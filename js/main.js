@@ -204,45 +204,67 @@ class GameEngine {
       });
     }
 
-    document.getElementById('btn-next-stage').addEventListener('click', () => {
-      document.getElementById('victory-screen').classList.add('hidden');
-      if (this.isEndlessMode) {
-        this.loadInfiniteEndlessWorld();
-      } else {
-        const nextIdx = (this.currentStageIndex + 1) % STAGES.length;
-        this.loadStage(nextIdx);
-      }
-      this.isPlaying = true;
-    });
+    const btnNextStage = document.getElementById('btn-next-stage');
+    if (btnNextStage) {
+      btnNextStage.addEventListener('click', () => {
+        const vicScreen = document.getElementById('victory-screen');
+        if (vicScreen) vicScreen.classList.add('hidden');
+        if (this.isEndlessMode) {
+          this.loadInfiniteEndlessWorld();
+        } else {
+          const nextIdx = (this.currentStageIndex + 1) % STAGES.length;
+          this.loadStage(nextIdx);
+        }
+        this.isPlaying = true;
+      });
+    }
 
-    document.getElementById('btn-menu').addEventListener('click', () => {
-      document.getElementById('victory-screen').classList.add('hidden');
-      document.getElementById('start-screen').classList.remove('hidden');
-      this.isPlaying = false;
-    });
+    const btnMenu = document.getElementById('btn-menu');
+    if (btnMenu) {
+      btnMenu.addEventListener('click', () => {
+        const vicScreen = document.getElementById('victory-screen');
+        if (vicScreen) vicScreen.classList.add('hidden');
+        const startScreen = document.getElementById('start-screen');
+        if (startScreen) startScreen.classList.remove('hidden');
+        this.isPlaying = false;
+      });
+    }
 
     const btnSound = document.getElementById('btn-sound');
-    btnSound.addEventListener('click', () => {
-      const enabled = window.Audio.toggle();
-      btnSound.textContent = enabled ? '🔊' : '🔇';
-      btnSound.classList.toggle('active', enabled);
-    });
+    if (btnSound) {
+      btnSound.addEventListener('click', () => {
+        if (window.Audio) {
+          const enabled = window.Audio.toggle();
+          btnSound.textContent = enabled ? '🔊' : '🔇';
+          btnSound.classList.toggle('active', enabled);
+        }
+      });
+    }
 
     const btnHaptics = document.getElementById('btn-haptics');
-    btnHaptics.addEventListener('click', () => {
-      const enabled = window.Haptics.toggle();
-      btnHaptics.textContent = enabled ? '📳' : '🔕';
-      btnHaptics.classList.toggle('active', enabled);
-    });
+    if (btnHaptics) {
+      btnHaptics.addEventListener('click', () => {
+        if (window.Haptics) {
+          const enabled = window.Haptics.toggle();
+          btnHaptics.textContent = enabled ? '📳' : '🔕';
+          btnHaptics.classList.toggle('active', enabled);
+        }
+      });
+    }
 
     const btnHelp = document.getElementById('btn-help');
     const hintOverlay = document.getElementById('controls-hint');
-    btnHelp.addEventListener('click', () => {
-      hintOverlay.classList.remove('hidden');
-    });
-    document.getElementById('btn-close-guide').addEventListener('click', () => {
-      hintOverlay.classList.add('hidden');
-    });
+    if (btnHelp && hintOverlay) {
+      btnHelp.addEventListener('click', () => {
+        hintOverlay.classList.remove('hidden');
+      });
+    }
+    const btnCloseGuide = document.getElementById('btn-close-guide');
+    if (btnCloseGuide && hintOverlay) {
+      btnCloseGuide.addEventListener('click', () => {
+        hintOverlay.classList.add('hidden');
+      });
+    }
 
     // 5. Custom Background Music (BGM) Manager Handlers
     const btnCustomMusic = document.getElementById('btn-custom-music');
@@ -1283,6 +1305,20 @@ class GameEngine {
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  window.Game = new GameEngine();
-});
+function initGameEngine() {
+  if (!window.Game) {
+    try {
+      window.Game = new GameEngine();
+      console.log("[HALLAND] GameEngine active and UI bound successfully.");
+    } catch(e) {
+      console.error("[HALLAND] Game initialization error:", e);
+    }
+  }
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  initGameEngine();
+} else {
+  window.addEventListener('DOMContentLoaded', initGameEngine);
+  window.addEventListener('load', initGameEngine);
+}
