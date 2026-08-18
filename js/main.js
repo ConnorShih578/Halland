@@ -145,6 +145,18 @@ class GameEngine {
       });
     }
 
+    const btnSaveServer = document.getElementById('btn-save-server-url');
+    if (btnSaveServer) {
+      btnSaveServer.addEventListener('click', () => {
+        const serverInput = document.getElementById('pvp-server-url-input');
+        if (this.multiplayer && serverInput) {
+          this.multiplayer.setServerUrl(serverInput.value);
+          btnSaveServer.textContent = 'SAVED! ✓';
+          setTimeout(() => btnSaveServer.textContent = 'SAVE', 2000);
+        }
+      });
+    }
+
     const btnPlayEndless = document.getElementById('btn-play-endless');
     if (btnPlayEndless) {
       btnPlayEndless.addEventListener('click', () => {

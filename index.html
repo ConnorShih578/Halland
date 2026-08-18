@@ -343,7 +343,16 @@
           Select Host or Join to start a multiplayer match.
         </div>
 
-        <button id="btn-close-pvp" class="cyber-btn secondary-btn" style="margin-top: 1rem; width: 100%; padding: 0.6rem;">
+        <!-- Render Server URL Settings Toggle -->
+        <div style="margin-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.8rem;">
+          <div style="display: flex; gap: 0.5rem; justify-content: center; align-items: center;">
+            <span style="font-size: 0.75rem; color: #64748b; font-family: monospace;">SERVER:</span>
+            <input type="text" id="pvp-server-url-input" value="wss://mygameserver-bsow.onrender.com/" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #38bdf8; font-size: 0.75rem; padding: 0.3rem 0.5rem; font-family: monospace; width: 260px; border-radius: 3px;">
+            <button id="btn-save-server-url" class="cyber-btn" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background: #0369a1;">SAVE</button>
+          </div>
+        </div>
+
+        <button id="btn-close-pvp" class="cyber-btn secondary-btn" style="margin-top: 0.8rem; width: 100%; padding: 0.6rem;">
           <span>← BACK TO MAIN MENU</span>
         </button>
       </div>
