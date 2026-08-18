@@ -453,6 +453,71 @@ class AudioController {
       osc.stop(now + idx * 0.1 + 0.6);
     });
   }
+
+  playEmote(characterId) {
+    if (!this.enabled || !this.ctx) return;
+    this.resume();
+    const now = this.ctx.currentTime;
+    const charId = (characterId || 'halland').toLowerCase();
+
+    if (charId === 'ronalds') {
+      // SIUUU deep power chord & rising cheer
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(160, now);
+      osc.frequency.exponentialRampToValueAtTime(540, now + 0.35);
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.6);
+    } else if (charId === 'mcbape') {
+      // Soldier military salute bugle fanfare
+      [330, 392, 523, 659].forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.09);
+        gain.gain.setValueAtTime(0.3, now + idx * 0.09);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.09 + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + idx * 0.09);
+        osc.stop(now + idx * 0.09 + 0.3);
+      });
+    } else if (charId === 'lebrown') {
+      // Heavy double bass silencer stomp
+      this.playThud(now, 120, 30, 0.25, 0.7);
+      setTimeout(() => this.playThud(this.ctx.currentTime, 110, 25, 0.3, 0.8), 280);
+    } else if (charId === 'jordunn') {
+      // Playful tongue swish & shoe squeak
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.exponentialRampToValueAtTime(440, now + 0.2);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } else {
+      // Halland Zen bell chime
+      const bell = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      bell.type = 'sine';
+      bell.frequency.setValueAtTime(528, now); // 528Hz Solfeggio frequency
+      gain.gain.setValueAtTime(0.35, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+      bell.connect(gain);
+      gain.connect(this.ctx.destination);
+      bell.start(now);
+      bell.stop(now + 1.2);
+    }
+  }
 }
 
 window.Audio = new AudioController();

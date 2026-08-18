@@ -276,6 +276,19 @@ class PhysicsEngine {
           break;
         }
 
+        case 'EMOTE': {
+          player.state = 'EMOTE';
+          player.stateTime = 0;
+          player.stateDuration = 2.2;
+          player.vx = 0;
+          if (window.Audio && window.Audio.playEmote) {
+            window.Audio.playEmote(player.characterId || 'halland');
+          } else if (window.Audio) {
+            window.Audio.play('checkpoint');
+          }
+          break;
+        }
+
         case 'SWIPE_RIGHT': {
           if (isBehind && player.facing > 0) {
             // Target is behind: spinning backfist!

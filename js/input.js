@@ -270,8 +270,7 @@ class InputController {
 
   // --- Desktop Keyboard & Gamepad Input ---
 
-  handleKeyDown(e) {
-    const gameKeys = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyE', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyR'];
+    const gameKeys = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyE', 'KeyT', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyR'];
     if (gameKeys.includes(e.code)) {
       e.preventDefault();
     }
@@ -295,11 +294,17 @@ class InputController {
     }
 
     // Ignore browser auto-repeat for attack action triggers
-    if (e.repeat && ['Space', 'KeyE', 'ArrowRight', 'ArrowDown', 'ArrowUp', 'ArrowLeft'].includes(e.code)) {
+    if (e.repeat && ['Space', 'KeyE', 'KeyT', 'ArrowRight', 'ArrowDown', 'ArrowUp', 'ArrowLeft'].includes(e.code)) {
       return;
     }
 
-    // 2. Spacebar (or E Key) = Basic Punch / Kick Combo
+    // 2. T Key = Signature Character Taunt / Emote
+    if (e.code === 'KeyT') {
+      this.queueAction('EMOTE');
+      if (window.Haptics) window.Haptics.trigger('tap');
+    }
+
+    // 3. Spacebar (or E Key) = Basic Punch / Kick Combo
     if (e.code === 'Space' || e.code === 'KeyE') {
       this.queueAction('TAP');
       this.spawnSyntheticKeyTrail('TAP');

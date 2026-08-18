@@ -426,6 +426,68 @@ class StickmanRenderer {
         break;
       }
 
+      case 'EMOTE': {
+        const charId = (player.characterId || 'halland').toLowerCase();
+
+        if (charId === 'mcbape') {
+          // Soldier McBape: First Salute 🪖, then Cross-Armed Signature Stand
+          if (t < 0.45) {
+            // Military Salute at Attention
+            targetSpine.head.y = -54;
+            targetSpine.neck.y = -46;
+            targetSpine.chest.y = -38;
+            targetSpine.hips.y = -26;
+            targetRightHand = { x: facing * 7, y: -48 }; // Hand to helmet brim
+            targetLeftHand = { x: -facing * 8, y: -22 }; // At attention seam
+            targetLeftFoot = { x: -4, y: 0 };
+            targetRightFoot = { x: 4, y: 0 };
+          } else {
+            // Signature Cross-Armed Stand
+            targetSpine.head.y = -52;
+            targetSpine.chest.y = -36;
+            targetRightHand = { x: -facing * 5, y: -34 }; // Tucked across chest
+            targetLeftHand = { x: facing * 5, y: -32 }; // Cross over right
+            targetLeftFoot = { x: -10, y: 0 };
+            targetRightFoot = { x: 10, y: 0 };
+          }
+        } else if (charId === 'ronalds') {
+          // Chris Ronalds: SUUUUIIIIIIII Power Celebration Stance
+          targetSpine.head.y = -54;
+          targetSpine.chest.y = -36;
+          targetSpine.hips.y = -24;
+          targetRightHand = { x: facing * 22, y: -16 }; // Arms thrust down at 45°
+          targetLeftHand = { x: -facing * 22, y: -16 };
+          targetLeftFoot = { x: -18, y: 0 }; // Stomped wide stance
+          targetRightFoot = { x: 18, y: 0 };
+        } else if (charId === 'jordunn') {
+          // Michael Jordunn: Head tilted back, tongue out 👅, #1 finger wag
+          targetSpine.head.x = facing * 10;
+          targetSpine.head.y = -46;
+          targetRightHand = { x: facing * 18, y: -52 }; // Pointing #1 index finger up
+          targetLeftHand = { x: -facing * 8, y: -26 }; // Hand on hip
+          targetLeftFoot = { x: -8, y: 0 };
+          targetRightFoot = { x: 8, y: 0 };
+        } else if (charId === 'lebrown') {
+          // LeBrown James: The Silencer Celebration (Heavy alternating knee stomps & pushing palms down)
+          const stompPhase = Math.sin(t * Math.PI * 6);
+          targetSpine.hips.y = -20 + Math.abs(stompPhase) * 4;
+          targetRightHand = { x: facing * 10, y: -22 + stompPhase * 6 }; // Forceful downward palm presses
+          targetLeftHand = { x: -facing * 6, y: -22 - stompPhase * 6 };
+          targetLeftFoot = { x: -8, y: stompPhase > 0 ? -18 : 0 }; // High knee stomps
+          targetRightFoot = { x: 8, y: stompPhase < 0 ? -18 : 0 };
+        } else {
+          // Halland: Zen Lotus Meditation Pose 🧘
+          targetSpine.head.y = -38;
+          targetSpine.chest.y = -28;
+          targetSpine.hips.y = -14;
+          targetLeftFoot = { x: -12, y: -8 }; // Crossed lotus legs
+          targetRightFoot = { x: 12, y: -8 };
+          targetLeftHand = { x: -14, y: -16 }; // Resting on knees in Mudra
+          targetRightHand = { x: 14, y: -16 };
+        }
+        break;
+      }
+
       case 'BODY_SLAM': {
         targetSpine.head.x = facing * 14;
         targetSpine.head.y = -38;
@@ -642,12 +704,62 @@ class StickmanRenderer {
     // White Angular Eye Lens
     this.drawSpiderEyes(ctx, spine.head.x, spine.head.y, facing);
 
+    // Michael Jordunn Sticking Tongue Out 👅 during EMOTE
+    if (charId === 'jordunn' && state === 'EMOTE') {
+      ctx.fillStyle = '#f43f5e'; // Vibrant tongue pink
+      ctx.beginPath();
+      ctx.arc(spine.head.x + facing * 8, spine.head.y + 3, 3.5, 0, Math.PI);
+      ctx.fill();
+    }
+
     // 6. Karate Belt Knot / Ammo Belt
     ctx.fillStyle = beltColor || (charId === 'mcbape' ? '#18181b' : charId === 'ronalds' ? '#15803d' : '#ffffff');
     ctx.fillRect(spine.hips.x - 4, spine.hips.y - 2, 8, 4);
 
     // 7. Floating Overhead Health Bar
     this.drawOverheadHealth(ctx, player);
+
+    // 8. Character Signature Emote Overlays & Dialogue Badges
+    if (state === 'EMOTE') {
+      ctx.save();
+      const t = player.stateTime / Math.max(0.1, player.stateDuration || 2.0);
+
+      if (charId === 'ronalds') {
+        // SUUUUIIIIIIII expanding shockwave rings
+        ctx.strokeStyle = `rgba(239, 68, 68, ${Math.max(0, 1 - t)})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, (t * 60) % 50, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = '#f59e0b';
+        ctx.font = '900 13px Outfit, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText("💥 SUUUUIIIIIIII! 💥", 0, -92);
+      } else if (charId === 'mcbape') {
+        ctx.fillStyle = '#84cc16';
+        ctx.font = '900 12px Outfit, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(t < 0.45 ? "🪖 YES SIR! 🫡" : "⚡ SIGNATURE STAND", 0, -92);
+      } else if (charId === 'jordunn') {
+        ctx.fillStyle = '#ef4444';
+        ctx.font = '900 12px Outfit, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText("👅 #23 GOAT 👟", 0, -92);
+      } else if (charId === 'lebrown') {
+        ctx.fillStyle = '#eab308';
+        ctx.font = '900 12px Outfit, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText("👑 THE SILENCER 👑", 0, -92);
+      } else {
+        // Halland Zen
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = '900 12px Outfit, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText("🧘 ZEN MEDITATION 🌸", 0, -92);
+      }
+      ctx.restore();
+    }
 
     // 8. Spider-Web Line when executing WEB_ZIP
     if (state === 'WEB_ZIP') {
