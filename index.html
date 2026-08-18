@@ -13,6 +13,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Outfit:wght@400;600;700;900&family=JetBrains+Mono:wght@500;700;800&family=Syncopate:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=2.5.0">
+  <!-- PeerJS for WebRTC 1v1 Online Multiplayer -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 <body>
   <div id="game-container">
@@ -274,14 +276,76 @@
           </div>
         </div>
 
-        <button id="btn-play" class="cyber-btn play-btn" style="width: 100%; padding: 1.1rem; font-size: 1.25rem;">
-          <span class="btn-glow"></span>
-          <span class="btn-text">▶️ START GAME</span>
-        </button>
+        <div style="display: flex; flex-direction: column; gap: 0.8rem; width: 100%;">
+          <button id="btn-play" class="cyber-btn play-btn" style="width: 100%; padding: 1.1rem; font-size: 1.25rem;">
+            <span class="btn-glow"></span>
+            <span class="btn-text">▶️ START GAME</span>
+          </button>
+          <button id="btn-open-pvp" class="cyber-btn endless-glow" style="width: 100%; padding: 0.9rem; font-size: 1.1rem; background: linear-gradient(135deg, #0284c7, #0369a1);">
+            <span class="btn-glow"></span>
+            <span class="btn-text">⚔️ 1V1 ONLINE PVP DUEL</span>
+          </button>
+        </div>
 
         <div class="guide-footer" style="margin-top: 1.2rem; font-size: 0.8rem; color: #94a3b8;">
           <span>⌨️ <strong>W / A / D</strong> Move &bull; <strong>Spacebar</strong> Combo &bull; <strong>S</strong> Parry/Slide &bull; <strong>Up</strong> Web Zip</span>
         </div>
+      </div>
+    </div>
+
+    <!-- 1v1 Online Multiplayer PvP Modal -->
+    <div id="pvp-modal" class="overlay-screen hidden">
+      <div class="cyber-modal main-menu-card" style="max-width: 520px; text-align: center;">
+        <div class="modal-corner tl"></div>
+        <div class="modal-corner tr"></div>
+        <div class="modal-corner bl"></div>
+        <div class="modal-corner br"></div>
+
+        <div class="brand-bar">
+          <span class="studio-tag">PEER-TO-PEER WEBRTC ARENA</span>
+        </div>
+
+        <div class="title-wrap">
+          <h2 style="font-family: var(--font-cyber); font-size: 1.8rem; color: #38bdf8; letter-spacing: 0.1em; margin: 0.4rem 0;">1V1 ONLINE PVP DUEL</h2>
+          <div class="title-sub">REAL-TIME MARTIAL ARTS COMBAT &bull; BEST OF 3 ROUNDS</div>
+        </div>
+
+        <!-- PVP Host / Join Panels -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.4rem 0;">
+          <!-- Host Panel -->
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; padding: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem;">
+            <div style="font-size: 0.75rem; font-weight: 800; color: #38bdf8; letter-spacing: 0.15em;">HOST MATCH</div>
+            <div style="font-size: 0.8rem; color: #94a3b8;">Create a battle room and share your code or link with a friend!</div>
+            <button id="btn-host-pvp" class="cyber-btn" style="background: #0284c7; padding: 0.8rem; font-size: 0.95rem; font-weight: 800;">
+              <span>👑 CREATE ROOM</span>
+            </button>
+            <div id="pvp-host-details" style="display: none; margin-top: 0.4rem;">
+              <div style="font-size: 0.75rem; color: #64748b;">ROOM CODE:</div>
+              <div id="pvp-room-code-display" style="font-family: monospace; font-size: 1.4rem; font-weight: 900; color: #f59e0b; letter-spacing: 0.15em; margin: 0.3rem 0;">HALL-XXXX</div>
+              <button id="btn-copy-pvp-link" class="cyber-btn secondary-btn" style="width: 100%; padding: 0.5rem; font-size: 0.8rem;">
+                <span>COPY LINK 🔗</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Join Panel -->
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem;">
+            <div style="font-size: 0.75rem; font-weight: 800; color: #ef4444; letter-spacing: 0.15em;">JOIN MATCH</div>
+            <div style="font-size: 0.8rem; color: #94a3b8;">Enter an active Room Code to connect directly:</div>
+            <input type="text" id="pvp-join-code" placeholder="e.g. HALL-A1B2" maxlength="12" style="background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); color: #fff; text-align: center; padding: 0.65rem; font-family: monospace; font-size: 1.1rem; font-weight: 800; letter-spacing: 0.1em; border-radius: 4px; text-transform: uppercase;">
+            <button id="btn-join-pvp" class="cyber-btn" style="background: #dc2626; padding: 0.8rem; font-size: 0.95rem; font-weight: 800;">
+              <span>⚔️ JOIN DUEL</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="pvp-status-msg" style="font-size: 0.85rem; color: #cbd5e1; min-height: 1.8rem; font-family: monospace;">
+          Select Host or Join to start a multiplayer match.
+        </div>
+
+        <button id="btn-close-pvp" class="cyber-btn secondary-btn" style="margin-top: 1rem; width: 100%; padding: 0.6rem;">
+          <span>← BACK TO MAIN MENU</span>
+        </button>
       </div>
     </div>
 
@@ -365,6 +429,7 @@
   <script src="js/physics.js?v=2.5.0"></script>
   <script src="js/input.js?v=2.5.0"></script>
   <script src="js/levels.js?v=2.5.0"></script>
+  <script src="js/multiplayer.js?v=2.5.0"></script>
   <script src="js/main.js?v=2.5.0"></script>
 </body>
 </html>

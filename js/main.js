@@ -59,6 +59,7 @@ class GameEngine {
     this.initCanvasSize();
     this.bindUI();
     if (window.Cutscenes) window.Cutscenes.init();
+    if (window.MultiplayerManager) this.multiplayer = new MultiplayerManager(this);
     this.loadStage(0);
 
     requestAnimationFrame((t) => this.loop(t));
@@ -100,12 +101,47 @@ class GameEngine {
       btnPlay.addEventListener('click', () => {
         document.getElementById('start-screen').classList.add('hidden');
         this.isEndlessMode = true;
+        if (this.multiplayer) this.multiplayer.isMultiplayer = false;
         this.distanceTraveled = 0;
         this.endlessKills = 0;
         this.endlessScore = 0;
         this.loadInfiniteEndlessWorld();
         this.isPlaying = true;
         if (window.Audio) window.Audio.resume();
+      });
+    }
+
+    // 3. 1v1 Online Multiplayer PvP Buttons
+    const btnOpenPvp = document.getElementById('btn-open-pvp');
+    if (btnOpenPvp) {
+      btnOpenPvp.addEventListener('click', () => {
+        if (this.multiplayer) this.multiplayer.openPvpModal();
+      });
+    }
+
+    const btnClosePvp = document.getElementById('btn-close-pvp');
+    if (btnClosePvp) {
+      btnClosePvp.addEventListener('click', () => {
+        if (this.multiplayer) this.multiplayer.closePvpModal();
+      });
+    }
+
+    const btnHostPvp = document.getElementById('btn-host-pvp');
+    if (btnHostPvp) {
+      btnHostPvp.addEventListener('click', () => {
+        const detailsEl = document.getElementById('pvp-host-details');
+        if (detailsEl) detailsEl.style.display = 'block';
+        if (this.multiplayer) this.multiplayer.hostMatch();
+      });
+    }
+
+    const btnJoinPvp = document.getElementById('btn-join-pvp');
+    if (btnJoinPvp) {
+      btnJoinPvp.addEventListener('click', () => {
+        const codeInput = document.getElementById('pvp-join-code');
+        if (this.multiplayer && codeInput) {
+          this.multiplayer.joinMatch(codeInput.value);
+        }
       });
     }
 
@@ -439,6 +475,10 @@ class GameEngine {
           this.updateMJPaperBall(this.fixedStep);
           this.checkTutorialSteps();
 
+          if (this.multiplayer && this.multiplayer.isMultiplayer) {
+            this.multiplayer.checkPvpCombat(this.player, this.fixedStep);
+          }
+
           if (this.isEndlessMode && this.currentStage.isInfinite) {
             window.LevelGenerator.streamInfiniteWorld(this.currentStage, this.player.x);
             this.updateInfiniteProgression();
@@ -601,6 +641,9 @@ class GameEngine {
     this.drawEntities(ctx);
 
     this.stickRenderer.draw(ctx, this.player);
+    if (this.multiplayer && this.multiplayer.isMultiplayer) {
+      this.multiplayer.render(ctx);
+    }
     this.combat.drawParticles(ctx);
     this.drawSakuraPetals(ctx);
 
