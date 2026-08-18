@@ -52,14 +52,20 @@ class MultiplayerManager {
   }
 
   checkUrlRoomParam() {
-    const params = new URLSearchParams(window.location.search);
-    const room = params.get('room') || params.get('pvp');
-    if (room) {
-      setTimeout(() => {
-        const inputEl = document.getElementById('pvp-join-code');
-        if (inputEl) inputEl.value = room.toUpperCase();
-        this.openPvpModal();
-      }, 300);
+    try {
+      if (typeof window !== 'undefined' && window.location && window.URLSearchParams) {
+        const params = new URLSearchParams(window.location.search);
+        const room = params.get('room') || params.get('pvp');
+        if (room) {
+          setTimeout(() => {
+            const inputEl = document.getElementById('pvp-join-code');
+            if (inputEl) inputEl.value = room.toUpperCase();
+            this.openPvpModal();
+          }, 300);
+        }
+      }
+    } catch(e) {
+      console.warn("[PVP] URL param check error:", e);
     }
   }
 

@@ -270,6 +270,7 @@ class InputController {
 
   // --- Desktop Keyboard & Gamepad Input ---
 
+  handleKeyDown(e) {
     const gameKeys = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyE', 'KeyT', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyR'];
     if (gameKeys.includes(e.code)) {
       e.preventDefault();
