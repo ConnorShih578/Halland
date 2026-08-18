@@ -506,79 +506,62 @@ class StickmanRenderer {
     const rightArm = this.solveIK(rightShoulderJoint, eff.rightHand, this.upperArmLen, this.forearmLen, -facing);
 
     const suitRed = '#ef4444';
-    const darkContour = '#0f172a';
+    const darkLimb = '#dc2626';
 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // 1. Back Arm
-    this.drawLimb(ctx, leftArm, suitRed, darkContour, 3.8, 2.6);
+    // 1. Back Limbs (Sleek, Single-Pass High-Contrast)
+    this.drawLimb(ctx, leftArm, darkLimb, 3.2);
+    this.drawLimb(ctx, leftLeg, darkLimb, 3.6);
 
-    // 2. Back Leg
-    this.drawLimb(ctx, leftLeg, suitRed, darkContour, 4.2, 3.0);
-
-    // 3. Torso & Spine Curve
-    ctx.lineWidth = 4.8;
-    ctx.strokeStyle = darkContour;
+    // 2. Torso & Spine Curve
+    ctx.lineWidth = 4.2;
+    ctx.strokeStyle = suitRed;
     ctx.beginPath();
     ctx.moveTo(spine.hips.x, spine.hips.y);
     ctx.lineTo(spine.chest.x, spine.chest.y);
     ctx.lineTo(spine.neck.x, spine.neck.y);
     ctx.stroke();
 
-    ctx.lineWidth = 3.6;
-    ctx.strokeStyle = suitRed;
-    ctx.stroke();
+    // 3. Front Limbs
+    this.drawLimb(ctx, rightLeg, suitRed, 3.6);
+    this.drawLimb(ctx, rightArm, suitRed, 3.2);
 
-    // 4. Front Leg
-    this.drawLimb(ctx, rightLeg, suitRed, darkContour, 4.2, 3.0);
-
-    // 5. Front Arm
-    this.drawLimb(ctx, rightArm, suitRed, darkContour, 3.8, 2.6);
-
-    // 6. Spider Mask Head
+    // 4. Clean Spider Mask Head
     ctx.beginPath();
     ctx.arc(spine.head.x, spine.head.y, this.headRadius, 0, Math.PI * 2);
     ctx.fillStyle = suitRed;
     ctx.fill();
-    ctx.lineWidth = 1.6;
-    ctx.strokeStyle = '#ffffff';
-    ctx.stroke();
 
-    // 7. White Spider-Man Eye Lenses
+    // 5. White Angular Spider-Eye
     this.drawSpiderEyes(ctx, spine.head.x, spine.head.y, facing);
 
-    // 8. Karate Belt / Waistband
+    // 6. Karate Belt Knot
     ctx.fillStyle = beltColor || '#ffffff';
-    ctx.fillRect(spine.hips.x - 5, spine.hips.y - 3, 10, 6);
+    ctx.fillRect(spine.hips.x - 4, spine.hips.y - 2, 8, 4);
 
-    // 9. Floating Overhead Health Bar directly above Halland
+    // 7. Floating Overhead Health Bar
     this.drawOverheadHealth(ctx, player);
 
-    // 10. Spider-Web Line when executing WEB_ZIP
+    // 8. Spider-Web Line when executing WEB_ZIP
     if (state === 'WEB_ZIP') {
-      ctx.save();
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 2.0;
       ctx.beginPath();
       ctx.moveTo(eff.rightHand.x, eff.rightHand.y);
       ctx.lineTo(eff.rightHand.x + facing * 2, eff.rightHand.y - 140);
       ctx.stroke();
-      ctx.restore();
     }
 
-    // 10. Martial Arts Slash Crescent Arcs & Kinetic Swooshes
+    // 9. Martial Arts Slash Crescent Arcs (Crisp & High-Performance, Zero Shadow Blur)
     const isKick = ['SNAP_KICK', 'FLYING_TORNADO_KICK', 'SPIN_HEEL_KICK', 'SPIN_SWEEP'].includes(state);
     const isPunch = ['STRAIGHT_PUNCH', 'DRAGON_UPPERCUT', 'SPIN_BACKFIST'].includes(state);
 
     if (isKick || isPunch) {
-      ctx.save();
       const slashColor = state === 'DRAGON_UPPERCUT' ? '#f59e0b' : isKick ? '#38bdf8' : '#ef4444';
       ctx.strokeStyle = slashColor;
-      ctx.shadowColor = slashColor;
-      ctx.shadowBlur = 8;
-      ctx.lineWidth = 2.8;
-      ctx.lineCap = 'round';
+      ctx.lineWidth = 2.6;
 
       if (isKick) {
         ctx.beginPath();
@@ -599,7 +582,6 @@ class StickmanRenderer {
         ctx.lineTo(punchX + facing * 12, -38);
         ctx.stroke();
       }
-      ctx.restore();
     }
 
     ctx.restore();
@@ -607,18 +589,9 @@ class StickmanRenderer {
     this.drawRibbons(ctx, beltColor || '#ffffff');
   }
 
-  drawLimb(ctx, ik, color, outline, outerWidth, innerWidth) {
+  drawLimb(ctx, ik, color, width) {
     const { root, joint, end } = ik;
-
-    ctx.lineWidth = outerWidth;
-    ctx.strokeStyle = outline;
-    ctx.beginPath();
-    ctx.moveTo(root.x, root.y);
-    ctx.lineTo(joint.x, joint.y);
-    ctx.lineTo(end.x, end.y);
-    ctx.stroke();
-
-    ctx.lineWidth = innerWidth;
+    ctx.lineWidth = width;
     ctx.strokeStyle = color;
     ctx.beginPath();
     ctx.moveTo(root.x, root.y);

@@ -968,63 +968,57 @@ class GameEngine {
   }
 
   drawSakuraPetals(ctx) {
-    ctx.save();
-    for (const p of this.sakuraPetals) {
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rot);
-      ctx.fillStyle = `rgba(244, 114, 182, ${p.alpha})`;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, p.size, p.size * 0.5, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+    if (!this.sakuraPetals || !this.sakuraPetals.length) return;
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.75)';
+    ctx.beginPath();
+    for (let i = 0; i < this.sakuraPetals.length; i++) {
+      const p = this.sakuraPetals[i];
+      ctx.moveTo(p.x + p.size, p.y);
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
     }
-    ctx.restore();
+    ctx.fill();
   }
 
   drawPlatforms(ctx) {
-    ctx.save();
+    if (!this.currentStage || !this.currentStage.platforms) return;
+    const plats = this.currentStage.platforms;
+
+    // Batched single-pass fill
     ctx.fillStyle = '#1e2430';
+    ctx.beginPath();
+    for (let i = 0; i < plats.length; i++) {
+      const p = plats[i];
+      ctx.rect(p.x, p.y, p.w, p.h);
+    }
+    ctx.fill();
+
+    // Batched top highlight rim
     ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 2.5;
-
-    for (const p of this.currentStage.platforms) {
-      ctx.fillRect(p.x, p.y, p.w, p.h);
-      ctx.beginPath();
+    ctx.beginPath();
+    for (let i = 0; i < plats.length; i++) {
+      const p = plats[i];
       ctx.moveTo(p.x, p.y);
       ctx.lineTo(p.x + p.w, p.y);
-      ctx.stroke();
-
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.10)';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(p.x, p.y, p.w, p.h);
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 2.5;
     }
-    ctx.restore();
+    ctx.stroke();
   }
 
   drawBreakables(ctx) {
-    if (!this.currentStage.breakables) return;
-    ctx.save();
+    if (!this.currentStage || !this.currentStage.breakables) return;
+    const breakables = this.currentStage.breakables;
 
-    for (const b of this.currentStage.breakables) {
-      if (b.broken) continue;
-
-      // Bright yellow wooden smashable barrier
-      ctx.fillStyle = '#eab308';
-      ctx.fillRect(b.x, b.y, b.w, b.h);
-
-      ctx.strokeStyle = '#ca8a04';
-      ctx.lineWidth = 2.5;
-      ctx.strokeRect(b.x, b.y, b.w, b.h);
-
-      ctx.fillStyle = '#1e293b';
-      ctx.font = '800 10px Outfit';
-      ctx.textAlign = 'center';
-      ctx.fillText('SMASH', b.x + b.w / 2, b.y + b.h / 2);
+    // Batched yellow wooden breakables
+    ctx.fillStyle = '#eab308';
+    ctx.strokeStyle = '#ca8a04';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < breakables.length; i++) {
+      const b = breakables[i];
+      if (!b.broken) ctx.rect(b.x, b.y, b.w, b.h);
     }
-    ctx.restore();
+    ctx.fill();
+    ctx.stroke();
   }
 
   drawEntities(ctx) {
