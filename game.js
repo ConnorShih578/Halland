@@ -324,6 +324,7 @@
   };
 
   let isRunning = false;
+  let isPaused = false;
   let distance = 0;
   let score = 0;
   let cameraX = 0;
@@ -334,6 +335,7 @@
   const bestDistEl = document.getElementById('best-dist');
   const highScoreEl = document.getElementById('high-score');
   const startScreen = document.getElementById('screen');
+  const pauseScreen = document.getElementById('pause-screen');
   const flashEl = document.getElementById('flash');
 
   const bestDist = localStorage.getItem('h_bdist') || 0;
@@ -341,11 +343,39 @@
   bestDistEl.textContent = `${bestDist}m`;
   highScoreEl.textContent = bestScore;
 
+  function togglePause() {
+    if (!isRunning) return;
+    isPaused = !isPaused;
+    if (isPaused) {
+      pauseScreen.classList.remove('hidden');
+      input.moveX = 0;
+      input.jumpPressed = false;
+      input.isBlocking = false;
+    } else {
+      pauseScreen.classList.add('hidden');
+    }
+  }
+
   document.getElementById('btn-start').addEventListener('click', () => {
     initAudio();
     startScreen.classList.add('hidden');
     isRunning = true;
+    isPaused = false;
     resetRun();
+  });
+
+  document.getElementById('btn-pause').addEventListener('click', togglePause);
+  document.getElementById('btn-resume').addEventListener('click', togglePause);
+  document.getElementById('btn-restart').addEventListener('click', () => {
+    isPaused = false;
+    pauseScreen.classList.add('hidden');
+    resetRun();
+  });
+
+  window.addEventListener('keydown', e => {
+    if (e.code === 'Escape' || e.code === 'KeyP') {
+      togglePause();
+    }
   });
 
   function resetRun() {
@@ -386,7 +416,7 @@
     const dt = Math.min((now - lastT) / 1000, 0.1);
     lastT = now;
 
-    if (isRunning) {
+    if (isRunning && !isPaused) {
       // 1. Process Actions
       if (input.keys['KeyA'] || input.keys['ArrowLeft']) input.moveX = -1;
       else if (input.keys['KeyD'] || input.keys['ArrowRight']) input.moveX = 1;
