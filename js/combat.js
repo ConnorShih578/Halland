@@ -108,7 +108,24 @@ class CombatSystem {
       }
     }
 
-    // 2. Search Breakable Wooden Boards
+    // 2. Search Multiplayer PvP Opponents
+    if (window.Game && window.Game.multiplayer && window.Game.multiplayer.isMultiplayer) {
+      for (const [id, rPlayer] of window.Game.multiplayer.players) {
+        if (rPlayer.isDead || rPlayer.hp <= 0) continue;
+        const targetCenterY = rPlayer.y - 30;
+        const dx = rPlayer.x - searchX;
+        const dy = targetCenterY - searchY;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist < closestDist) {
+          closestDist = dist;
+          const isBehind = (dx * player.facing) < -8;
+          bestTarget = { x: rPlayer.x, y: targetCenterY, ent: rPlayer, type: 'pvp_player', isBehind, dx, dy };
+        }
+      }
+    }
+
+    // 3. Search Breakable Wooden Boards
     if (!bestTarget && breakables) {
       for (const b of breakables) {
         if (b.broken) continue;

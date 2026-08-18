@@ -110,10 +110,12 @@ class MultiplayerManager {
     this.roomCode = this.generateRoomCode();
     this.isHost = true;
     this.isMultiplayer = true;
+    this.isConnected = true;
     this.players.clear();
     this.renderers.clear();
 
-    this.updateStatusUI(`Connecting to Render Server (<code>${this.serverUrl}</code>)...`);
+    this.showHostLobbyUI(this.roomCode);
+    this.updateStatusUI(`🟢 ROOM CREATED: <strong>${this.roomCode}</strong><br><span style="font-size:0.85em;color:#94a3b8">Share room code or invite link. (2 - 8 Players)</span>`);
 
     this.connectWebSocket(() => {
       this.isConnected = true;
@@ -132,6 +134,18 @@ class MultiplayerManager {
         }
       });
     });
+
+    // Also broadcast over local channel immediately
+    this.sendWsPacket({
+      roomCode: this.roomCode,
+      event: 'player_join',
+      senderId: this.senderId,
+      data: {
+        name: this.playerName,
+        characterId: this.characterId,
+        isHost: true
+      }
+    });
   }
 
   // --- JOIN A MULTI-PLAYER MATCH ---
@@ -144,6 +158,7 @@ class MultiplayerManager {
     this.roomCode = code.trim().toUpperCase();
     this.isHost = false;
     this.isMultiplayer = true;
+    this.isConnected = true;
     this.players.clear();
     this.renderers.clear();
 
@@ -164,6 +179,18 @@ class MultiplayerManager {
       });
 
       this.updateStatusUI(`⚡ Connected to room ${this.roomCode}! Waiting for host to launch battle...`);
+    });
+
+    // Also broadcast over local channel immediately
+    this.sendWsPacket({
+      roomCode: this.roomCode,
+      event: 'player_join',
+      senderId: this.senderId,
+      data: {
+        name: this.playerName,
+        characterId: this.characterId,
+        isHost: false
+      }
     });
   }
 
@@ -778,6 +805,13 @@ class MultiplayerManager {
 
     const urlInput = document.getElementById('pvp-server-url-input');
     if (urlInput) urlInput.value = this.serverUrl;
+
+    const charCards = document.querySelectorAll('.char-select-card');
+    charCards.forEach(c => {
+      const isSelected = c.getAttribute('data-char') === this.characterId;
+      c.classList.toggle('active', isSelected);
+      c.style.border = isSelected ? '2px solid #38bdf8' : '1px solid rgba(255,255,255,0.2)';
+    });
   }
 
   closePvpModal() {

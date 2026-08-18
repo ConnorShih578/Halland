@@ -587,21 +587,21 @@ class StickmanRenderer {
     let jerseyNum = '';
 
     if (charId === 'lebrown') {
-      suitColor = '#a855f7';
-      darkLimb = '#7e22ce';
-      headColor = '#7e22ce';
+      suitColor = '#7e22ce'; // Lakers Royal Purple
+      darkLimb = '#eab308'; // Gold arm & leg accents
+      headColor = '#6b21a8';
       hasHairRibbon = false;
       hasCrown = true;
       hasHeadband = true;
-      headbandColor = '#eab308';
+      headbandColor = '#facc15';
       jerseyNum = '6';
     } else if (charId === 'jordunn') {
-      suitColor = '#dc2626';
-      darkLimb = '#991b1b';
-      headColor = '#1e1b4b';
+      suitColor = '#dc2626'; // Bulls Red
+      darkLimb = '#0f172a'; // Obsidian Black limbs
+      headColor = '#09090b';
       hasHairRibbon = false;
       hasHeadband = true;
-      headbandColor = '#dc2626';
+      headbandColor = '#ef4444';
       jerseyNum = '23';
     } else if (charId === 'mcbape') {
       // Supreme Military Dictator McBape Uniform
@@ -612,11 +612,17 @@ class StickmanRenderer {
       hasHelmet = true; // Officer Peaked Cap
       jerseyNum = '10';
     } else if (charId === 'ronalds') {
-      suitColor = '#ef4444';
-      darkLimb = '#15803d'; // Green & Red Portugal style
-      headColor = '#b91c1c';
+      suitColor = '#991b1b'; // Portugal Deep Ruby Red
+      darkLimb = '#15803d'; // Forest Emerald Green Shorts & Boots
+      headColor = '#7f1d1d';
       hasHairRibbon = false;
       jerseyNum = '7';
+    } else {
+      // Halland: Red Spider-Karate Gi with Blonde Ribbons
+      suitColor = '#ef4444';
+      darkLimb = '#b91c1c';
+      headColor = '#ef4444';
+      hasHairRibbon = true;
     }
 
     ctx.lineCap = 'round';
