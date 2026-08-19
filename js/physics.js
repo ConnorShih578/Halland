@@ -105,6 +105,11 @@ class PhysicsEngine {
     }
 
     // 4. Ultra-Crisp Horizontal Movement & Steering
+    if (player.state === 'EMOTE' && (input.moveX !== 0 || input.jumpPressed)) {
+      player.state = player.isGrounded ? (Math.abs(input.moveX) > 0 ? 'RUN' : 'IDLE') : 'JUMP';
+      player.stateTime = 0;
+    }
+
     const isLockedTrajectory = ['BODY_SLAM'].includes(player.state);
 
     if (!isLockedTrajectory && !input.isBlocking) {
@@ -415,6 +420,29 @@ class PhysicsEngine {
           if (window.Haptics) window.Haptics.trigger('backflip');
           break;
         }
+        case 'EMOTE': {
+          player.state = 'EMOTE';
+          player.stateTime = 0;
+          player.stateDuration = 2.0;
+          player.vx = 0;
+          if (combat) {
+            const charId = (player.characterId || 'halland').toLowerCase();
+            const tauntNames = {
+              halland: '🧘 ZEN LOTUS MEDITATION',
+              lebrown: '👑 THE SILENCER KNEE STOMP',
+              jordunn: '👟 TONGUE WAG & #1 FINGER',
+              mcbape: '🎖️ DICTATOR MILITARY SALUTE',
+              ronalds: '💥 SUUUUIIIIIIII CELEBRATION'
+            };
+            combat.announceAction(`${player.name || 'FIGHTER'}: ${tauntNames[charId] || 'SIGNATURE TAUNT'}`);
+          }
+          if (window.Audio && window.Audio.playEmote) {
+            window.Audio.playEmote(player.characterId || 'halland');
+          } else if (window.Audio) {
+            window.Audio.play('checkpoint');
+          }
+          break;
+        }
       }
     }
   }
@@ -497,6 +525,7 @@ class PhysicsEngine {
 
   updateAnimationStates(player, input) {
     const actionStates = [
+      'EMOTE',
       'JAB', 'SNAP_KICK', 'STRAIGHT_PUNCH', 'SLIDE_SWEEP', 'WEB_ZIP', 'BACKSTEP',
       'SPIN_BACKFIST', 'SPIN_HEEL_KICK', 'SPIN_SWEEP',
       'CANNONBALL', 'DIVING_PUNCH', 'BODY_SLAM', 'BACKFLIP'
