@@ -373,9 +373,11 @@ class GameEngine {
       btnCustomMusic.addEventListener('click', () => {
         musicModal.classList.remove('hidden');
       });
-      btnCloseMusic.addEventListener('click', () => {
-        musicModal.classList.add('hidden');
-      });
+      if (btnCloseMusic) {
+        btnCloseMusic.addEventListener('click', () => {
+          musicModal.classList.add('hidden');
+        });
+      }
 
       const handleAudioFile = (file) => {
         if (file && window.Audio) {
@@ -387,10 +389,12 @@ class GameEngine {
         }
       };
 
-      bgmFileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        handleAudioFile(file);
-      });
+      if (bgmFileInput) {
+        bgmFileInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          handleAudioFile(file);
+        });
+      }
 
       // Drag and drop audio files
       if (bgmDropzone) {
@@ -420,13 +424,17 @@ class GameEngine {
         });
       }
 
-      btnBgmPlayToggle.addEventListener('click', () => {
-        if (window.Audio) window.Audio.toggleBgm();
-      });
+      if (btnBgmPlayToggle) {
+        btnBgmPlayToggle.addEventListener('click', () => {
+          if (window.Audio) window.Audio.toggleBgm();
+        });
+      }
 
-      bgmVolumeSlider.addEventListener('input', (e) => {
-        if (window.Audio) window.Audio.setBgmVolume(parseFloat(e.target.value));
-      });
+      if (bgmVolumeSlider) {
+        bgmVolumeSlider.addEventListener('input', (e) => {
+          if (window.Audio) window.Audio.setBgmVolume(parseFloat(e.target.value));
+        });
+      }
     }
 
     // 6. Pause System Handlers

@@ -293,11 +293,11 @@
 
         <!-- Two Main Arcade Action Buttons -->
         <div style="display: flex; flex-direction: column; gap: 0.9rem; width: 100%; margin-bottom: 1.2rem;">
-          <button id="btn-play-endless" class="cyber-btn play-btn endless-glow" style="width: 100%; padding: 1.15rem; font-size: 1.25rem;">
+          <button id="btn-play-endless" class="cyber-btn play-btn endless-glow" onclick="if(window.Game && window.Game.startEndlessGame) window.Game.startEndlessGame(); else { document.getElementById('start-screen').classList.add('hidden'); }" style="width: 100%; padding: 1.15rem; font-size: 1.25rem;">
             <span class="btn-glow"></span>
             <span class="btn-text">♾️ START ENDLESS MODE</span>
           </button>
-          <button id="btn-open-1v1" class="cyber-btn play-btn" style="width: 100%; padding: 1.05rem; font-size: 1.15rem; background: linear-gradient(135deg, #0284c7, #0369a1); border: 1px solid #38bdf8;">
+          <button id="btn-open-1v1" class="cyber-btn play-btn" onclick="const m = document.getElementById('duel-modal'); if(m) m.classList.remove('hidden');" style="width: 100%; padding: 1.05rem; font-size: 1.15rem; background: linear-gradient(135deg, #0284c7, #0369a1); border: 1px solid #38bdf8;">
             <span class="btn-glow"></span>
             <span class="btn-text">⚔️ 1V1 LOCAL DUEL (SAME KEYBOARD)</span>
           </button>
@@ -420,14 +420,58 @@
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-          <button id="btn-start-duel" class="cyber-btn play-btn" style="width: 100%; padding: 1.1rem; font-size: 1.25rem;">
+          <button id="btn-start-duel" class="cyber-btn play-btn" onclick="if(window.Game && window.Game.start1v1Duel) { const p1 = document.getElementById('p1-duel-name'); const p2 = document.getElementById('p2-duel-name'); window.Game.start1v1Duel(window.Game.p1Char || 'halland', (p1 && p1.value.trim()) || 'HALLAND', window.Game.p2Char || 'mcbape', (p2 && p2.value.trim()) || 'MCBAPE'); }" style="width: 100%; padding: 1.1rem; font-size: 1.25rem;">
             <span class="btn-glow"></span>
             <span class="btn-text">⚔️ ENTER 1V1 DOJO ARENA</span>
           </button>
-          <button id="btn-close-duel" class="cyber-btn secondary-btn" style="width: 100%; padding: 0.6rem; font-size: 0.9rem;">
+          <button id="btn-close-duel" class="cyber-btn secondary-btn" onclick="const m = document.getElementById('duel-modal'); if(m) m.classList.add('hidden');" style="width: 100%; padding: 0.6rem; font-size: 0.9rem;">
             <span>← BACK TO MENU</span>
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- Custom Background Music Modal -->
+    <div id="custom-music-modal" class="overlay-screen hidden">
+      <div class="cyber-modal main-menu-card" style="max-width: 500px; text-align: center;">
+        <div class="modal-corner tl"></div>
+        <div class="modal-corner tr"></div>
+        <div class="modal-corner bl"></div>
+        <div class="modal-corner br"></div>
+
+        <div class="brand-bar">
+          <span class="studio-tag">AUDIO CENTER</span>
+        </div>
+
+        <div class="title-wrap" style="text-align: center; margin-bottom: 1rem;">
+          <h2 style="font-family: var(--font-cyber); font-size: 1.6rem; color: #f59e0b;">CUSTOM BGM PLAYER</h2>
+          <div class="title-sub">LOAD YOUR MP3 / WAV TRACKS OR PLAY CYBER BEATS</div>
+        </div>
+
+        <div id="bgm-dropzone" style="border: 2px dashed rgba(245,158,11,0.5); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; background: rgba(15,23,42,0.8); cursor: pointer;" onclick="document.getElementById('bgm-file-input').click();">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎵</div>
+          <div style="font-weight: 800; color: #f59e0b; margin-bottom: 0.3rem;">DROP MP3 / WAV AUDIO HERE</div>
+          <div style="font-size: 0.75rem; color: #94a3b8;">or click to browse local audio files</div>
+          <input type="file" id="bgm-file-input" accept="audio/*" style="display: none;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 1rem;">
+          <button id="btn-bgm-sample" class="cyber-btn play-btn" style="padding: 0.7rem; font-size: 0.85rem;">
+            <span>🎹 CYBER DOJO BEAT</span>
+          </button>
+          <button id="btn-bgm-play-toggle" class="cyber-btn" style="padding: 0.7rem; font-size: 0.85rem; background: #0284c7;">
+            <span>⏯️ PLAY / PAUSE</span>
+          </button>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; background: rgba(0,0,0,0.4); padding: 0.6rem 0.8rem; border-radius: 6px;">
+          <span style="font-size: 0.75rem; color: #cbd5e1; font-weight: 700;">BGM VOLUME:</span>
+          <input type="range" id="bgm-volume-slider" min="0" max="1" step="0.05" value="0.5" style="width: 160px; accent-color: #f59e0b;">
+        </div>
+
+        <button id="btn-close-music" class="cyber-btn secondary-btn" onclick="document.getElementById('custom-music-modal').classList.add('hidden');" style="width: 100%; padding: 0.6rem;">
+          <span>← CLOSE AUDIO CENTER</span>
+        </button>
       </div>
     </div>
 
