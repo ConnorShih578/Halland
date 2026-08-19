@@ -123,14 +123,15 @@ class InputController {
     if (e.key === '.') this.keys['Period'] = true;
     if (e.key === '/') this.keys['Slash'] = true;
 
-    // Detect Player 2 Joining (P2 action keys: . or / or ')
+    // Detect Player 2 Joining (P2 action keys: . or / or ') - Disabled in Endless Mode
     const isP2ActionKey = [
       'Period', 'NumpadDecimal', 'Slash', 'NumpadDivide', 'Quote', 'KeyL'
     ].includes(e.code) || e.key === '.' || e.key === '/' || e.key === "'";
 
     const isDuelMode = window.Game && window.Game.is1v1Duel;
+    const isEndless = window.Game && window.Game.isEndlessMode;
 
-    if ((isP2ActionKey || isDuelMode) && !this.p2.active) {
+    if (!isEndless && (isP2ActionKey || isDuelMode) && !this.p2.active) {
       this.p2.active = true;
       if (!isDuelMode && window.Game && typeof window.Game.spawnPlayer2 === 'function') {
         window.Game.spawnPlayer2();

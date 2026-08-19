@@ -545,6 +545,7 @@ class GameEngine {
   }
 
   spawnPlayer2() {
+    if (this.isEndlessMode) return; // Strict single player for Endless Mode
     if (!this.currentStage) return;
     const spawnX = (this.player ? this.player.x + 35 : (this.currentStage.startX || 80) + 35);
     const spawnY = (this.player ? this.player.y : (this.currentStage.startY || 540));
@@ -585,10 +586,17 @@ class GameEngine {
 
     this.is1v1Duel = false;
     this.isEndlessMode = true;
+    this.player2 = null; // Strict single player
     this.duelWinner = null;
     this.distanceTraveled = 0;
     this.endlessKills = 0;
     this.endlessScore = 0;
+
+    if (this.input) {
+      this.input.p1.active = true;
+      this.input.p2.active = false;
+      this.input.reset();
+    }
 
     const p1Tag = document.getElementById('hud-p1-tag');
     if (p1Tag) p1Tag.textContent = 'P1: HALLAND';
