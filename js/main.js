@@ -95,19 +95,64 @@ class GameEngine {
     };
     updateEndlessStatsUI();
 
-    // 2. Clean Single Start Button
+    // 2. Mode Selector Tabs (Story Campaign vs Endless Survival)
+    const tabCampaign = document.getElementById('tab-campaign');
+    const tabEndless = document.getElementById('tab-endless');
+    const campaignView = document.getElementById('campaign-view');
+    const endlessView = document.getElementById('endless-view');
+
+    if (tabCampaign && tabEndless) {
+      tabCampaign.addEventListener('click', () => {
+        tabCampaign.classList.add('active');
+        tabEndless.classList.remove('active');
+        if (campaignView) campaignView.classList.remove('hidden');
+        if (endlessView) endlessView.classList.add('hidden');
+        this.isEndlessMode = false;
+      });
+
+      tabEndless.addEventListener('click', () => {
+        tabEndless.classList.add('active');
+        tabCampaign.classList.remove('active');
+        if (endlessView) endlessView.classList.remove('hidden');
+        if (campaignView) campaignView.classList.add('hidden');
+        this.isEndlessMode = true;
+        updateEndlessStatsUI();
+      });
+    }
+
+    // 3. Populate Campaign Acts in UI Level Selection Grid
+    const stageGrid = document.getElementById('stage-grid');
+    const stages = window.STAGES || (window.LevelGenerator ? window.LevelGenerator.getCampaignStages() : []);
+    if (stageGrid && stages) {
+      stageGrid.innerHTML = '';
+      stages.forEach((st, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `stage-card ${idx === this.currentStageIndex ? 'active' : ''}`;
+        btn.dataset.stage = idx;
+        btn.innerHTML = `
+          <div class="st-header">
+            <span class="st-num">ACT ${idx + 1}</span>
+            <span class="st-rank ${(st.belt || 'white').toLowerCase()}">${st.belt || 'WHITE'} BELT</span>
+          </div>
+          <div class="st-title">${st.name.split(':')[1] || st.name}</div>
+          <div class="st-desc">${st.subtitle || 'Smash all yellow barriers & defeat boss!'}</div>
+        `;
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.stage-card').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          this.isEndlessMode = false;
+          this.currentStageIndex = idx;
+          this.loadStage(idx);
+        });
+        stageGrid.appendChild(btn);
+      });
+    }
+
+    // 4. Start Play Buttons
     const btnPlay = document.getElementById('btn-play');
     if (btnPlay) {
       btnPlay.addEventListener('click', () => {
-        document.getElementById('start-screen').classList.add('hidden');
-        this.isEndlessMode = true;
-        if (this.multiplayer) this.multiplayer.isMultiplayer = false;
-        this.distanceTraveled = 0;
-        this.endlessKills = 0;
-        this.endlessScore = 0;
-        this.loadInfiniteEndlessWorld();
-        this.isPlaying = true;
-        if (window.Audio) window.Audio.resume();
+        this.startStoryGame(this.currentStageIndex !== undefined ? this.currentStageIndex : 0);
       });
     }
 
@@ -191,14 +236,14 @@ class GameEngine {
     const btnPlayEndless = document.getElementById('btn-play-endless');
     if (btnPlayEndless) {
       btnPlayEndless.addEventListener('click', () => {
-        document.getElementById('start-screen').classList.add('hidden');
-        this.isEndlessMode = true;
-        this.distanceTraveled = 0;
-        this.endlessKills = 0;
-        this.endlessScore = 0;
-        this.loadInfiniteEndlessWorld();
-        this.isPlaying = true;
-        if (window.Audio) window.Audio.resume();
+        this.startEndlessGame();
+      });
+    }
+
+    const btnOpenPvpEndless = document.getElementById('btn-open-pvp-endless');
+    if (btnOpenPvpEndless) {
+      btnOpenPvpEndless.addEventListener('click', () => {
+        if (this.multiplayer) this.multiplayer.openPvpModal();
       });
     }
 
@@ -439,6 +484,17 @@ class GameEngine {
     if (pauseModal) pauseModal.classList.add('hidden');
     this.lastFrameTime = performance.now();
     if (window.Audio) window.Audio.play('tap');
+  }
+
+  startStoryGame(index = 0) {
+    const startScreen = document.getElementById('start-screen');
+    if (startScreen) startScreen.classList.add('hidden');
+    this.isEndlessMode = false;
+    if (this.multiplayer) this.multiplayer.isMultiplayer = false;
+    const stageIdx = index !== undefined ? index : (this.currentStageIndex || 0);
+    this.loadStage(stageIdx);
+    this.isPlaying = true;
+    if (window.Audio) window.Audio.resume();
   }
 
   startEndlessGame() {

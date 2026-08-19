@@ -245,12 +245,12 @@
       </div>
     </div>
 
-    <!-- Clean Start Screen -->
+    <!-- Start / Stage Select Screen -->
     <div id="start-screen" class="overlay-screen">
       <div class="kanji-bg left">武</div>
       <div class="kanji-bg right">影</div>
 
-      <div class="cyber-modal main-menu-card" style="max-width: 500px; text-align: center;">
+      <div class="cyber-modal main-menu-card">
         <div class="modal-corner tl"></div>
         <div class="modal-corner tr"></div>
         <div class="modal-corner bl"></div>
@@ -265,26 +265,65 @@
           <div class="title-sub">THE HYBRID POWERHOUSE MARTIAL ARTS ADVENTURE</div>
         </div>
 
-        <div class="endless-stats-row" style="margin: 1.2rem 0; justify-content: center; gap: 1rem;">
-          <div class="e-stat">
-            <span class="e-label">BEST DISTANCE</span>
-            <span id="endless-best-wave" class="e-val mono" style="color: #f59e0b;">0m</span>
+        <!-- Mode Selector Tabs -->
+        <div class="mode-tabs">
+          <button id="tab-campaign" class="mode-tab active">
+            <span>🥋 STORY CAMPAIGN</span>
+          </button>
+          <button id="tab-endless" class="mode-tab">
+            <span>♾️ ENDLESS SURVIVAL</span>
+          </button>
+        </div>
+
+        <!-- Campaign View -->
+        <div id="campaign-view" class="mode-view">
+          <div class="stage-nav-bar">
+            <span class="stage-nav-title">ACT SELECT: THE SAGA OF MJ'S SHOE</span>
           </div>
-          <div class="e-stat">
-            <span class="e-label">HIGH SCORE</span>
-            <span id="endless-high-score" class="e-val mono" style="color: #38bdf8;">0</span>
+          <div id="stage-grid" class="stage-select-grid scrollable">
+            <!-- Populated dynamically by main.js with 5 story acts -->
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.7rem; width: 100%;">
+            <button id="btn-play" class="cyber-btn play-btn" onclick="if(window.Game && window.Game.startStoryGame) window.Game.startStoryGame(); else { document.getElementById('start-screen').classList.add('hidden'); if(window.Audio) window.Audio.resume(); }">
+              <span class="btn-glow"></span>
+              <span class="btn-text">START STORY MISSION</span>
+            </button>
+            <button id="btn-open-pvp" class="cyber-btn endless-glow" onclick="if(window.Game && window.Game.multiplayer) window.Game.multiplayer.openPvpModal(); else document.getElementById('pvp-modal').classList.remove('hidden');" style="padding: 0.85rem; font-size: 1rem; background: linear-gradient(135deg, #0284c7, #0369a1);">
+              <span class="btn-glow"></span>
+              <span class="btn-text">⚔️ 1V1 ONLINE PVP DUEL</span>
+            </button>
           </div>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 0.8rem; width: 100%;">
-          <button id="btn-play" class="cyber-btn play-btn" onclick="if(window.Game && window.Game.startEndlessGame) window.Game.startEndlessGame(); else { document.getElementById('start-screen').classList.add('hidden'); if(window.Audio) window.Audio.resume(); }" style="width: 100%; padding: 1.1rem; font-size: 1.25rem;">
-            <span class="btn-glow"></span>
-            <span class="btn-text">▶️ START GAME</span>
-          </button>
-          <button id="btn-open-pvp" class="cyber-btn endless-glow" onclick="if(window.Game && window.Game.multiplayer) window.Game.multiplayer.openPvpModal(); else document.getElementById('pvp-modal').classList.remove('hidden');" style="width: 100%; padding: 0.9rem; font-size: 1.1rem; background: linear-gradient(135deg, #0284c7, #0369a1);">
-            <span class="btn-glow"></span>
-            <span class="btn-text">⚔️ 1V1 ONLINE PVP DUEL</span>
-          </button>
+        <!-- Endless Survival View -->
+        <div id="endless-view" class="mode-view hidden">
+          <div class="endless-banner-card">
+            <div class="endless-badge">INFINITE WAVE COMBAT</div>
+            <h3>SURVIVE THE INFINITE DOJO</h3>
+            <p>Fight through endless waves of escalating Ninjas, Sentinels, and Grandmasters. Upgrade belt ranks every 400m!</p>
+
+            <div class="endless-stats-row">
+              <div class="e-stat">
+                <span class="e-label">BEST DISTANCE</span>
+                <span id="endless-best-wave" class="e-val mono">0m</span>
+              </div>
+              <div class="e-stat">
+                <span class="e-label">HIGH SCORE</span>
+                <span id="endless-high-score" class="e-val mono">0</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 0.7rem; width: 100%;">
+            <button id="btn-play-endless" class="cyber-btn play-btn endless-glow" onclick="if(window.Game && window.Game.startEndlessGame) window.Game.startEndlessGame(); else { document.getElementById('start-screen').classList.add('hidden'); if(window.Audio) window.Audio.resume(); }">
+              <span class="btn-glow"></span>
+              <span class="btn-text">START ENDLESS SURVIVAL ♾️</span>
+            </button>
+            <button id="btn-open-pvp-endless" class="cyber-btn" onclick="if(window.Game && window.Game.multiplayer) window.Game.multiplayer.openPvpModal(); else document.getElementById('pvp-modal').classList.remove('hidden');" style="padding: 0.85rem; font-size: 1rem; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.5); color: #38bdf8;">
+              <span class="btn-glow"></span>
+              <span class="btn-text">⚔️ 1V1 ONLINE PVP DUEL</span>
+            </button>
+          </div>
         </div>
 
         <div class="guide-footer" style="margin-top: 1.2rem; font-size: 0.8rem; color: #94a3b8;">
