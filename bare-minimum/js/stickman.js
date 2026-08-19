@@ -442,61 +442,125 @@ class StickmanRenderer {
       case 'EMOTE': {
         const charId = (player.characterId || 'halland').toLowerCase();
 
-        if (charId === 'mcbape') {
-          // Soldier McBape: First Salute 🪖, then Cross-Armed Signature Stand
-          if (t < 0.45) {
-            // Military Salute at Attention
+        if (charId === 'ronalds') {
+          // Chris Ronalds: Jump-Spin SUI Celebration!
+          // Phase 1 (t < 0.40): Leaping high into the air and spinning 360°
+          // Phase 2 (t >= 0.40): Power Stomp Landing, Arms thrust back at tight 45° (natural length!), chest puffed out!
+          if (t < 0.40) {
+            const jumpPhase = t / 0.40;
+            const jumpHeight = Math.sin(jumpPhase * Math.PI) * 36; // 36px high mid-air leap!
+            targetRotation = jumpPhase * Math.PI * 2 * facing; // Full 360 spin in air!
+            targetSpine.head.y = -54 - jumpHeight;
+            targetSpine.chest.y = -38 - jumpHeight;
+            targetSpine.hips.y = -26 - jumpHeight;
+            // Tuck knees up in mid-air
+            targetLeftFoot = { x: -6, y: -16 - jumpHeight };
+            targetRightFoot = { x: 6, y: -16 - jumpHeight };
+            targetLeftHand = { x: -facing * 12, y: -34 - jumpHeight };
+            targetRightHand = { x: facing * 12, y: -34 - jumpHeight };
+          } else {
+            // Landed Ground SUI Stance: Wide stomp, elbows tight, arms thrust back naturally (proportional length!)
+            targetRotation = 0;
+            targetSpine.head.x = facing * 4;
+            targetSpine.head.y = -54; // Head held high
+            targetSpine.chest.x = facing * 6; // Chest puffed out
+            targetSpine.chest.y = -38;
+            targetSpine.hips.y = -22; // Solid squat stance
+            // Wide power stance feet
+            targetLeftFoot = { x: -14, y: 0 };
+            targetRightFoot = { x: 14, y: 0 };
+            // Hands thrust back & down at 45° with natural arm reach (no hyper-extended arms)
+            targetRightHand = { x: facing * 13, y: -18 };
+            targetLeftHand = { x: -facing * 13, y: -18 };
+          }
+        } else if (charId === 'lebrown') {
+          // King LeBrown: The Silencer Celebration
+          // Phase 1 (0.00 - 0.36): High Left Knee Stomp in PERFECT sync with both hands pushing down
+          // Phase 2 (0.36 - 0.72): High Right Knee Stomp in PERFECT sync with both hands pushing down
+          // Phase 3 (0.72 - 1.00): Double Chest Thump & Crown point!
+          if (t < 0.36) {
+            const p = t / 0.36;
+            const stompDown = Math.sin(p * Math.PI);
+            targetSpine.head.y = -54;
+            targetSpine.chest.y = -38;
+            targetSpine.hips.y = -24 + stompDown * 3;
+            targetLeftFoot = { x: -10, y: -(1 - stompDown) * 16 }; // Left knee lifts high then stomps down
+            targetRightFoot = { x: 10, y: 0 };
+            // Both hands push down in EXACT cadence with stomp
+            const handY = -34 + stompDown * 14;
+            targetLeftHand = { x: -facing * 8, y: handY };
+            targetRightHand = { x: facing * 8, y: handY };
+          } else if (t < 0.72) {
+            const p = (t - 0.36) / 0.36;
+            const stompDown = Math.sin(p * Math.PI);
+            targetSpine.head.y = -54;
+            targetSpine.chest.y = -38;
+            targetSpine.hips.y = -24 + stompDown * 3;
+            targetRightFoot = { x: 10, y: -(1 - stompDown) * 16 }; // Right knee lifts high then stomps down
+            targetLeftFoot = { x: -10, y: 0 };
+            // Both hands push down in EXACT cadence with stomp
+            const handY = -34 + stompDown * 14;
+            targetLeftHand = { x: -facing * 8, y: handY };
+            targetRightHand = { x: facing * 8, y: handY };
+          } else {
+            // Chest Thump with Right Fist & Standing Tall
+            targetSpine.head.y = -56;
+            targetSpine.chest.y = -40;
+            targetSpine.hips.y = -26;
+            targetLeftFoot = { x: -8, y: 0 };
+            targetRightFoot = { x: 8, y: 0 };
+            targetRightHand = { x: facing * 3, y: -40 }; // Right fist pounding chest
+            targetLeftHand = { x: -facing * 10, y: -24 }; // Left hand resting on hip
+          }
+        } else if (charId === 'mcbape') {
+          // Kylian McBape: Commander Military Salute -> Iconic Armpit Fold Stand
+          if (t < 0.42) {
+            // Crisp Military Salute at Attention (Hand placed on front cap visor, NEVER behind head!)
             targetSpine.head.y = -54;
             targetSpine.neck.y = -46;
             targetSpine.chest.y = -38;
             targetSpine.hips.y = -26;
-            targetRightHand = { x: facing * 7, y: -48 }; // Hand to helmet brim
-            targetLeftHand = { x: -facing * 8, y: -22 }; // At attention seam
+            targetRightHand = { x: facing * 9, y: -52 }; // Crisp salute at front brim of peaked cap
+            targetLeftHand = { x: -facing * 6, y: -20 }; // Firmly aligned with trouser seam
             targetLeftFoot = { x: -4, y: 0 };
             targetRightFoot = { x: 4, y: 0 };
           } else {
-            // Signature Cross-Armed Stand
+            // Signature Cross-Armed Fold (Hands neatly tucked in front of chest)
             targetSpine.head.y = -52;
             targetSpine.chest.y = -36;
-            targetRightHand = { x: -facing * 5, y: -34 }; // Tucked across chest
-            targetLeftHand = { x: facing * 5, y: -32 }; // Cross over right
+            targetRightHand = { x: -facing * 4, y: -34 }; // Folded across front
+            targetLeftHand = { x: facing * 4, y: -32 };
+            targetLeftFoot = { x: -8, y: 0 };
+            targetRightFoot = { x: 8, y: 0 };
+          }
+        } else if (charId === 'jordunn') {
+          // Michael Jordunn: Tongue Out Wag & #1 Finger Point -> The Shrug
+          if (t < 0.55) {
+            targetSpine.head.x = facing * 8;
+            targetSpine.head.y = -48; // Head tilted back
+            targetRightHand = { x: facing * 12, y: -54 }; // Pointing #1 index finger in the sky
+            targetLeftHand = { x: -facing * 8, y: -24 }; // Left hand on hip
+            targetLeftFoot = { x: -8, y: 0 };
+            targetRightFoot = { x: 8, y: 0 };
+          } else {
+            // The Shrug (Palms open at chest level, head tilted)
+            targetSpine.head.x = -facing * 4;
+            targetSpine.head.y = -50;
+            targetRightHand = { x: facing * 12, y: -30 }; // Palm open shrug
+            targetLeftHand = { x: -facing * 12, y: -30 };
             targetLeftFoot = { x: -10, y: 0 };
             targetRightFoot = { x: 10, y: 0 };
           }
-        } else if (charId === 'ronalds') {
-          // Chris Ronalds: SUUUUIIIIIIII Power Celebration Stance
-          targetSpine.head.y = -54;
-          targetSpine.chest.y = -36;
-          targetSpine.hips.y = -24;
-          targetRightHand = { x: facing * 22, y: -16 }; // Arms thrust down at 45°
-          targetLeftHand = { x: -facing * 22, y: -16 };
-          targetLeftFoot = { x: -18, y: 0 }; // Stomped wide stance
-          targetRightFoot = { x: 18, y: 0 };
-        } else if (charId === 'jordunn') {
-          // Michael Jordunn: Head tilted back, tongue out 👅, #1 finger wag
-          targetSpine.head.x = facing * 10;
-          targetSpine.head.y = -46;
-          targetRightHand = { x: facing * 18, y: -52 }; // Pointing #1 index finger up
-          targetLeftHand = { x: -facing * 8, y: -26 }; // Hand on hip
-          targetLeftFoot = { x: -8, y: 0 };
-          targetRightFoot = { x: 8, y: 0 };
-        } else if (charId === 'lebrown') {
-          // LeBrown James: The Silencer Celebration (Heavy alternating knee stomps & pushing palms down)
-          const stompPhase = Math.sin(t * Math.PI * 6);
-          targetSpine.hips.y = -20 + Math.abs(stompPhase) * 4;
-          targetRightHand = { x: facing * 10, y: -22 + stompPhase * 6 }; // Forceful downward palm presses
-          targetLeftHand = { x: -facing * 6, y: -22 - stompPhase * 6 };
-          targetLeftFoot = { x: -8, y: stompPhase > 0 ? -18 : 0 }; // High knee stomps
-          targetRightFoot = { x: 8, y: stompPhase < 0 ? -18 : 0 };
         } else {
-          // Halland: Zen Lotus Meditation Pose 🧘
-          targetSpine.head.y = -38;
-          targetSpine.chest.y = -28;
-          targetSpine.hips.y = -14;
-          targetLeftFoot = { x: -12, y: -8 }; // Crossed lotus legs
-          targetRightFoot = { x: 12, y: -8 };
-          targetLeftHand = { x: -14, y: -16 }; // Resting on knees in Mudra
-          targetRightHand = { x: 14, y: -16 };
+          // Erling Halland: Floating Zen Lotus Meditation
+          const floatHover = Math.sin(t * Math.PI * 4) * 6;
+          targetSpine.head.y = -44 - floatHover;
+          targetSpine.chest.y = -32 - floatHover;
+          targetSpine.hips.y = -18 - floatHover;
+          targetLeftFoot = { x: -12, y: -10 - floatHover }; // Crossed lotus legs
+          targetRightFoot = { x: 12, y: -10 - floatHover };
+          targetLeftHand = { x: -14, y: -18 - floatHover }; // Mudra on knees
+          targetRightHand = { x: 14, y: -18 - floatHover };
         }
         break;
       }
@@ -521,120 +585,120 @@ class StickmanRenderer {
       }
     }
 
-    const k = 460;
-    const d = 34;
+    // 4. Spring Interpolation towards target kinematic positions
+    const stiffness = 280;
+    const damping = 26;
 
-    this.springDamper(this.spine.hips, targetSpine.hips, k, d, dt);
-    this.springDamper(this.spine.chest, targetSpine.chest, k, d, dt);
-    this.springDamper(this.spine.neck, targetSpine.neck, k, d, dt);
-    this.springDamper(this.spine.head, targetSpine.head, k, d, dt);
+    this.springVector(this.spine.hips, targetSpine.hips, dt, stiffness, damping);
+    this.springVector(this.spine.chest, targetSpine.chest, dt, stiffness, damping);
+    this.springVector(this.spine.neck, targetSpine.neck, dt, stiffness, damping);
+    this.springVector(this.spine.head, targetSpine.head, dt, stiffness, damping);
 
-    this.springDamper(this.effectors.leftFoot, targetLeftFoot, k * 1.2, d * 1.1, dt);
-    this.springDamper(this.effectors.rightFoot, targetRightFoot, k * 1.2, d * 1.1, dt);
-    this.springDamper(this.effectors.leftHand, targetLeftHand, k * 1.4, d * 1.2, dt);
-    this.springDamper(this.effectors.rightHand, targetRightHand, k * 1.4, d * 1.2, dt);
+    this.springVector(this.effectors.leftFoot, targetLeftFoot, dt, stiffness, damping);
+    this.springVector(this.effectors.rightFoot, targetRightFoot, dt, stiffness, damping);
+    this.springVector(this.effectors.leftHand, targetLeftHand, dt, stiffness, damping);
+    this.springVector(this.effectors.rightHand, targetRightHand, dt, stiffness, damping);
 
-    this.rotation += (targetRotation - this.rotation) * (1 - Math.exp(-22 * dt));
-    this.isCannonball = isCannonball;
+    this.rotation += (targetRotation - this.rotation) * Math.min(1, dt * 18);
+  }
+
+  springVector(current, target, dt, k, d) {
+    const fx = -k * (current.x - target.x) - d * current.vx;
+    const fy = -k * (current.y - target.y) - d * current.vy;
+
+    current.vx += fx * dt;
+    current.vy += fy * dt;
+    current.x += current.vx * dt;
+    current.y += current.vy * dt;
+
+    if (!Number.isFinite(current.x)) current.x = target.x;
+    if (!Number.isFinite(current.y)) current.y = target.y;
+    if (!Number.isFinite(current.vx)) current.vx = 0;
+    if (!Number.isFinite(current.vy)) current.vy = 0;
   }
 
   draw(ctx, player) {
-    if (!player) return;
+    if (!player || player.isDead) return;
+
     ctx.save();
+    ctx.translate(Math.round(player.x), Math.round(player.y));
+    ctx.rotate(this.rotation);
 
-    const x = Number.isFinite(player.x) ? player.x : 0;
-    const y = Number.isFinite(player.y) ? player.y : 0;
-    const facing = player.facing === -1 ? -1 : 1;
-    const beltColor = player.beltColor || '#ffffff';
-    const vx = Number.isFinite(player.vx) ? player.vx : 0;
-    const vy = Number.isFinite(player.vy) ? player.vy : 0;
+    const facing = player.facing || 1;
     const state = player.state || 'IDLE';
-
-    this.computeDynamicPose(player, 0.016);
-
-    ctx.translate(x, y);
-
-    if (Math.abs(this.rotation) > 0.01) {
-      ctx.translate(0, -28);
-      ctx.rotate(this.rotation);
-      ctx.translate(0, 28);
-    }
-
-    if (this.isCannonball) {
-      this.drawCannonball(ctx, beltColor);
-      ctx.restore();
-      return;
-    }
-
-    const spine = this.spine;
+    const beltColor = player.beltColor || '#ffffff';
+    const charId = (player.characterId || 'halland').toLowerCase();
     const eff = this.effectors;
+    const spine = this.spine;
 
-    const worldHeadX = x + spine.head.x;
-    const worldHeadY = y + spine.head.y;
-    const worldHipX = x + spine.hips.x;
-    const worldHipY = y + spine.hips.y;
-    this.updateRibbons(worldHeadX, worldHeadY, worldHipX, worldHipY, facing, vx, vy);
+    // Kinematic Roots
+    const hipsJoint = spine.hips;
+    const leftHipJoint = { x: hipsJoint.x - 3, y: hipsJoint.y };
+    const rightHipJoint = { x: hipsJoint.x + 3, y: hipsJoint.y };
 
-    const leftHipJoint = { x: spine.hips.x - 3, y: spine.hips.y };
-    const rightHipJoint = { x: spine.hips.x + 3, y: spine.hips.y };
+    const leftShoulderJoint = { x: spine.chest.x - 4, y: spine.chest.y };
+    const rightShoulderJoint = { x: spine.chest.x + 4, y: spine.chest.y };
 
-    const leftShoulderJoint = { x: spine.chest.x - 3, y: spine.chest.y - 2 };
-    const rightShoulderJoint = { x: spine.chest.x + 3, y: spine.chest.y - 2 };
-
-    const leftLeg = this.solveIK(leftHipJoint, eff.leftFoot, this.thighLen, this.shinLen, facing);
+    // Solve 2-Bone Analytic IK for Limbs with character bend direction
+    const leftLeg = this.solveIK(leftHipJoint, eff.leftFoot, this.thighLen, this.shinLen, -facing);
     const rightLeg = this.solveIK(rightHipJoint, eff.rightFoot, this.thighLen, this.shinLen, facing);
-
-    const leftArm = this.solveIK(leftShoulderJoint, eff.leftHand, this.upperArmLen, this.forearmLen, -facing);
+    const leftArm = this.solveIK(leftShoulderJoint, eff.leftHand, this.upperArmLen, this.forearmLen, facing);
     const rightArm = this.solveIK(rightShoulderJoint, eff.rightHand, this.upperArmLen, this.forearmLen, -facing);
 
-    const charId = (player.characterId || 'halland').toLowerCase();
-
+    // =========================================================
+    // REALISTIC & CUSTOM CHARACTER STYLING / ACCESSORIES
+    // =========================================================
     let suitColor = '#ef4444';
-    let darkLimb = '#dc2626';
+    let darkLimb = '#b91c1c';
     let headColor = '#ef4444';
-    let hasHairRibbon = true;
+    let torsoWidth = 4.6;
+    let hasHairRibbon = false;
     let hasCrown = false;
     let hasHeadband = false;
-    let headbandColor = '#ffffff';
+    let headbandColor = '#ef4444';
     let hasHelmet = false;
     let jerseyNum = '';
 
     if (charId === 'lebrown') {
+      // 👑 KING LEBROWN JAMES - Muscular Power Forward Build
       suitColor = '#7e22ce'; // Lakers Royal Purple
-      darkLimb = '#eab308'; // Gold arm & leg accents
-      headColor = '#6b21a8';
-      hasHairRibbon = false;
+      darkLimb = '#eab308'; // Gold arm sleeve & accents
+      headColor = '#4c1d95';
+      torsoWidth = 5.6;
       hasCrown = true;
       hasHeadband = true;
       headbandColor = '#facc15';
       jerseyNum = '6';
     } else if (charId === 'jordunn') {
+      // 👟 MICHAEL JORDUNN - Bulls GOAT Build
       suitColor = '#dc2626'; // Bulls Red
-      darkLimb = '#0f172a'; // Obsidian Black limbs
-      headColor = '#09090b';
-      hasHairRibbon = false;
+      darkLimb = '#09090b'; // Obsidian Black limbs
+      headColor = '#18181b';
+      torsoWidth = 4.8;
       hasHeadband = true;
       headbandColor = '#ef4444';
       jerseyNum = '23';
     } else if (charId === 'mcbape') {
-      // Supreme Military Dictator McBape Uniform
-      suitColor = '#3f6212'; // Deep Dictator General Olive Green
-      darkLimb = '#1c1917'; // Polished Black General Officer Boots & Gloves
-      headColor = '#1c1917'; // Dictator General Crown
-      hasHairRibbon = false;
-      hasHelmet = true; // Officer Peaked Cap
+      // 🪖 KYLIAN MCBAPE - Commander General Uniform
+      suitColor = '#365314'; // Military Olive Green Trenchcoat
+      darkLimb = '#1c1917'; // Polished Black Leather Boots & Gloves
+      headColor = '#1c1917';
+      torsoWidth = 5.0;
+      hasHelmet = true; // High Peaked Officer Cap
       jerseyNum = '10';
     } else if (charId === 'ronalds') {
-      suitColor = '#991b1b'; // Portugal Deep Ruby Red
-      darkLimb = '#15803d'; // Forest Emerald Green Shorts & Boots
+      // 💥 CHRIS RONALDS - Portugal Ruby Red Sculpted Striker
+      suitColor = '#991b1b'; // Portugal Ruby Red
+      darkLimb = '#15803d'; // Forest Emerald Green Shorts
       headColor = '#7f1d1d';
-      hasHairRibbon = false;
+      torsoWidth = 4.8;
       jerseyNum = '7';
     } else {
-      // Halland: Red Spider-Karate Gi with Blonde Ribbons
-      suitColor = '#ef4444';
-      darkLimb = '#b91c1c';
+      // 👱 ERLING HALLAND - Tall Viking Striker with Blonde Hair
+      suitColor = '#ef4444'; // Cyber Karate Red
+      darkLimb = '#0284c7'; // Sky-Blue Highlights
       headColor = '#ef4444';
+      torsoWidth = 4.6;
       hasHairRibbon = true;
     }
 
@@ -645,8 +709,8 @@ class StickmanRenderer {
     this.drawLimb(ctx, leftArm, darkLimb, 3.2);
     this.drawLimb(ctx, leftLeg, darkLimb, 3.6);
 
-    // 2. Torso & Spine Curve
-    ctx.lineWidth = 4.6;
+    // 2. Torso & Spine Curve (Customized Width)
+    ctx.lineWidth = torsoWidth;
     ctx.strokeStyle = suitColor;
     ctx.beginPath();
     ctx.moveTo(spine.hips.x, spine.hips.y);
@@ -654,9 +718,8 @@ class StickmanRenderer {
     ctx.lineTo(spine.neck.x, spine.neck.y);
     ctx.stroke();
 
-    // Supreme Dictator Red Sash & Medals for McBape
+    // McBape Military Epaulettes & Red Sash
     if (charId === 'mcbape') {
-      // Red Dictator Commander Sash
       ctx.strokeStyle = '#dc2626';
       ctx.lineWidth = 2.8;
       ctx.beginPath();
@@ -664,19 +727,27 @@ class StickmanRenderer {
       ctx.lineTo(spine.hips.x + 4, spine.hips.y);
       ctx.stroke();
 
-      // Gold Officer Epaulettes on shoulders
       ctx.fillStyle = '#eab308';
       ctx.fillRect(leftShoulderJoint.x - 3, leftShoulderJoint.y - 2, 6, 3);
       ctx.fillRect(rightShoulderJoint.x - 3, rightShoulderJoint.y - 2, 6, 3);
 
-      // Medal Ribbon Bar
       ctx.fillStyle = '#38bdf8';
       ctx.fillRect(spine.chest.x - 4, spine.chest.y - 2, 3, 2);
       ctx.fillStyle = '#f59e0b';
       ctx.fillRect(spine.chest.x - 1, spine.chest.y - 2, 3, 2);
     }
 
-    // Jersey / Dogtag Number if applicable
+    // LeBrown Purple Shooting Sleeve
+    if (charId === 'lebrown') {
+      ctx.strokeStyle = '#eab308';
+      ctx.lineWidth = 3.6;
+      ctx.beginPath();
+      ctx.moveTo(rightShoulderJoint.x, rightShoulderJoint.y);
+      ctx.lineTo(rightArm.joint.x, rightArm.joint.y);
+      ctx.stroke();
+    }
+
+    // Jersey Number on Chest
     if (jerseyNum) {
       ctx.fillStyle = charId === 'mcbape' ? '#fde047' : '#ffffff';
       ctx.font = '900 9px "JetBrains Mono", monospace';
@@ -688,17 +759,38 @@ class StickmanRenderer {
     this.drawLimb(ctx, rightLeg, suitColor, 3.6);
     this.drawLimb(ctx, rightArm, suitColor, 3.2);
 
+    // Footwear Details (Sneakers / Cleats / Boots)
+    if (charId === 'ronalds') {
+      // Emerald Green Cleats with White Sock Band
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(eff.rightFoot.x - 2, eff.rightFoot.y - 4, 4, 3);
+      ctx.fillStyle = '#15803d';
+      ctx.fillRect(eff.rightFoot.x - 4, eff.rightFoot.y - 2, 8, 3);
+    } else if (charId === 'jordunn') {
+      // Red & Black Air Jordan Sneakers
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(eff.rightFoot.x - 2, eff.rightFoot.y - 5, 4, 3);
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(eff.rightFoot.x - 4, eff.rightFoot.y - 2, 8, 3);
+    } else if (charId === 'mcbape') {
+      // Black Officer Boots
+      ctx.fillStyle = '#09090b';
+      ctx.fillRect(eff.rightFoot.x - 4, eff.rightFoot.y - 4, 8, 5);
+      ctx.fillStyle = '#eab308';
+      ctx.fillRect(eff.rightFoot.x - 1, eff.rightFoot.y - 3, 2, 2);
+    }
+
     // 4. Head
     ctx.beginPath();
     ctx.arc(spine.head.x, spine.head.y, this.headRadius, 0, Math.PI * 2);
     ctx.fillStyle = headColor;
     ctx.fill();
 
-    // 5. Headgear / Headband / Soldier Helmet
+    // 5. Headgear / Crown / Soldier Cap / Pompadour
     if (hasCrown) {
-      ctx.font = '14px Outfit';
+      ctx.font = '15px Outfit';
       ctx.textAlign = 'center';
-      ctx.fillText('👑', spine.head.x, spine.head.y - 8);
+      ctx.fillText('👑', spine.head.x, spine.head.y - 9);
     }
 
     if (hasHelmet) {
@@ -707,7 +799,6 @@ class StickmanRenderer {
       ctx.strokeStyle = '#eab308';
       ctx.lineWidth = 1.6;
 
-      // High flared peaked cap crown
       ctx.beginPath();
       ctx.moveTo(spine.head.x - 11, spine.head.y - 3);
       ctx.lineTo(spine.head.x - 13, spine.head.y - 12);
@@ -717,7 +808,7 @@ class StickmanRenderer {
       ctx.fill();
       ctx.stroke();
 
-      // Gold Laurel Insignia Cockade on Front of Cap
+      // Gold Laurel Insignia Cockade on Front
       ctx.fillStyle = '#eab308';
       ctx.beginPath();
       ctx.arc(spine.head.x, spine.head.y - 7, 2.8, 0, Math.PI * 2);
@@ -742,14 +833,21 @@ class StickmanRenderer {
     }
 
     if (charId === 'ronalds') {
-      // Slick black pompadour hair
-      ctx.fillStyle = '#0f172a';
+      // Slick black styled pompadour hair
+      ctx.fillStyle = '#09090b';
       ctx.beginPath();
-      ctx.arc(spine.head.x - facing * 2, spine.head.y - 5, 5, 0, Math.PI * 2);
+      ctx.arc(spine.head.x - facing * 2, spine.head.y - 5, 5.5, 0, Math.PI * 2);
       ctx.fill();
+      // Golden highlight streak
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(spine.head.x - facing * 2, spine.head.y - 8);
+      ctx.lineTo(spine.head.x + facing * 3, spine.head.y - 6);
+      ctx.stroke();
     }
 
-    // White Angular Eye Lens
+    // Spider Eyes
     this.drawSpiderEyes(ctx, spine.head.x, spine.head.y, facing);
 
     // Michael Jordunn Sticking Tongue Out 👅 during EMOTE
@@ -760,7 +858,7 @@ class StickmanRenderer {
       ctx.fill();
     }
 
-    // 6. Karate Belt Knot / Dictator Gold Buckle
+    // 6. Karate Belt Knot / Gold Buckle
     ctx.fillStyle = beltColor || (charId === 'mcbape' ? '#eab308' : charId === 'ronalds' ? '#15803d' : '#ffffff');
     ctx.fillRect(spine.hips.x - 4, spine.hips.y - 2, 8, 4);
 
@@ -773,34 +871,53 @@ class StickmanRenderer {
       const t = player.stateTime / Math.max(0.1, player.stateDuration || 2.0);
 
       if (charId === 'ronalds') {
-        // SUUUUIIIIIIII expanding shockwave rings
-        ctx.strokeStyle = `rgba(239, 68, 68, ${Math.max(0, 1 - t)})`;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(0, 0, (t * 60) % 50, 0, Math.PI * 2);
-        ctx.stroke();
+        // SUUUUIIIIIIII expanding power shockwaves
+        if (t >= 0.40) {
+          const waveRadius = ((t - 0.40) * 120) % 70;
+          ctx.strokeStyle = `rgba(245, 158, 11, ${Math.max(0, 1 - (t - 0.40))})`;
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.arc(0, 0, waveRadius, 0, Math.PI * 2);
+          ctx.stroke();
+        }
 
         ctx.fillStyle = '#f59e0b';
         ctx.font = '900 13px Outfit, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText("💥 SUUUUIIIIIIII! 💥", 0, -92);
+        ctx.fillText(t < 0.40 ? "💥 LEAP & SPIN... 💥" : "💥 SUUUUIIIIIIII! 💥", 0, -92);
       } else if (charId === 'mcbape') {
         ctx.fillStyle = '#facc15';
         ctx.font = '900 12px Outfit, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(t < 0.45 ? "🎖️ COMMAND SALUTE 🫡" : "⚡ SUPREME DICTATOR", 0, -92);
+        ctx.fillText(t < 0.42 ? "🪖 GENERAL SALUTE 🫡" : "⚡ SUPREME DICTATOR 🎖️", 0, -92);
       } else if (charId === 'jordunn') {
         ctx.fillStyle = '#ef4444';
         ctx.font = '900 12px Outfit, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText("👅 #23 GOAT 👟", 0, -92);
+        ctx.fillText(t < 0.55 ? "👅 #23 GOAT 👟" : "🤷 THE SHRUG 🏆", 0, -92);
       } else if (charId === 'lebrown') {
+        // Silencer Crown Light Pulse
+        const stompDown = Math.sin(t * Math.PI * 6);
+        if (stompDown > 0.6) {
+          ctx.strokeStyle = 'rgba(234, 179, 8, 0.7)';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(0, 0, 30, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
         ctx.fillStyle = '#eab308';
         ctx.font = '900 12px Outfit, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText("👑 THE SILENCER 👑", 0, -92);
+        ctx.fillText(t < 0.72 ? "👑 THE SILENCER 👑" : "👑 THIS IS MY HOUSE! 👑", 0, -92);
       } else {
-        // Halland Zen
+        // Halland Zen Lotus Chakra Mandala
+        ctx.strokeStyle = `rgba(56, 189, 248, ${0.4 + Math.sin(t * 12) * 0.3})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, -25, 34, 0, Math.PI * 2);
+        ctx.stroke();
+
         ctx.fillStyle = '#38bdf8';
         ctx.font = '900 12px Outfit, sans-serif';
         ctx.textAlign = 'center';
@@ -812,7 +929,6 @@ class StickmanRenderer {
     // 8. Spider-Web Line when executing WEB_ZIP
     if (state === 'WEB_ZIP') {
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2.0;
       ctx.beginPath();
       ctx.moveTo(eff.rightHand.x, eff.rightHand.y);
       ctx.lineTo(eff.rightHand.x + facing * 2, eff.rightHand.y - 140);
