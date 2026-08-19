@@ -108,7 +108,24 @@ class CombatSystem {
       }
     }
 
-    // 2. Search Multiplayer PvP Opponents
+    // 2. Search Local 1v1 Opponent
+    if (window.Game && window.Game.is1v1Duel && window.Game.player && window.Game.player2) {
+      const opp = (player === window.Game.player) ? window.Game.player2 : window.Game.player;
+      if (opp && !opp.isDead && opp.hp > 0) {
+        const targetCenterY = opp.y - 30;
+        const dx = opp.x - searchX;
+        const dy = targetCenterY - searchY;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist < closestDist) {
+          closestDist = dist;
+          const isBehind = (dx * player.facing) < -8;
+          bestTarget = { x: opp.x, y: targetCenterY, ent: opp, type: 'local_pvp', isBehind, dx, dy };
+        }
+      }
+    }
+
+    // 3. Search Multiplayer PvP Opponents
     if (window.Game && window.Game.multiplayer && window.Game.multiplayer.isMultiplayer) {
       for (const [id, rPlayer] of window.Game.multiplayer.players) {
         if (rPlayer.isDead || rPlayer.hp <= 0) continue;
@@ -695,6 +712,55 @@ class CombatSystem {
       r1.y < r2.y + r2.h &&
       r1.y + r1.h > r2.y
     );
+  }
+
+  checkPvPCombat(attacker, defender) {
+    if (!attacker || !defender || defender.isDead || defender.hp <= 0 || defender.invulnerableTimer > 0) return;
+    if (!this.isAttackActive(attacker)) return;
+
+    const hitbox = this.getPlayerHitbox(attacker);
+    const defBounds = {
+      x: defender.x - defender.w / 2 - 8,
+      y: defender.y - defender.h - 8,
+      w: defender.w + 16,
+      h: defender.h + 16
+    };
+
+    if (this.rectsOverlap(hitbox, defBounds)) {
+      // Check for Perfect Parry if defender is holding Block
+      if (defender.state === 'BLOCK' || defender.state === 'AIR_BLOCK') {
+        attacker.state = 'IDLE';
+        attacker.vx = -attacker.facing * 7;
+        attacker.vy = -3;
+        this.triggerHitStop(0.12);
+        this.triggerScreenShake(9, 0.22);
+        this.spawnImpactParticles(attacker.x, attacker.y - 30, 'parry', 4);
+        if (window.Audio) window.Audio.play('wallKick');
+        if (window.Haptics) window.Haptics.trigger('parry');
+        this.announceAction(`⚡ ${defender.name || 'DEFENDER'} PERFECT PARRIED ${attacker.name || 'ATTACKER'}!`);
+        return;
+      }
+
+      // Deal damage
+      const dmg = (hitbox.damage || 1) * 8 + 4;
+      defender.hp = Math.max(0, defender.hp - dmg);
+      defender.invulnerableTimer = 0.35;
+      defender.vx = attacker.facing * (hitbox.type === 'launch' ? 6 : 9);
+      defender.vy = hitbox.type === 'launch' ? -9 : -4;
+      defender.isGrounded = false;
+
+      this.triggerHitStop(0.06);
+      this.triggerScreenShake(7, 0.18);
+      this.spawnImpactParticles(defender.x, defender.y - 30, 'hit', 3);
+      if (window.Audio) window.Audio.play('hit');
+      if (window.Haptics) window.Haptics.trigger('hit');
+
+      this.announceAction(`🥊 ${attacker.name || 'P1'} HIT ${defender.name || 'P2'}! (-${dmg} HP)`);
+
+      if (defender.hp <= 0 && window.Game && typeof window.Game.handleDuelKnockout === 'function') {
+        window.Game.handleDuelKnockout(attacker, defender);
+      }
+    }
   }
 
   drawParticles(ctx) {

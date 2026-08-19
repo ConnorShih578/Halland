@@ -245,9 +245,15 @@ class InputController {
       }
     }
 
-    // Quick Restart Checkpoint (R)
-    if (e.code === 'KeyR' && window.Game && typeof window.Game.restartCheckpoint === 'function') {
-      window.Game.restartCheckpoint();
+    // Quick Restart / Rematch (R)
+    if (e.code === 'KeyR' && window.Game) {
+      if (window.Game.is1v1Duel) {
+        window.Game.start1v1Duel(window.Game.p1Char, window.Game.p1Name, window.Game.p2Char, window.Game.p2Name);
+      } else if (window.Game.isEndlessMode) {
+        window.Game.startEndlessGame();
+      } else if (typeof window.Game.restartCheckpoint === 'function') {
+        window.Game.restartCheckpoint();
+      }
     }
   }
 

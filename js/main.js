@@ -25,6 +25,12 @@ class GameEngine {
     this.player2 = null;
 
     this.isEndlessMode = false;
+    this.is1v1Duel = false;
+    this.p1Char = 'halland';
+    this.p1Name = 'HALLAND';
+    this.p2Char = 'mcbape';
+    this.p2Name = 'MCBAPE';
+    this.duelWinner = null;
     this.distanceTraveled = 0;
     this.endlessScore = 0;
     this.endlessKills = 0;
@@ -209,29 +215,63 @@ class GameEngine {
       });
     }
 
-    // Character Card Selector
-    const charCards = document.querySelectorAll('.char-select-card');
-    charCards.forEach(card => {
+    // 1V1 Local Duel Setup Modal Handlers
+    const btnOpen1v1 = document.getElementById('btn-open-1v1');
+    const duelModal = document.getElementById('duel-modal');
+    const btnCloseDuel = document.getElementById('btn-close-duel');
+    const btnStartDuel = document.getElementById('btn-start-duel');
+
+    if (btnOpen1v1 && duelModal) {
+      btnOpen1v1.addEventListener('click', () => {
+        duelModal.classList.remove('hidden');
+      });
+    }
+
+    if (btnCloseDuel && duelModal) {
+      btnCloseDuel.addEventListener('click', () => {
+        duelModal.classList.add('hidden');
+      });
+    }
+
+    // P1 Character Selection Cards
+    const p1Cards = document.querySelectorAll('.p1-card');
+    p1Cards.forEach(card => {
       card.addEventListener('click', () => {
-        charCards.forEach(c => {
+        p1Cards.forEach(c => {
           c.classList.remove('active');
           c.style.border = '1px solid rgba(255,255,255,0.2)';
+          c.style.background = 'rgba(15, 23, 42, 0.4)';
         });
         card.classList.add('active');
-        card.style.border = '2px solid #38bdf8';
-        const charId = card.getAttribute('data-char') || 'halland';
-        const nameInput = document.getElementById('pvp-player-name-input');
-        const name = nameInput ? nameInput.value : 'FIGHTER';
-        if (this.multiplayer) this.multiplayer.setPlayerProfile(name, charId);
+        card.style.border = '2px solid #ef4444';
+        card.style.background = 'rgba(239,68,68,0.25)';
+        this.p1Char = card.getAttribute('data-char') || 'halland';
       });
     });
 
-    const nameInput = document.getElementById('pvp-player-name-input');
-    if (nameInput) {
-      nameInput.addEventListener('input', () => {
-        const activeCard = document.querySelector('.char-select-card.active');
-        const charId = activeCard ? activeCard.getAttribute('data-char') : 'halland';
-        if (this.multiplayer) this.multiplayer.setPlayerProfile(nameInput.value, charId);
+    // P2 Character Selection Cards
+    const p2Cards = document.querySelectorAll('.p2-card');
+    p2Cards.forEach(card => {
+      card.addEventListener('click', () => {
+        p2Cards.forEach(c => {
+          c.classList.remove('active');
+          c.style.border = '1px solid rgba(255,255,255,0.2)';
+          c.style.background = 'rgba(15, 23, 42, 0.4)';
+        });
+        card.classList.add('active');
+        card.style.border = '2px solid #38bdf8';
+        card.style.background = 'rgba(56,189,248,0.25)';
+        this.p2Char = card.getAttribute('data-char') || 'mcbape';
+      });
+    });
+
+    if (btnStartDuel) {
+      btnStartDuel.addEventListener('click', () => {
+        const p1NameIn = document.getElementById('p1-duel-name');
+        const p2NameIn = document.getElementById('p2-duel-name');
+        const p1Name = (p1NameIn && p1NameIn.value.trim()) ? p1NameIn.value.trim() : 'HALLAND';
+        const p2Name = (p2NameIn && p2NameIn.value.trim()) ? p2NameIn.value.trim() : 'MCBAPE';
+        this.start1v1Duel(this.p1Char, p1Name, this.p2Char, p2Name);
       });
     }
 
@@ -239,13 +279,6 @@ class GameEngine {
     if (btnPlayEndless) {
       btnPlayEndless.addEventListener('click', () => {
         this.startEndlessGame();
-      });
-    }
-
-    const btnOpenPvpEndless = document.getElementById('btn-open-pvp-endless');
-    if (btnOpenPvpEndless) {
-      btnOpenPvpEndless.addEventListener('click', () => {
-        if (this.multiplayer) this.multiplayer.openPvpModal();
       });
     }
 
@@ -274,6 +307,19 @@ class GameEngine {
         const startScreen = document.getElementById('start-screen');
         if (startScreen) startScreen.classList.remove('hidden');
         this.isPlaying = false;
+      });
+    }
+
+    const btnRestart = document.getElementById('btn-restart');
+    if (btnRestart) {
+      btnRestart.addEventListener('click', () => {
+        if (this.is1v1Duel) {
+          this.start1v1Duel(this.p1Char, this.p1Name, this.p2Char, this.p2Name);
+        } else if (this.isEndlessMode) {
+          this.startEndlessGame();
+        } else {
+          this.restartCheckpoint();
+        }
       });
     }
 
@@ -507,6 +553,7 @@ class GameEngine {
     const startScreen = document.getElementById('start-screen');
     if (startScreen) startScreen.classList.add('hidden');
     this.isEndlessMode = false;
+    this.is1v1Duel = false;
     if (this.multiplayer) this.multiplayer.isMultiplayer = false;
     const stageIdx = index !== undefined ? index : (this.currentStageIndex || 0);
     this.loadStage(stageIdx);
@@ -517,14 +564,160 @@ class GameEngine {
   startEndlessGame() {
     const startScreen = document.getElementById('start-screen');
     if (startScreen) startScreen.classList.add('hidden');
+    const duelModal = document.getElementById('duel-modal');
+    if (duelModal) duelModal.classList.add('hidden');
+
+    this.is1v1Duel = false;
     this.isEndlessMode = true;
-    if (this.multiplayer) this.multiplayer.isMultiplayer = false;
+    this.duelWinner = null;
     this.distanceTraveled = 0;
     this.endlessKills = 0;
     this.endlessScore = 0;
+
+    const p1Tag = document.getElementById('hud-p1-tag');
+    if (p1Tag) p1Tag.textContent = 'P1: HALLAND';
+    const p2Hud = document.getElementById('hud-p2-capsule');
+    if (p2Hud) p2Hud.classList.add('hidden');
+
+    const statLabel = document.getElementById('hud-stat-label');
+    if (statLabel) statLabel.textContent = 'SCORE';
+
     this.loadInfiniteEndlessWorld();
     this.isPlaying = true;
     if (window.Audio) window.Audio.resume();
+  }
+
+  start1v1Duel(p1Char = 'halland', p1Name = 'HALLAND', p2Char = 'mcbape', p2Name = 'MCBAPE') {
+    const startScreen = document.getElementById('start-screen');
+    if (startScreen) startScreen.classList.add('hidden');
+    const duelModal = document.getElementById('duel-modal');
+    if (duelModal) duelModal.classList.add('hidden');
+
+    this.is1v1Duel = true;
+    this.isEndlessMode = false;
+    this.duelWinner = null;
+
+    this.p1Char = p1Char;
+    this.p1Name = p1Name;
+    this.p2Char = p2Char;
+    this.p2Name = p2Name;
+
+    this.currentStage = window.LevelGenerator.createDojoArena();
+
+    // Spawn Player 1
+    this.player = this.physics.createPlayer(this.currentStage.startX || 260, this.currentStage.startY || 540);
+    this.player.characterId = this.p1Char;
+    this.player.name = this.p1Name;
+    this.player.beltColor = '#ef4444';
+    this.player.facing = 1;
+    this.player.hp = 100;
+    this.player.maxHp = 100;
+
+    // Spawn Player 2
+    this.player2 = this.physics.createPlayer(this.currentStage.startXP2 || 740, this.currentStage.startYP2 || 540);
+    this.player2.characterId = this.p2Char;
+    this.player2.name = this.p2Name;
+    this.player2.beltColor = '#38bdf8';
+    this.player2.facing = -1;
+    this.player2.hp = 100;
+    this.player2.maxHp = 100;
+    this.player2.isPlayer2 = true;
+
+    if (this.input) {
+      this.input.p1.active = true;
+      this.input.p2.active = true;
+      this.input.reset();
+    }
+
+    this.stickRenderer.resetRibbons(this.player.x, this.player.y - 54, this.player.x, this.player.y - 26);
+    this.stickRenderer2.resetRibbons(this.player2.x, this.player2.y - 54, this.player2.x, this.player2.y - 26);
+
+    this.stageTime = 0;
+    this.accumulator = 0;
+    this.camera.x = (this.player.x + this.player2.x) * 0.5;
+    this.camera.y = this.player.y - 28;
+
+    // Update HUD for 1v1
+    const p1Tag = document.getElementById('hud-p1-tag');
+    if (p1Tag) p1Tag.textContent = `P1: ${this.player.name}`;
+    const p2Tag = document.getElementById('hud-p2-tag');
+    if (p2Tag) p2Tag.textContent = `P2: ${this.player2.name}`;
+    const p2Hud = document.getElementById('hud-p2-capsule');
+    if (p2Hud) p2Hud.classList.remove('hidden');
+
+    const stageNameEl = document.getElementById('hud-stage-name');
+    if (stageNameEl) stageNameEl.textContent = '1V1 DOJO ARENA';
+
+    const statLabel = document.getElementById('hud-stat-label');
+    if (statLabel) statLabel.textContent = 'DUEL';
+    const beltEl = document.getElementById('hud-belt');
+    if (beltEl) {
+      beltEl.textContent = 'BLACK';
+      beltEl.className = 'hud-badge belt-black';
+    }
+
+    this.updateHUDHealth();
+    this.isPlaying = true;
+    if (window.Audio) {
+      window.Audio.resume();
+      window.Audio.play('checkpoint');
+    }
+    if (this.combat) {
+      this.combat.announceAction(`⚔️ ${this.player.name} VS ${this.player2.name} - FIGHT!`);
+    }
+  }
+
+  handleDuelKnockout(winner, loser) {
+    if (this.duelWinner) return;
+    this.duelWinner = winner;
+    loser.isDead = true;
+    loser.state = 'KNOCKDOWN';
+
+    if (this.combat) {
+      this.combat.triggerHitStop(0.3);
+      this.combat.triggerScreenShake(14, 0.4);
+      this.combat.announceAction(`🏆 ${winner.name || 'WINNER'} WINS BY KNOCKOUT! 🏆`);
+    }
+    if (window.Audio) window.Audio.play('bossRoar');
+
+    setTimeout(() => {
+      const vicScreen = document.getElementById('victory-screen');
+      if (vicScreen) {
+        const titleEl = vicScreen.querySelector('.victory-title');
+        const kickerEl = vicScreen.querySelector('.victory-kicker');
+        const badgeEl = vicScreen.querySelector('.victory-badge');
+        const timeEl = document.getElementById('victory-time');
+        const deathsEl = document.getElementById('victory-deaths');
+        const combosEl = document.getElementById('victory-combos');
+
+        if (kickerEl) kickerEl.textContent = 'KNOCKOUT VICTORY!';
+        if (titleEl) titleEl.textContent = `${winner.name} WINS! 🏆`;
+        if (badgeEl) badgeEl.textContent = `CHAMPION: ${winner.characterId.toUpperCase()}`;
+        if (timeEl) timeEl.textContent = this.formatTime(this.stageTime);
+        if (deathsEl) deathsEl.textContent = '0';
+        if (combosEl) combosEl.textContent = `${this.combat.comboCount || 10} HITS`;
+
+        const nextBtn = document.getElementById('btn-next-stage');
+        if (nextBtn) {
+          nextBtn.querySelector('.btn-text').textContent = '↺ REMATCH (R)';
+          nextBtn.onclick = () => {
+            vicScreen.classList.add('hidden');
+            this.start1v1Duel(this.p1Char, this.p1Name, this.p2Char, this.p2Name);
+          };
+        }
+        const menuBtn = document.getElementById('btn-menu');
+        if (menuBtn) {
+          menuBtn.onclick = () => {
+            vicScreen.classList.add('hidden');
+            const startScreen = document.getElementById('start-screen');
+            if (startScreen) startScreen.classList.remove('hidden');
+            this.isPlaying = false;
+          };
+        }
+
+        vicScreen.classList.remove('hidden');
+      }
+    }, 1100);
   }
 
   loadStage(index) {
@@ -668,6 +861,11 @@ class GameEngine {
           if (this.player2 && !this.player2.isDead) {
             this.physics.updatePlayer(this.player2, this.input.p2, this.combat, this.currentStage, this.fixedStep);
             this.combat.update(this.fixedStep, this.player2, this.currentStage.entities, this.currentStage);
+          }
+
+          if (this.is1v1Duel && this.player && this.player2 && !this.duelWinner) {
+            this.combat.checkPvPCombat(this.player, this.player2);
+            this.combat.checkPvPCombat(this.player2, this.player);
           }
 
           this.updateEntities(this.fixedStep);
@@ -890,10 +1088,12 @@ class GameEngine {
 
     this.stickRenderer.draw(ctx, this.player);
 
-    if (this.player2 && !this.player2.isDead) {
-      this.stickRenderer2.draw(ctx, this.player2);
-      this.drawPlayerTag(ctx, this.player2, 'P2 (KYLE)', '#38bdf8');
-      this.drawPlayerTag(ctx, this.player, 'P1 (HALLAND)', '#ef4444');
+    if (this.is1v1Duel || this.player2) {
+      if (this.player2 && !this.player2.isDead) {
+        this.stickRenderer2.draw(ctx, this.player2);
+        this.drawPlayerTag(ctx, this.player2, `P2: ${this.player2.name || 'MCBAPE'}`, '#38bdf8');
+      }
+      this.drawPlayerTag(ctx, this.player, `P1: ${this.player.name || 'HALLAND'}`, '#ef4444');
     }
 
     if (this.multiplayer && this.multiplayer.isMultiplayer) {

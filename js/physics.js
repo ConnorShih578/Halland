@@ -281,6 +281,17 @@ class PhysicsEngine {
           player.stateTime = 0;
           player.stateDuration = 2.2;
           player.vx = 0;
+          if (combat) {
+            const charId = (player.characterId || 'halland').toLowerCase();
+            const tauntNames = {
+              halland: '🧘 ZEN LOTUS MEDITATION',
+              lebrown: '👑 THE SILENCER KNEE STOMP',
+              jordunn: '👟 TONGUE WAG & #1 FINGER',
+              mcbape: '🎖️ DICTATOR MILITARY SALUTE',
+              ronalds: '💥 SUUUUIIIIIIII CELEBRATION'
+            };
+            combat.announceAction(`${player.name || 'FIGHTER'}: ${tauntNames[charId] || 'SIGNATURE TAUNT'}`);
+          }
           if (window.Audio && window.Audio.playEmote) {
             window.Audio.playEmote(player.characterId || 'halland');
           } else if (window.Audio) {

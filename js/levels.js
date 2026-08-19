@@ -425,6 +425,44 @@ class LevelGenerator {
       world.lastGroundY = baseGroundY;
     }
   }
+
+  createDojoArena() {
+    return {
+      isInfinite: false,
+      isArena: true,
+      name: "CYBER DOJO 1V1 ARENA",
+      subtitle: "Local 2-Player Combat Duel",
+      theme: 'dojo',
+      belt: "BLACK",
+      beltColor: "#ef4444",
+      startX: 260,
+      startY: 540,
+      startXP2: 740,
+      startYP2: 540,
+      killY: 1100,
+      platforms: [
+        // Main Arena Combat Floor (860px wide)
+        { x: 70, y: 540, w: 860, h: 60, type: 'ground' },
+        // Left & Right Solid Boundary Arena Walls
+        { x: 50, y: 140, w: 22, h: 460, type: 'wall' },
+        { x: 928, y: 140, w: 22, h: 460, type: 'wall' },
+        // Tiered Elevated Combat Platforms
+        { x: 180, y: 410, w: 180, h: 26, type: 'roof' },
+        { x: 640, y: 410, w: 180, h: 26, type: 'roof' },
+        { x: 370, y: 300, w: 260, h: 26, type: 'roof' }
+      ],
+      breakables: [
+        { x: 170, y: 450, w: 22, h: 90, broken: false },
+        { x: 808, y: 450, w: 22, h: 90, broken: false }
+      ],
+      decorations: [
+        { type: 'torii_gate', x: 100, y: 540, w: 80, h: 120, label: 'P1 CORNER' },
+        { type: 'torii_gate', x: 820, y: 540, w: 80, h: 120, label: 'P2 CORNER' },
+        { type: 'sakura_tree', x: 500, y: 540 }
+      ],
+      entities: []
+    };
+  }
 }
 
 window.LevelGenerator = new LevelGenerator();
