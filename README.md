@@ -7,7 +7,7 @@
 A hyper-responsive, buttery-smooth 2D martial arts parkour platformer starring **Halland** — a Spider-Man superhero meets Erling Haaland martial arts stickman in a high-octane neon dojo saga.
 
 ---
-
+##i kind of lost where the level selection mode went
 ## 🎮 Play Online
 You can play the game directly in your browser with zero downloads:
 👉 **[Play Halland on GitHub Pages](https://connorshih578.github.io/Halland/)**
