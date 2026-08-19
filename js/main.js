@@ -1735,6 +1735,20 @@ window.selectP2Char = function(charId, btn) {
   if (window.Game) window.Game.p2Char = charId;
 };
 
+window.openDuelModal = function() {
+  const startScreen = document.getElementById('start-screen');
+  const duelModal = document.getElementById('duel-modal');
+  if (startScreen) startScreen.classList.add('hidden');
+  if (duelModal) duelModal.classList.remove('hidden');
+};
+
+window.closeDuelModal = function() {
+  const startScreen = document.getElementById('start-screen');
+  const duelModal = document.getElementById('duel-modal');
+  if (duelModal) duelModal.classList.add('hidden');
+  if (startScreen) startScreen.classList.remove('hidden');
+};
+
 function initGameEngine() {
   if (!window.Game) {
     try {

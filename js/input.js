@@ -123,15 +123,16 @@ class InputController {
     if (e.key === '.') this.keys['Period'] = true;
     if (e.key === '/') this.keys['Slash'] = true;
 
-    // Detect Player 2 Joining (If P2 keys are pressed, activate Player 2!)
-    const isP2Trigger = [
-      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
-      'Period', 'NumpadDecimal', 'Slash', 'NumpadDivide', 'Quote'
-    ].includes(e.code) || e.key === '.' || e.key === '/';
+    // Detect Player 2 Joining (P2 action keys: . or / or ')
+    const isP2ActionKey = [
+      'Period', 'NumpadDecimal', 'Slash', 'NumpadDivide', 'Quote', 'KeyL'
+    ].includes(e.code) || e.key === '.' || e.key === '/' || e.key === "'";
 
-    if (isP2Trigger && !this.p2.active) {
+    const isDuelMode = window.Game && window.Game.is1v1Duel;
+
+    if ((isP2ActionKey || isDuelMode) && !this.p2.active) {
       this.p2.active = true;
-      if (window.Game && typeof window.Game.spawnPlayer2 === 'function') {
+      if (!isDuelMode && window.Game && typeof window.Game.spawnPlayer2 === 'function') {
         window.Game.spawnPlayer2();
       }
     }
