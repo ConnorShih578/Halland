@@ -12,6 +12,7 @@ class GameEngine {
     this.ctx = this.canvas.getContext('2d');
 
     this.stickRenderer = new StickmanRenderer();
+    this.stickRenderer2 = new StickmanRenderer();
     this.physics = new PhysicsEngine();
     this.combat = new CombatSystem();
     this.input = new InputController(this.canvas);
@@ -21,6 +22,7 @@ class GameEngine {
     this.currentStageIndex = 0;
     this.currentStage = null;
     this.player = null;
+    this.player2 = null;
 
     this.isEndlessMode = false;
     this.distanceTraveled = 0;
@@ -446,18 +448,15 @@ class GameEngine {
   pauseGame() {
     this.isPaused = true;
     if (this.input) {
-      this.input.keys = {};
-      this.input.actionQueue = [];
-      this.input.moveX = 0;
-      this.input.moveY = 0;
-      this.input.isBlocking = false;
-      this.input.jumpPressed = false;
-      this.input.leftStickActive = false;
-      this.input.isRightTouching = false;
+      this.input.reset();
     }
     if (this.player) {
       this.player.vx = 0;
       this.player.vy = 0;
+    }
+    if (this.player2) {
+      this.player2.vx = 0;
+      this.player2.vy = 0;
     }
     const pauseModal = document.getElementById('pause-screen');
     if (pauseModal) {
@@ -475,15 +474,33 @@ class GameEngine {
   resumeGame() {
     this.isPaused = false;
     if (this.input) {
-      this.input.keys = {};
-      this.input.actionQueue = [];
-      this.input.moveX = 0;
-      this.input.moveY = 0;
+      this.input.reset();
     }
     const pauseModal = document.getElementById('pause-screen');
     if (pauseModal) pauseModal.classList.add('hidden');
     this.lastFrameTime = performance.now();
     if (window.Audio) window.Audio.play('tap');
+  }
+
+  spawnPlayer2() {
+    if (!this.currentStage) return;
+    const spawnX = (this.player ? this.player.x + 35 : (this.currentStage.startX || 80) + 35);
+    const spawnY = (this.player ? this.player.y : (this.currentStage.startY || 540));
+    this.player2 = this.physics.createPlayer(spawnX, spawnY);
+    this.player2.characterId = 'mcbape';
+    this.player2.beltColor = '#38bdf8';
+    this.player2.isPlayer2 = true;
+    this.player2.name = 'PLAYER 2';
+    if (!this.stickRenderer2) this.stickRenderer2 = new StickmanRenderer();
+    this.stickRenderer2.resetRibbons(this.player2.x, this.player2.y - 54, this.player2.x, this.player2.y - 26);
+
+    const p2Hud = document.getElementById('hud-p2-capsule');
+    if (p2Hud) p2Hud.classList.remove('hidden');
+
+    if (this.combat) {
+      this.combat.announceAction('🎮 PLAYER 2 JOINED THE BRAWL! (ARROWS / . / /)');
+    }
+    if (window.Audio) window.Audio.play('checkpoint');
   }
 
   startStoryGame(index = 0) {
@@ -519,6 +536,14 @@ class GameEngine {
     this.player = this.physics.createPlayer(this.currentStage.startX || 80, this.currentStage.startY || 540);
     this.player.beltColor = this.currentStage.beltColor || '#ffffff';
 
+    if (this.input && this.input.p2 && this.input.p2.active) {
+      this.spawnPlayer2();
+    } else {
+      this.player2 = null;
+      const p2Hud = document.getElementById('hud-p2-capsule');
+      if (p2Hud) p2Hud.classList.add('hidden');
+    }
+
     this.stageTime = 0;
     this.accumulator = 0;
     this.camera.x = this.player.x;
@@ -543,6 +568,14 @@ class GameEngine {
     this.player = this.physics.createPlayer(this.currentStage.startX, this.currentStage.startY);
     this.player.beltColor = '#ffffff';
 
+    if (this.input && this.input.p2 && this.input.p2.active) {
+      this.spawnPlayer2();
+    } else {
+      this.player2 = null;
+      const p2Hud = document.getElementById('hud-p2-capsule');
+      if (p2Hud) p2Hud.classList.add('hidden');
+    }
+
     this.distanceTraveled = 0;
     this.endlessScore = 0;
     this.endlessKills = 0;
@@ -562,15 +595,29 @@ class GameEngine {
   }
 
   restartCheckpoint() {
-    if (!this.player) return;
-    this.player.x = this.player.spawnX;
-    this.player.y = this.player.spawnY;
-    this.player.vx = 0;
-    this.player.vy = 0;
-    this.player.state = 'IDLE';
-    this.player.stateTime = 0;
-    this.player.isDead = false;
-    this.stickRenderer.resetRibbons(this.player.x, this.player.y - 54, this.player.x, this.player.y - 26);
+    if (this.player) {
+      this.player.x = this.player.spawnX;
+      this.player.y = this.player.spawnY;
+      this.player.vx = 0;
+      this.player.vy = 0;
+      this.player.state = 'IDLE';
+      this.player.stateTime = 0;
+      this.player.isDead = false;
+      this.player.hp = this.player.maxHp;
+      this.stickRenderer.resetRibbons(this.player.x, this.player.y - 54, this.player.x, this.player.y - 26);
+    }
+    if (this.player2) {
+      this.player2.x = this.player ? this.player.spawnX + 35 : this.player2.spawnX;
+      this.player2.y = this.player ? this.player.spawnY : this.player2.spawnY;
+      this.player2.vx = 0;
+      this.player2.vy = 0;
+      this.player2.state = 'IDLE';
+      this.player2.stateTime = 0;
+      this.player2.isDead = false;
+      this.player2.hp = this.player2.maxHp;
+      if (this.stickRenderer2) this.stickRenderer2.resetRibbons(this.player2.x, this.player2.y - 54, this.player2.x, this.player2.y - 26);
+    }
+    this.updateHUDHealth();
     if (window.Audio) window.Audio.play('tap');
     if (window.Haptics) window.Haptics.trigger('tap');
   }
@@ -607,6 +654,7 @@ class GameEngine {
     if (this.isPlaying && this.player && !this.isPaused) {
       this.stageTime += rawDt;
       this.updateHUDTimer();
+      this.updateHUDHealth();
 
       this.input.updateGamepad();
 
@@ -615,7 +663,13 @@ class GameEngine {
         const hitStopped = this.combat.update(this.fixedStep, this.player, this.currentStage.entities, this.currentStage);
 
         if (!hitStopped) {
-          this.physics.updatePlayer(this.player, this.input, this.combat, this.currentStage, this.fixedStep);
+          this.physics.updatePlayer(this.player, this.input.p1 || this.input, this.combat, this.currentStage, this.fixedStep);
+
+          if (this.player2 && !this.player2.isDead) {
+            this.physics.updatePlayer(this.player2, this.input.p2, this.combat, this.currentStage, this.fixedStep);
+            this.combat.update(this.fixedStep, this.player2, this.currentStage.entities, this.currentStage);
+          }
+
           this.updateEntities(this.fixedStep);
           this.updateSakuraPetals(this.fixedStep);
           this.updateMJPaperBall(this.fixedStep);
@@ -626,7 +680,8 @@ class GameEngine {
           }
 
           if (this.isEndlessMode && this.currentStage.isInfinite) {
-            window.LevelGenerator.streamInfiniteWorld(this.currentStage, this.player.x);
+            const leadX = (this.player2 && !this.player2.isDead) ? Math.max(this.player.x, this.player2.x) : this.player.x;
+            window.LevelGenerator.streamInfiniteWorld(this.currentStage, leadX);
             this.updateInfiniteProgression();
           }
         }
@@ -733,17 +788,64 @@ class GameEngine {
     const p = this.player;
     if (!p) return;
 
-    const lookAheadX = p.facing * Math.min(90, Math.abs(p.vx) * 11);
-    const verticalLead = p.vy > 4 ? 35 : p.vy < -4 ? -25 : 0;
+    let targetX = p.x + p.facing * Math.min(90, Math.abs(p.vx) * 11);
+    let targetY = (p.y - 28) + (p.vy > 4 ? 35 : p.vy < -4 ? -25 : 0);
 
-    const targetX = p.x + lookAheadX;
-    const targetY = (p.y - 28) + verticalLead;
+    if (this.player2 && !this.player2.isDead) {
+      const avgX = (p.x + this.player2.x) * 0.5;
+      const avgY = (p.y + this.player2.y) * 0.5 - 28;
+      targetX = avgX;
+      targetY = avgY;
+    }
 
     const lerpSpeedX = 6.2;
     const lerpSpeedY = 5.2;
 
     this.camera.x += (targetX - this.camera.x) * (1 - Math.exp(-lerpSpeedX * dt));
     this.camera.y += (targetY - this.camera.y) * (1 - Math.exp(-lerpSpeedY * dt));
+  }
+
+  updateHUDHealth() {
+    if (this.player) {
+      const hpRatio = Math.max(0, this.player.hp / (this.player.maxHp || 100));
+      const bar = document.getElementById('hud-hp-bar');
+      const text = document.getElementById('hud-hp-text');
+      if (bar) bar.style.width = `${hpRatio * 100}%`;
+      if (text) text.textContent = `${Math.max(0, Math.ceil(this.player.hp))} / ${this.player.maxHp || 100}`;
+    }
+
+    if (this.player2) {
+      const p2Hud = document.getElementById('hud-p2-capsule');
+      if (p2Hud) p2Hud.classList.remove('hidden');
+      const hpRatio2 = Math.max(0, this.player2.hp / (this.player2.maxHp || 100));
+      const bar2 = document.getElementById('hud-p2-hp-bar');
+      const text2 = document.getElementById('hud-p2-hp-text');
+      if (bar2) bar2.style.width = `${hpRatio2 * 100}%`;
+      if (text2) text2.textContent = `${Math.max(0, Math.ceil(this.player2.hp))} / ${this.player2.maxHp || 100}`;
+    }
+  }
+
+  drawPlayerTag(ctx, player, label, color) {
+    if (!player) return;
+    ctx.save();
+    ctx.translate(player.x, player.y - player.h - 18);
+    ctx.fillStyle = color || '#38bdf8';
+    ctx.font = '800 10px Outfit, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = color || '#38bdf8';
+    ctx.shadowBlur = 6;
+    ctx.fillText(label, 0, 0);
+
+    // Mini overhead health pill
+    const barW = 32;
+    const barH = 4;
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(-barW / 2, 4, barW, barH);
+    const hpRatio = Math.max(0, (player.hp || 0) / (player.maxHp || 100));
+    ctx.fillStyle = color || '#38bdf8';
+    ctx.fillRect(-barW / 2, 4, barW * hpRatio, barH);
+    ctx.restore();
   }
 
   updateHUDTimer() {
@@ -787,6 +889,13 @@ class GameEngine {
     this.drawEntities(ctx);
 
     this.stickRenderer.draw(ctx, this.player);
+
+    if (this.player2 && !this.player2.isDead) {
+      this.stickRenderer2.draw(ctx, this.player2);
+      this.drawPlayerTag(ctx, this.player2, 'P2 (KYLE)', '#38bdf8');
+      this.drawPlayerTag(ctx, this.player, 'P1 (HALLAND)', '#ef4444');
+    }
+
     if (this.multiplayer && this.multiplayer.isMultiplayer) {
       this.multiplayer.render(ctx);
     }

@@ -51,11 +51,11 @@ class LevelGenerator {
         startY: 540,
         killY: 1000,
         tutorialSteps: [
-          { x: 120, text: "🕹️ RUN & SPRINT: Drag left stick or use A / D. Jump with W or Space!" },
-          { x: 500, text: "🥊 COMBAT: Tap on right screen or press E to combo! Swipe Right (→) to DASH PUNCH!" },
-          { x: 880, text: "🚧 YELLOW BARRIERS: SMANSH ALL YELLOW WALLS! The goal stays locked until every barrier is destroyed!" },
-          { x: 1280, text: "🕷️ WEB ZIP: Swipe Up (↑) to shoot a web and pull upward (1x per jump)!" },
-          { x: 1680, text: "⚡ PARRY TRAINING: Hold S or touch right screen when the enemy winds up to PARRY & STUN!" }
+          { x: 120, text: "🕹️ RUN & SPRINT: Use A / D (P1) or Left / Right (P2). Jump with W (P1) or Up (P2)!" },
+          { x: 500, text: "🥊 COMBAT: Press X (P1) or . (P2) for Combo Attacks! S / Down to Slide & Sweep!" },
+          { x: 880, text: "🚧 YELLOW BARRIERS: SMASH ALL YELLOW WALLS! The goal stays locked until every barrier is destroyed!" },
+          { x: 1280, text: "🕷️ WEB SLING: Press C (P1) or / (P2) to sling a web and lift upward (1x per jump)!" },
+          { x: 1680, text: "⚡ PARRY TRAINING: Hold S (P1) or Down (P2) when the enemy winds up to PARRY & STUN!" }
         ],
         platforms: [
           { x: 0, y: 540, w: 450, h: 60, type: 'ground' },

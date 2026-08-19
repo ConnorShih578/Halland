@@ -30,13 +30,25 @@
     <!-- UI Overlay / HUD -->
     <div id="hud">
       <div class="hud-top">
+        <!-- Player 1 HP Capsule -->
         <div class="cyber-capsule health-capsule">
           <div class="health-top-row">
-            <span class="capsule-tag">HALLAND HP</span>
+            <span class="capsule-tag" style="color: #ef4444;">P1 HP (HALLAND)</span>
             <span id="hud-hp-text" class="capsule-val mono">100 / 100</span>
           </div>
           <div class="health-track">
-            <div id="hud-hp-bar" class="health-fill" style="width: 100%;"></div>
+            <div id="hud-hp-bar" class="health-fill" style="width: 100%; background: linear-gradient(90deg, #ef4444, #f59e0b);"></div>
+          </div>
+        </div>
+
+        <!-- Player 2 HP Capsule (Dynamic Co-op) -->
+        <div id="hud-p2-capsule" class="cyber-capsule health-capsule hidden">
+          <div class="health-top-row">
+            <span class="capsule-tag" style="color: #38bdf8;">P2 HP (KYLE)</span>
+            <span id="hud-p2-hp-text" class="capsule-val mono">100 / 100</span>
+          </div>
+          <div class="health-track">
+            <div id="hud-p2-hp-bar" class="health-fill" style="width: 100%; background: linear-gradient(90deg, #0284c7, #38bdf8);"></div>
           </div>
         </div>
 
@@ -213,34 +225,39 @@
 
         <div class="guide-grid">
           <div class="guide-col">
-            <div class="col-badge">LOCOMOTION</div>
-            <h3>🕹️ LEFT SCREEN / WASD</h3>
-            <p><strong>Run / Sprint:</strong> Drag Left/Right or A / D</p>
-            <p><strong>Jump / Wall Kick:</strong> Push Up or W</p>
-            <p><strong>Crouch &amp; Low Slide:</strong> Pull Down or S</p>
+            <div class="col-badge" style="background:#ef4444;color:#fff;">PLAYER 1 (WASD)</div>
+            <h3>🥋 P1 KEYBOARD</h3>
+            <p><strong>Move / Run:</strong> <code>A</code> (Left) &bull; <code>D</code> (Right)</p>
+            <p><strong>Jump / Wall Kick:</strong> <code>W</code></p>
+            <p><strong>Crouch &amp; Slide:</strong> <code>S</code></p>
+            <p><strong>Attack Combo:</strong> <code>X</code> (or Spacebar)</p>
+            <p><strong>Web Sling:</strong> <code>C</code> (Upward Lift &amp; Zip)</p>
+            <p><strong>Parry &amp; Stun:</strong> Hold <code>S</code> on enemy windup</p>
           </div>
 
           <div class="guide-col">
-            <div class="col-badge">COMBAT</div>
-            <h3>✨ RIGHT SCREEN / SPACEBAR</h3>
-            <p><strong>Spacebar (or Tap):</strong> Alternating Karate Combo</p>
-            <p><strong>Swipe Right (→):</strong> Dash Straight Punch</p>
-            <p><strong>Swipe Down (↓):</strong> Low Sweep Kick (Trip enemies)</p>
-            <p><strong>Swipe Up (↑):</strong> Web Zip (1x per jump lift!)</p>
-            <p><strong>Swipe Back (←):</strong> Backstep Dodge</p>
+            <div class="col-badge" style="background:#38bdf8;color:#000;">PLAYER 2 (ARROWS)</div>
+            <h3>🎮 P2 KEYBOARD</h3>
+            <p><strong>Move / Run:</strong> <code>←</code> (Left) &bull; <code>→</code> (Right)</p>
+            <p><strong>Jump / Wall Kick:</strong> <code>↑</code> (Up Arrow)</p>
+            <p><strong>Crouch &amp; Slide:</strong> <code>↓</code> (Down Arrow)</p>
+            <p><strong>Attack Combo:</strong> <code>.</code> (Period)</p>
+            <p><strong>Web Sling:</strong> <code>/</code> (Slash)</p>
+            <p><strong>Parry &amp; Stun:</strong> Hold <code>↓</code> on enemy windup</p>
           </div>
 
           <div class="guide-col highlight-col">
-            <div class="col-badge special">PARRY &amp; COUNTER</div>
-            <h3>🥋 HAND-EYE COORDINATION</h3>
-            <p><strong>Enemy Tells:</strong> Watch for enemy <code>⚡ ATTACK !</code></p>
-            <p><strong>Perfect Parry:</strong> Hold <code>S</code> or touch &amp; hold right screen on strike to <strong>PARRY &amp; STUN</strong> for <strong>2x DAMAGE</strong>!</p>
-            <p><strong>Reverse Auto-Aim:</strong> Punching or kicking enemies behind Halland triggers <strong>Spinning Backfists</strong> &amp; <strong>Heel Kicks</strong>!</p>
+            <div class="col-badge special">KEYBOARD ONLY</div>
+            <h3>⚡ ARCADE CONTROLS</h3>
+            <p><strong>Local 2-Player:</strong> Player 2 instantly joins when pressing any P2 key (<code>↑/←/↓/→</code>, <code>.</code>, <code>/</code>)!</p>
+            <p><strong>Solo Mode:</strong> When playing solo, Arrow Keys also steer Player 1!</p>
+            <p><strong>Yellow Barriers:</strong> Smash all yellow wooden walls to unlock goal!</p>
+            <p><strong>Taunt / Emote:</strong> <code>T</code> (P1) &bull; <code>'</code> (P2)</p>
           </div>
         </div>
 
         <div class="guide-footer">
-          <span>⌨️ KEYBOARD CONTROLS: <strong>W / A / D</strong> (Move/Jump) | <strong>Spacebar</strong> (Attack Combo) | <strong>Arrow Keys</strong> (Swipes/Web Zip) | <strong>S</strong> (Parry)</span>
+          <span>⌨️ <strong>P1:</strong> WASD Move &bull; <strong>X</strong> Attack &bull; <strong>C</strong> Web Sling | <strong>P2:</strong> ARROWS Move &bull; <strong>.</strong> Attack &bull; <strong>/</strong> Web Sling</span>
         </div>
       </div>
     </div>
@@ -327,7 +344,7 @@
         </div>
 
         <div class="guide-footer" style="margin-top: 1.2rem; font-size: 0.8rem; color: #94a3b8;">
-          <span>⌨️ <strong>W / A / D</strong> Move &bull; <strong>Spacebar</strong> Combo &bull; <strong>S</strong> Parry/Slide &bull; <strong>Up</strong> Web Zip &bull; <strong>T</strong> Emote</span>
+          <span>⌨️ <strong>P1:</strong> WASD Move &bull; <strong>X</strong> Attack &bull; <strong>C</strong> Web Sling &bull; <strong>S</strong> Parry | <strong>P2:</strong> ARROWS Move &bull; <strong>.</strong> Attack &bull; <strong>/</strong> Web Sling</span>
         </div>
       </div>
     </div>

@@ -211,6 +211,10 @@ body, html {
   min-width: 140px;
 }
 
+#hud-p2-capsule {
+  border-left: 3px solid #38bdf8;
+}
+
 .health-top-row {
   display: flex;
   justify-content: space-between;

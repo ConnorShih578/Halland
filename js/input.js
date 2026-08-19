@@ -1,261 +1,30 @@
 /* =========================================================
-   INPUT & GESTURE CONTROLLER
-   Left Movement Joystick + Invisible Right Gesture Canvas
-   with fluid white strike trails and zero gesture lag.
-   Keyboard: WASD (move/jump/crouch/block), E (tap), Arrow Keys (right canvas swipes).
+   KEYBOARD-ONLY ARCADE INPUT CONTROLLER ("HALLAND ARCADE")
+   - Pure Keyboard Controls (Zero Touch/Virtual Joystick Clutter)
+   - Player 1:
+       * WASD (or Arrow Keys when Solo) = Movement / Jump / Crouch / Block
+       * X (or Space / E) = Combo Flurry Attack
+       * C = Web Sling (Upward Lift & Zip)
+       * T = Taunt / Emote
+   - Player 2 (Local 2-Player Co-op / Duel):
+       * Arrow Keys = Movement / Jump / Crouch / Block
+       * . (Period) = Combo Flurry Attack
+       * / (Slash) = Web Sling (Upward Lift & Zip)
+       * ' (Quote) / L = Taunt / Emote
 ========================================================= */
 
-class InputController {
-  constructor(canvas) {
-    this.canvas = canvas;
-
-    // Movement state (Left Stick / Keyboard WASD)
+class PlayerInputState {
+  constructor(playerId = 1) {
+    this.playerId = playerId;
     this.moveX = 0;       // -1 .. 1
     this.moveY = 0;       // -1 .. 1
     this.jumpPressed = false;
     this.jumpHeld = false;
     this.crouchHeld = false;
-
-    // Action state queue & current gesture
+    this.isBlocking = false;
     this.pendingAction = null;
-    this.isBlocking = false;
-
-    // Combo alternation counter (for ground tap)
     this.comboStep = 0;
-
-    // Left Touch Management (Movement Joystick)
-    this.leftTouchId = null;
-    this.leftStickOrigin = { x: 0, y: 0 };
-    this.leftStickCurrent = { x: 0, y: 0 };
-    this.leftStickActive = false;
-    this.leftStickRadius = 55;
-
-    // Right Gesture Touch Management (Invisible Canvas)
-    this.rightTouchId = null;
-    this.rightTouchStart = { x: 0, y: 0, time: 0 };
-    this.rightTouchPoints = [];
-    this.isRightTouching = false;
-
-    // Active White Trails list for rendering
-    this.trails = [];
-
-    // Desktop Keyboard State
-    this.keys = {};
-
-    this.bindEvents();
-  }
-
-  bindEvents() {
-    const el = this.canvas;
-
-    // Touch Events
-    el.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false });
-    el.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
-    el.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: false });
-    el.addEventListener('touchcancel', (e) => this.handleTouchEnd(e), { passive: false });
-
-    // Mouse Fallback on Right Canvas
-    let isMouseDownRight = false;
-    el.addEventListener('mousedown', (e) => {
-      const rect = el.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      if (x > rect.width * 0.45) {
-        isMouseDownRight = true;
-        this.startRightGesture(999, x, y);
-      }
-    });
-
-    el.addEventListener('mousemove', (e) => {
-      if (isMouseDownRight) {
-        const rect = el.getBoundingClientRect();
-        this.updateRightGesture(999, e.clientX - rect.left, e.clientY - rect.top);
-      }
-    });
-
-    const endMouse = (e) => {
-      if (isMouseDownRight) {
-        isMouseDownRight = false;
-        const rect = el.getBoundingClientRect();
-        this.endRightGesture(999, e.clientX - rect.left, e.clientY - rect.top);
-      }
-    };
-    el.addEventListener('mouseup', endMouse);
-    el.addEventListener('mouseleave', endMouse);
-
-    // Keyboard Events
-    window.addEventListener('keydown', (e) => this.handleKeyDown(e));
-    window.addEventListener('keyup', (e) => this.handleKeyUp(e));
-  }
-
-  // --- Touch Event Handlers ---
-
-  handleTouchStart(e) {
-    e.preventDefault();
-    const rect = this.canvas.getBoundingClientRect();
-    const halfWidth = rect.width * 0.5;
-
-    for (let i = 0; i < e.changedTouches.length; i++) {
-      const t = e.changedTouches[i];
-      const x = t.clientX - rect.left;
-      const y = t.clientY - rect.top;
-
-      if (x < halfWidth) {
-        // LEFT HALF: Movement Joystick
-        if (this.leftTouchId === null) {
-          this.leftTouchId = t.identifier;
-          this.leftStickOrigin = { x, y };
-          this.leftStickCurrent = { x, y };
-          this.leftStickActive = true;
-          if (window.Haptics) window.Haptics.trigger('tap');
-        }
-      } else {
-        // RIGHT HALF: Invisible Martial Arts Gesture Canvas
-        if (this.rightTouchId === null) {
-          this.startRightGesture(t.identifier, x, y);
-        }
-      }
-    }
-  }
-
-  handleTouchMove(e) {
-    e.preventDefault();
-    const rect = this.canvas.getBoundingClientRect();
-
-    for (let i = 0; i < e.changedTouches.length; i++) {
-      const t = e.changedTouches[i];
-      const x = t.clientX - rect.left;
-      const y = t.clientY - rect.top;
-
-      if (t.identifier === this.leftTouchId) {
-        this.leftStickCurrent = { x, y };
-        const dx = x - this.leftStickOrigin.x;
-        const dy = y - this.leftStickOrigin.y;
-        const dist = Math.hypot(dx, dy);
-
-        const clampedDist = Math.min(dist, this.leftStickRadius);
-        const angle = Math.atan2(dy, dx);
-
-        this.moveX = (Math.cos(angle) * clampedDist) / this.leftStickRadius;
-        this.moveY = (Math.sin(angle) * clampedDist) / this.leftStickRadius;
-
-        if (this.moveY < -0.55) {
-          if (!this.jumpHeld) {
-            this.jumpPressed = true;
-          }
-          this.jumpHeld = true;
-        } else {
-          this.jumpHeld = false;
-        }
-
-        this.crouchHeld = this.moveY > 0.55;
-      } else if (t.identifier === this.rightTouchId) {
-        this.updateRightGesture(t.identifier, x, y);
-      }
-    }
-  }
-
-  handleTouchEnd(e) {
-    e.preventDefault();
-    const rect = this.canvas.getBoundingClientRect();
-
-    for (let i = 0; i < e.changedTouches.length; i++) {
-      const t = e.changedTouches[i];
-      const x = t.clientX - rect.left;
-      const y = t.clientY - rect.top;
-
-      if (t.identifier === this.leftTouchId) {
-        this.leftTouchId = null;
-        this.leftStickActive = false;
-        this.moveX = 0;
-        this.moveY = 0;
-        this.jumpHeld = false;
-        this.crouchHeld = false;
-      } else if (t.identifier === this.rightTouchId) {
-        this.endRightGesture(t.identifier, x, y);
-      }
-    }
-  }
-
-  // --- Right Gesture Canvas Methods ---
-
-  startRightGesture(id, x, y) {
-    this.rightTouchId = id;
-    const now = performance.now();
-    this.rightTouchStart = { x, y, time: now };
-    this.rightTouchPoints = [{ x, y, time: now }];
-    this.isRightTouching = true;
-    this.isBlocking = false;
-  }
-
-  updateRightGesture(id, x, y) {
-    const now = performance.now();
-    this.rightTouchPoints.push({ x, y, time: now });
-
-    this.rightTouchPoints = this.rightTouchPoints.filter(p => now - p.time < 260);
-
-    const start = this.rightTouchStart;
-    const totalDist = Math.hypot(x - start.x, y - start.y);
-    const elapsed = now - start.time;
-
-    // Detect Hold to Block (held for > 180ms with little movement)
-    if (elapsed > 180 && totalDist < 25) {
-      if (!this.isBlocking) {
-        this.isBlocking = true;
-        if (window.Haptics) window.Haptics.trigger('block');
-      }
-    }
-  }
-
-  endRightGesture(id, x, y) {
-    const now = performance.now();
-    const start = this.rightTouchStart;
-    const dx = x - start.x;
-    const dy = y - start.y;
-    const dist = Math.hypot(dx, dy);
-    const duration = now - start.time;
-
-    if (this.rightTouchPoints.length > 1) {
-      this.trails.push({
-        points: [...this.rightTouchPoints],
-        birth: performance.now(),
-        duration: 260
-      });
-    }
-
-    if (this.isBlocking) {
-      this.isBlocking = false;
-    } else if (duration < 220 && dist < 22) {
-      // 💥 TAP (Alternating Combo on ground / Cannonball in air)
-      this.queueAction('TAP');
-      if (window.Haptics) window.Haptics.trigger('tap');
-    } else if (dist >= 22) {
-      // 🥋 DIRECTIONAL SWIPES
-      const angle = Math.atan2(dy, dx); // [-PI..PI]
-
-      if (angle >= -Math.PI / 4 && angle <= Math.PI / 4) {
-        // Swipe Right (Straight Punch on ground / Diving Punch in air)
-        this.queueAction('SWIPE_RIGHT');
-        if (window.Haptics) window.Haptics.trigger('whoosh');
-      } else if (angle > Math.PI / 4 && angle < (3 * Math.PI) / 4) {
-        // Swipe Down (Super Tough Sweep Kick on ground / Body Slam in air)
-        this.queueAction('SWIPE_DOWN');
-        if (window.Haptics) window.Haptics.trigger('whoosh');
-      } else if (angle < -Math.PI / 4 && angle > (-3 * Math.PI) / 4) {
-        // Swipe Up (Uppercut on ground / Upwards Kick in air)
-        this.queueAction('SWIPE_UP');
-        if (window.Haptics) window.Haptics.trigger('whoosh');
-      } else {
-        // Swipe Left (Backstep on ground / Backflip Dodge in air)
-        this.queueAction('SWIPE_LEFT');
-        if (window.Haptics) window.Haptics.trigger('whoosh');
-      }
-    }
-
-    this.rightTouchId = null;
-    this.isRightTouching = false;
-    this.rightTouchPoints = [];
+    this.active = playerId === 1;
   }
 
   queueAction(type) {
@@ -268,76 +37,216 @@ class InputController {
     return act;
   }
 
+  reset() {
+    this.moveX = 0;
+    this.moveY = 0;
+    this.jumpPressed = false;
+    this.jumpHeld = false;
+    this.crouchHeld = false;
+    this.isBlocking = false;
+    this.pendingAction = null;
+  }
+}
+
+class InputController {
+  constructor(canvas) {
+    this.canvas = canvas;
+
+    // Player 1 & Player 2 Input Instances
+    this.p1 = new PlayerInputState(1);
+    this.p2 = new PlayerInputState(2);
+
+    // Active White Strike Motion Trails
+    this.trails = [];
+
+    // Keyboard Key Map
+    this.keys = {};
+
+    this.bindKeyboardEvents();
+  }
+
+  // --- Convenience Getters & Setters for Player 1 Backward Compatibility ---
+  get moveX() { return this.p1.moveX; }
+  set moveX(v) { this.p1.moveX = v; }
+  get moveY() { return this.p1.moveY; }
+  set moveY(v) { this.p1.moveY = v; }
+  get jumpPressed() { return this.p1.jumpPressed; }
+  set jumpPressed(v) { this.p1.jumpPressed = v; }
+  get jumpHeld() { return this.p1.jumpHeld; }
+  set jumpHeld(v) { this.p1.jumpHeld = v; }
+  get crouchHeld() { return this.p1.crouchHeld; }
+  set crouchHeld(v) { this.p1.crouchHeld = v; }
+  get isBlocking() { return this.p1.isBlocking; }
+  set isBlocking(v) { this.p1.isBlocking = v; }
+  get pendingAction() { return this.p1.pendingAction; }
+  set pendingAction(v) { this.p1.pendingAction = v; }
+
+  queueAction(type) {
+    this.p1.queueAction(type);
+  }
+
+  consumeAction() {
+    return this.p1.consumeAction();
+  }
+
+  reset() {
+    this.keys = {};
+    this.p1.reset();
+    this.p2.reset();
+  }
+
+  bindKeyboardEvents() {
+    // Keyboard Only - Pure desktop & arcade responsiveness
+    window.addEventListener('keydown', (e) => this.handleKeyDown(e));
+    window.addEventListener('keyup', (e) => this.handleKeyUp(e));
+  }
+
   handleKeyDown(e) {
     if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) {
       return;
     }
 
-    const gameKeys = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyE', 'KeyT', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyR'];
-    if (gameKeys.includes(e.code)) {
-      e.preventDefault();
+    const gameKeys = [
+      'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyX', 'KeyC', 'KeyT', 'KeyE', 'Space',
+      'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Period', 'NumpadDecimal', 'Slash', 'NumpadDivide', 'Quote', 'KeyL',
+      'KeyR', 'KeyM', 'KeyH', 'KeyN', 'KeyP', 'Escape'
+    ];
+
+    if (gameKeys.includes(e.code) || e.key === '.' || e.key === '/' || e.key === "'") {
+      // Prevent page scrolling on Space / Arrow keys
+      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Slash'].includes(e.code) || e.key === '/') {
+        e.preventDefault();
+      }
     }
 
     this.keys[e.code] = true;
+    if (e.key === '.') this.keys['Period'] = true;
+    if (e.key === '/') this.keys['Slash'] = true;
 
-    // 1. WASD Movement Keys
-    if (this.keys['KeyA'] && !this.keys['KeyD']) this.moveX = -1;
-    else if (this.keys['KeyD'] && !this.keys['KeyA']) this.moveX = 1;
-    else if (!this.keys['KeyA'] && !this.keys['KeyD']) this.moveX = 0;
+    // Detect Player 2 Joining (If P2 keys are pressed, activate Player 2!)
+    const isP2Trigger = [
+      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+      'Period', 'NumpadDecimal', 'Slash', 'NumpadDivide', 'Quote'
+    ].includes(e.code) || e.key === '.' || e.key === '/';
 
-    // W Key = Jump
-    if (e.code === 'KeyW') {
-      if (!this.jumpHeld) this.jumpPressed = true;
-      this.jumpHeld = true;
+    if (isP2Trigger && !this.p2.active) {
+      this.p2.active = true;
+      if (window.Game && typeof window.Game.spawnPlayer2 === 'function') {
+        window.Game.spawnPlayer2();
+      }
     }
 
-    if (e.code === 'KeyS') {
-      this.crouchHeld = true;
-      this.isBlocking = true;
+    // =========================================================
+    // 1. PLAYER 1 (WASD Movement, X Attack, C Web Sling, T Taunt)
+    // =========================================================
+    // Horizontal Movement
+    if (this.keys['KeyA'] && !this.keys['KeyD']) {
+      this.p1.moveX = -1;
+    } else if (this.keys['KeyD'] && !this.keys['KeyA']) {
+      this.p1.moveX = 1;
+    } else if (!this.keys['KeyA'] && !this.keys['KeyD']) {
+      // If Player 2 is NOT active, solo player can also use Arrow keys
+      if (!this.p2.active) {
+        if (this.keys['ArrowLeft'] && !this.keys['ArrowRight']) this.p1.moveX = -1;
+        else if (this.keys['ArrowRight'] && !this.keys['ArrowLeft']) this.p1.moveX = 1;
+        else this.p1.moveX = 0;
+      } else {
+        this.p1.moveX = 0;
+      }
     }
 
-    // Ignore browser auto-repeat for attack action triggers
-    if (e.repeat && ['Space', 'KeyE', 'KeyT', 'ArrowRight', 'ArrowDown', 'ArrowUp', 'ArrowLeft'].includes(e.code)) {
-      return;
+    // W = Jump (or Up Arrow when solo)
+    if (e.code === 'KeyW' || (!this.p2.active && e.code === 'ArrowUp')) {
+      if (!this.p1.jumpHeld) this.p1.jumpPressed = true;
+      this.p1.jumpHeld = true;
     }
 
-    // 2. T Key = Signature Character Taunt / Emote
+    // S = Crouch & Block / Parry (or Down Arrow when solo)
+    if (e.code === 'KeyS' || (!this.p2.active && e.code === 'ArrowDown')) {
+      this.p1.crouchHeld = true;
+      this.p1.isBlocking = true;
+    }
+
+    // X (or Space / E) = Combo Attack
+    if (e.code === 'KeyX' || e.code === 'Space' || e.code === 'KeyE') {
+      if (!e.repeat) {
+        this.p1.queueAction('TAP');
+        this.spawnSyntheticKeyTrail('TAP', 0.35);
+        if (window.Haptics) window.Haptics.trigger('tap');
+      }
+    }
+
+    // C = Web Sling (Upward Lift & Zip)
+    if (e.code === 'KeyC') {
+      if (!e.repeat) {
+        this.p1.queueAction('SWIPE_UP');
+        this.spawnSyntheticKeyTrail('SWIPE_UP', 0.35);
+        if (window.Haptics) window.Haptics.trigger('whoosh');
+      }
+    }
+
+    // T = Signature Taunt / Emote
     if (e.code === 'KeyT') {
-      this.queueAction('EMOTE');
-      if (window.Haptics) window.Haptics.trigger('tap');
+      if (!e.repeat) {
+        this.p1.queueAction('EMOTE');
+        if (window.Haptics) window.Haptics.trigger('tap');
+      }
     }
 
-    // 3. Spacebar (or E Key) = Basic Punch / Kick Combo
-    if (e.code === 'Space' || e.code === 'KeyE') {
-      this.queueAction('TAP');
-      this.spawnSyntheticKeyTrail('TAP');
-      if (window.Haptics) window.Haptics.trigger('tap');
+    // =========================================================
+    // 2. PLAYER 2 (Arrow Keys Move, . Attack, / Web Sling)
+    // =========================================================
+    if (this.p2.active) {
+      // Horizontal Movement
+      if (this.keys['ArrowLeft'] && !this.keys['ArrowRight']) {
+        this.p2.moveX = -1;
+      } else if (this.keys['ArrowRight'] && !this.keys['ArrowLeft']) {
+        this.p2.moveX = 1;
+      } else {
+        this.p2.moveX = 0;
+      }
+
+      // Up Arrow = Jump
+      if (e.code === 'ArrowUp') {
+        if (!this.p2.jumpHeld) this.p2.jumpPressed = true;
+        this.p2.jumpHeld = true;
+      }
+
+      // Down Arrow = Crouch & Block / Parry
+      if (e.code === 'ArrowDown') {
+        this.p2.crouchHeld = true;
+        this.p2.isBlocking = true;
+      }
+
+      // . (Period) = Combo Attack
+      if (e.code === 'Period' || e.code === 'NumpadDecimal' || e.key === '.') {
+        if (!e.repeat) {
+          this.p2.queueAction('TAP');
+          this.spawnSyntheticKeyTrail('TAP', 0.75);
+          if (window.Haptics) window.Haptics.trigger('tap');
+        }
+      }
+
+      // / (Slash) = Web Sling
+      if (e.code === 'Slash' || e.code === 'NumpadDivide' || e.key === '/') {
+        if (!e.repeat) {
+          this.p2.queueAction('SWIPE_UP');
+          this.spawnSyntheticKeyTrail('SWIPE_UP', 0.75);
+          if (window.Haptics) window.Haptics.trigger('whoosh');
+        }
+      }
+
+      // ' (Quote) or L = Signature Taunt / Emote
+      if (e.code === 'Quote' || e.code === 'KeyL' || e.key === "'") {
+        if (!e.repeat) {
+          this.p2.queueAction('EMOTE');
+          if (window.Haptics) window.Haptics.trigger('tap');
+        }
+      }
     }
 
-    // 3. Arrow Keys = Right Canvas Directional Swipes with White Motion Trails
-    if (e.code === 'ArrowRight') {
-      this.queueAction('SWIPE_RIGHT');
-      this.spawnSyntheticKeyTrail('SWIPE_RIGHT');
-      if (window.Haptics) window.Haptics.trigger('whoosh');
-    }
-    if (e.code === 'ArrowDown') {
-      this.queueAction('SWIPE_DOWN');
-      this.spawnSyntheticKeyTrail('SWIPE_DOWN');
-      if (window.Haptics) window.Haptics.trigger('whoosh');
-    }
-    if (e.code === 'ArrowUp') {
-      this.queueAction('SWIPE_UP');
-      this.spawnSyntheticKeyTrail('SWIPE_UP');
-      if (window.Haptics) window.Haptics.trigger('whoosh');
-    }
-    if (e.code === 'ArrowLeft') {
-      this.queueAction('SWIPE_LEFT');
-      this.spawnSyntheticKeyTrail('SWIPE_LEFT');
-      if (window.Haptics) window.Haptics.trigger('whoosh');
-    }
-
-    // Restart shortcut (R)
-    if (e.code === 'KeyR' && window.Game) {
+    // Quick Restart Checkpoint (R)
+    if (e.code === 'KeyR' && window.Game && typeof window.Game.restartCheckpoint === 'function') {
       window.Game.restartCheckpoint();
     }
   }
@@ -348,198 +257,149 @@ class InputController {
     }
 
     this.keys[e.code] = false;
+    if (e.key === '.') this.keys['Period'] = false;
+    if (e.key === '/') this.keys['Slash'] = false;
 
-    // Update horizontal movement
-    if (this.keys['KeyA'] && !this.keys['KeyD']) this.moveX = -1;
-    else if (this.keys['KeyD'] && !this.keys['KeyA']) this.moveX = 1;
-    else this.moveX = 0;
-
-    if (e.code === 'KeyW' || e.code === 'Space') {
-      this.jumpHeld = false;
+    // --- P1 Release ---
+    if (this.keys['KeyA'] && !this.keys['KeyD']) {
+      this.p1.moveX = -1;
+    } else if (this.keys['KeyD'] && !this.keys['KeyA']) {
+      this.p1.moveX = 1;
+    } else {
+      if (!this.p2.active) {
+        if (this.keys['ArrowLeft'] && !this.keys['ArrowRight']) this.p1.moveX = -1;
+        else if (this.keys['ArrowRight'] && !this.keys['ArrowLeft']) this.p1.moveX = 1;
+        else this.p1.moveX = 0;
+      } else {
+        this.p1.moveX = 0;
+      }
     }
 
-    if (e.code === 'KeyS') {
-      this.crouchHeld = false;
-      this.isBlocking = false;
+    if (e.code === 'KeyW' || (!this.p2.active && e.code === 'ArrowUp')) {
+      this.p1.jumpHeld = false;
+    }
+
+    if (e.code === 'KeyS' || (!this.p2.active && e.code === 'ArrowDown')) {
+      this.p1.crouchHeld = false;
+      this.p1.isBlocking = false;
+    }
+
+    // --- P2 Release ---
+    if (this.p2.active) {
+      if (this.keys['ArrowLeft'] && !this.keys['ArrowRight']) {
+        this.p2.moveX = -1;
+      } else if (this.keys['ArrowRight'] && !this.keys['ArrowLeft']) {
+        this.p2.moveX = 1;
+      } else {
+        this.p2.moveX = 0;
+      }
+
+      if (e.code === 'ArrowUp') {
+        this.p2.jumpHeld = false;
+      }
+
+      if (e.code === 'ArrowDown') {
+        this.p2.crouchHeld = false;
+        this.p2.isBlocking = false;
+      }
     }
   }
 
-  // Spawn visual white slash trail on right half for keyboard arrow keys
-  spawnSyntheticKeyTrail(type) {
-    const rect = this.canvas.getBoundingClientRect();
-    const centerX = rect.width * 0.75;
-    const centerY = rect.height * 0.5;
+  // Visual Arcade Slash Arc Effect
+  spawnSyntheticKeyTrail(type, screenXFraction = 0.5) {
+    const rect = this.canvas ? this.canvas.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight };
+    const centerX = (rect.width || 800) * screenXFraction;
+    const centerY = (rect.height || 600) * 0.5;
     const now = performance.now();
     const points = [];
 
-    const len = 95;
+    const len = 90;
     let dx = 0, dy = 0;
 
     switch (type) {
-      case 'SWIPE_RIGHT': dx = len; break;
-      case 'SWIPE_DOWN': dy = len; break;
-      case 'SWIPE_UP': dy = -len; break;
-      case 'SWIPE_LEFT': dx = -len; break;
-      case 'TAP':
-        for (let i = 0; i <= 6; i++) {
-          const a = (i / 6) * Math.PI * 2;
-          points.push({ x: centerX + Math.cos(a) * 18, y: centerY + Math.sin(a) * 18, time: now });
+      case 'SWIPE_UP':
+        dy = -len;
+        for (let i = 0; i <= 8; i++) {
+          const t = i / 8;
+          points.push({ x: centerX + (t - 0.5) * 20, y: centerY - dy * 0.5 + dy * t, time: now });
         }
         break;
-    }
-
-    if (type !== 'TAP') {
-      for (let i = 0; i <= 8; i++) {
-        const t = i / 8;
-        points.push({
-          x: centerX - dx * 0.5 + dx * t,
-          y: centerY - dy * 0.5 + dy * t,
-          time: now
-        });
-      }
+      case 'TAP':
+      default:
+        for (let i = 0; i <= 6; i++) {
+          const a = (i / 6) * Math.PI * 2;
+          points.push({ x: centerX + Math.cos(a) * 22, y: centerY + Math.sin(a) * 22, time: now });
+        }
+        break;
     }
 
     this.trails.push({
       points: points,
       birth: now,
-      duration: 250
+      duration: 220
     });
   }
 
   updateGamepad() {
+    // Optional gamepad support
     if (!navigator.getGamepads) return;
     const gamepads = navigator.getGamepads();
     const gp = gamepads[0];
     if (!gp) return;
 
     const stickX = gp.axes[0];
-    if (Math.abs(stickX) > 0.2) this.moveX = stickX;
-    else if (!this.keys['KeyA'] && !this.keys['KeyD']) this.moveX = 0;
+    if (Math.abs(stickX) > 0.2) this.p1.moveX = stickX;
+    else if (!this.keys['KeyA'] && !this.keys['KeyD']) this.p1.moveX = 0;
 
     const btnA = gp.buttons[0] && gp.buttons[0].pressed;
     if (btnA) {
-      if (!this.jumpHeld) this.jumpPressed = true;
-      this.jumpHeld = true;
+      if (!this.p1.jumpHeld) this.p1.jumpPressed = true;
+      this.p1.jumpHeld = true;
     } else if (!this.keys['Space'] && !this.keys['KeyW']) {
-      this.jumpHeld = false;
+      this.p1.jumpHeld = false;
     }
 
-    if (gp.buttons[2] && gp.buttons[2].pressed) this.queueAction('TAP');
-    if (gp.buttons[1] && gp.buttons[1].pressed) this.queueAction('SWIPE_DOWN');
-    if (gp.buttons[3] && gp.buttons[3].pressed) this.queueAction('SWIPE_UP');
-    if (gp.buttons[5] && gp.buttons[5].pressed) this.queueAction('SWIPE_RIGHT');
-    if (gp.buttons[4] && gp.buttons[4].pressed) this.isBlocking = true;
-    else if (!this.keys['KeyS']) this.isBlocking = false;
+    if (gp.buttons[2] && gp.buttons[2].pressed) this.p1.queueAction('TAP');
+    if (gp.buttons[3] && gp.buttons[3].pressed) this.p1.queueAction('SWIPE_UP');
+    if (gp.buttons[4] && gp.buttons[4].pressed) this.p1.isBlocking = true;
+    else if (!this.keys['KeyS']) this.p1.isBlocking = false;
   }
 
   draw(ctx, canvasWidth, canvasHeight) {
     const now = performance.now();
-    const isMobileDevice = ('ontouchstart' in window) || (canvasWidth < 768);
 
-    // Ambient Touch Zone Indicator on Mobile (subtle guide for thumbs)
-    if (isMobileDevice && !this.leftStickActive && !this.isRightTouching) {
-      ctx.save();
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-      ctx.lineWidth = 1.5;
-
-      // Left Stick Zone
-      const leftCenterX = Math.max(70, canvasWidth * 0.14);
-      const leftCenterY = canvasHeight - 90;
-      ctx.beginPath();
-      ctx.arc(leftCenterX, leftCenterY, 44, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-      ctx.font = '800 9px Outfit';
-      ctx.textAlign = 'center';
-      ctx.fillText('🕹️ MOVE', leftCenterX, leftCenterY + 3);
-
-      // Right Action Zone
-      const rightCenterX = canvasWidth - Math.max(70, canvasWidth * 0.14);
-      const rightCenterY = canvasHeight - 90;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
-      ctx.beginPath();
-      ctx.arc(rightCenterX, rightCenterY, 44, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-      ctx.fillText('⚡ ATTACK', rightCenterX, rightCenterY + 3);
-
-      ctx.restore();
-    }
-
-    // 1. Draw Left Virtual Joystick if active
-    if (this.leftStickActive) {
-      ctx.save();
-      const origin = this.leftStickOrigin;
-      const cur = this.leftStickCurrent;
-
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.arc(origin.x, origin.y, this.leftStickRadius, 0, Math.PI * 2);
-      ctx.stroke();
-
-      const dx = cur.x - origin.x;
-      const dy = cur.y - origin.y;
-      const dist = Math.min(Math.hypot(dx, dy), this.leftStickRadius);
-      const angle = Math.atan2(dy, dx);
-      const knobX = origin.x + Math.cos(angle) * dist;
-      const knobY = origin.y + Math.sin(angle) * dist;
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
-      ctx.beginPath();
-      ctx.arc(knobX, knobY, 20, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-
-    // 2. Draw Active Right Motion Trail
-    if (this.isRightTouching && this.rightTouchPoints.length > 1) {
-      this.renderTrail(ctx, this.rightTouchPoints, 1.0);
-    }
-
-    // 3. Draw Fading Completed Trails
+    // Render active strike visual trails
     for (let i = this.trails.length - 1; i >= 0; i--) {
-      const tr = this.trails[i];
-      const age = now - tr.birth;
-      if (age > tr.duration) {
+      const trail = this.trails[i];
+      const elapsed = now - trail.birth;
+      if (elapsed > trail.duration) {
         this.trails.splice(i, 1);
-      } else {
-        const alpha = 1.0 - (age / tr.duration);
-        this.renderTrail(ctx, tr.points, alpha);
+        continue;
       }
+      const alpha = 1 - (elapsed / trail.duration);
+      this.renderTrail(ctx, trail.points, alpha);
     }
   }
 
-  renderTrail(ctx, points, globalAlpha) {
+  renderTrail(ctx, points, alpha) {
     if (points.length < 2) return;
-
     ctx.save();
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
+    ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.9})`;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
     for (let i = 1; i < points.length; i++) {
-      const p0 = points[i - 1];
-      const p1 = points[i];
-      const tNorm = i / points.length;
-
-      ctx.beginPath();
-      ctx.moveTo(p0.x, p0.y);
-      ctx.lineTo(p1.x, p1.y);
-
-      ctx.lineWidth = 4 + tNorm * 10;
-      ctx.strokeStyle = `rgba(255, 255, 255, ${tNorm * globalAlpha * 0.9})`;
-      ctx.shadowColor = '#ffffff';
-      ctx.shadowBlur = 8 * globalAlpha;
-      ctx.stroke();
+      ctx.lineTo(points[i].x, points[i].y);
     }
+    ctx.stroke();
+
+    ctx.strokeStyle = `rgba(56, 189, 248, ${alpha * 0.4})`;
+    ctx.lineWidth = 8;
+    ctx.stroke();
 
     ctx.restore();
   }
 }
-
-window.InputController = InputController;
