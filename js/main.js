@@ -1707,6 +1707,34 @@ class GameEngine {
   }
 }
 
+window.selectP1Char = function(charId, btn) {
+  document.querySelectorAll('.p1-card').forEach(b => {
+    b.classList.remove('active');
+    b.style.border = '1px solid rgba(255,255,255,0.2)';
+    b.style.background = 'rgba(15, 23, 42, 0.4)';
+  });
+  if (btn) {
+    btn.classList.add('active');
+    btn.style.border = '2px solid #ef4444';
+    btn.style.background = 'rgba(239,68,68,0.25)';
+  }
+  if (window.Game) window.Game.p1Char = charId;
+};
+
+window.selectP2Char = function(charId, btn) {
+  document.querySelectorAll('.p2-card').forEach(b => {
+    b.classList.remove('active');
+    b.style.border = '1px solid rgba(255,255,255,0.2)';
+    b.style.background = 'rgba(15, 23, 42, 0.4)';
+  });
+  if (btn) {
+    btn.classList.add('active');
+    btn.style.border = '2px solid #38bdf8';
+    btn.style.background = 'rgba(56,189,248,0.25)';
+  }
+  if (window.Game) window.Game.p2Char = charId;
+};
+
 function initGameEngine() {
   if (!window.Game) {
     try {
